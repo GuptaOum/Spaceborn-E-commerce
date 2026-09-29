@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 780" width="1240" height="780" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#94a3b8"/>
+    </marker>
+    <style>
+      .t  { font-size: 12.5px; font-weight: 600; fill: #0f172a; }
+      .s  { font-size: 10.5px; fill: #64748b; }
+      .s2 { font-size: 10.5px; fill: #475569; }
+      .zn { font-size: 10px; font-weight: 700; fill: #64748b; letter-spacing: .7px; }
+      .fl { font-size: 9.5px; fill: #64748b; }
+      .box   { fill: #ffffff; stroke: #cbd5e1; }
+      .boxhi { fill: #ffffff; stroke: #2563eb; }
+      .zone  { fill: #f8fafc; stroke: #e2e8f0; }
+      .mng   { fill: #f1f5f9; stroke: #cbd5e1; }
+      .dash  { stroke-dasharray: 4 3; }
+      .ln    { stroke: #94a3b8; stroke-width: 1.2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1240" height="780" fill="#ffffff"/>
+
+  <text x="40" y="34" font-size="19" font-weight="700" fill="#0f172a">Spaceborn &#8212; quick commerce for electronics, 3D printing and CNC</text>
+  <text x="40" y="54" font-size="12" fill="#475569">Deployed architecture &#183; AWS ap-south-1 (Mumbai) &#183; Terraform, 91 resources &#183; ECS Fargate, RDS PostgreSQL, Firebase Auth, Razorpay, SES</text>
+
+  <!-- Clients and third parties -->
+  <g>
+    <rect class="mng" x="40"  y="76" width="180" height="46" rx="6"/>
+    <text class="t" x="130" y="97"  text-anchor="middle">Customers</text>
+    <text class="s" x="130" y="111" text-anchor="middle">browser &#183; Firebase ID token</text>
+
+    <rect class="mng" x="232" y="76" width="180" height="46" rx="6"/>
+    <text class="t" x="322" y="97"  text-anchor="middle">Vendors</text>
+    <text class="s" x="322" y="111" text-anchor="middle">store, inventory, print jobs</text>
+
+    <rect class="mng dash" x="424" y="76" width="180" height="46" rx="6"/>
+    <text class="t" x="514" y="97"  text-anchor="middle">Admins</text>
+    <text class="s" x="514" y="111" text-anchor="middle">SSM tunnel only</text>
+
+    <rect class="mng" x="660" y="76" width="180" height="46" rx="6"/>
+    <text class="t" x="750" y="97"  text-anchor="middle">Razorpay</text>
+    <text class="s" x="750" y="111" text-anchor="middle">payments + webhook</text>
+
+    <rect class="mng" x="884" y="76" width="332" height="46" rx="6"/>
+    <text class="t" x="1050" y="97"  text-anchor="middle">Firebase Authentication</text>
+    <text class="s" x="1050" y="111" text-anchor="middle">identity provider &#183; role claims set server-side only</text>
+  </g>
+
+  <!-- VPC -->
+  <rect x="24" y="150" width="830" height="530" rx="8" fill="none" stroke="#2563eb" stroke-width="1.3"/>
+  <text x="40" y="170" font-size="11" font-weight="700" fill="#2563eb">VPC 10.20.0.0/16 &#183; 2 availability zones</text>
+
+  <!-- Public subnets -->
+  <rect class="zone" x="40" y="180" width="798" height="98" rx="6"/>
+  <text class="zn" x="54" y="198">PUBLIC SUBNETS</text>
+  <rect class="boxhi" x="56" y="208" width="470" height="60" rx="6"/>
+  <text class="t"  x="291" y="230" text-anchor="middle">Application Load Balancer (internet-facing)</text>
+  <text class="s2" x="291" y="246" text-anchor="middle">:80 &#8594; storefront     :8080 &#8594; vendor hub     /v1/* &#8594; API</text>
+  <text class="s"  x="291" y="261" text-anchor="middle">/v1/admin* &#8594; fixed 403 response</text>
+
+  <rect class="box" x="542" y="208" width="280" height="60" rx="6"/>
+  <text class="t" x="682" y="232" text-anchor="middle">NAT Gateway</text>
+  <text class="s" x="682" y="248" text-anchor="middle">the only egress path for private tasks</text>
+
+  <!-- App subnets -->
+  <rect class="zone" x="40" y="294" width="798" height="252" rx="6"/>
+  <text class="zn" x="54" y="312">PRIVATE APP SUBNETS &#183; ECS FARGATE &#183; NO PUBLIC IP</text>
+
+  <rect class="box" x="56" y="322" width="240" height="54" rx="6"/>
+  <text class="t" x="176" y="344" text-anchor="middle">Storefront</text>
+  <text class="s" x="176" y="359" text-anchor="middle">Next.js &#183; 2 tasks &#183; :3000</text>
+
+  <rect class="box" x="308" y="322" width="240" height="54" rx="6"/>
+  <text class="t" x="428" y="344" text-anchor="middle">Vendor hub</text>
+  <text class="s" x="428" y="359" text-anchor="middle">Next.js &#183; 1 task &#183; :3000</text>
+
+  <rect class="box dash" x="560" y="322" width="262" height="54" rx="6"/>
+  <text class="t" x="691" y="344" text-anchor="middle">Internal load balancer</text>
+  <text class="s" x="691" y="359" text-anchor="middle">admin only &#183; not internet facing</text>
+
+  <rect class="boxhi" x="56" y="390" width="240" height="54" rx="6"/>
+  <text class="t"  x="176" y="412" text-anchor="middle">API</text>
+  <text class="s2" x="176" y="427" text-anchor="middle">Express &#183; 2&#8211;6 tasks &#183; :4000</text>
+
+  <rect class="box" x="308" y="390" width="240" height="54" rx="6"/>
+  <text class="t" x="428" y="412" text-anchor="middle">Worker</text>
+  <text class="s" x="428" y="427" text-anchor="middle">outbox &#183; refunds &#183; email</text>
+
+  <rect class="box" x="560" y="390" width="262" height="54" rx="6"/>
+  <text class="t" x="691" y="412" text-anchor="middle">Admin panel</text>
+  <text class="s" x="691" y="427" text-anchor="middle">Next.js &#183; 1 task &#183; :3000</text>
+
+  <rect class="box" x="56" y="458" width="240" height="54" rx="6"/>
+  <text class="t" x="176" y="480" text-anchor="middle">Bastion</text>
+  <text class="s" x="176" y="495" text-anchor="middle">t4g.nano &#183; SSM entry for admin and DB</text>
+
+  <rect class="box dash" x="308" y="458" width="240" height="54" rx="6"/>
+  <text class="t" x="428" y="480" text-anchor="middle">Migration task</text>
+  <text class="s" x="428" y="495" text-anchor="middle">one-off &#183; same image as API</text>
+
+  <rect class="box" x="560" y="458" width="262" height="54" rx="6"/>
+  <text class="t" x="691" y="480" text-anchor="middle">S3 gateway endpoint</text>
+  <text class="s" x="691" y="495" text-anchor="middle">image layer pulls skip the NAT</text>
+
+  <!-- DB subnets -->
+  <rect class="zone" x="40" y="562" width="798" height="96" rx="6"/>
+  <text class="zn" x="54" y="580">ISOLATED DB SUBNETS &#183; NO ROUTE TO THE INTERNET</text>
+  <rect class="boxhi" x="56" y="590" width="470" height="56" rx="6"/>
+  <text class="t"  x="291" y="612" text-anchor="middle">RDS PostgreSQL 16 &#183; db.t4g.micro</text>
+  <text class="s2" x="291" y="629" text-anchor="middle">TLS forced &#183; encrypted &#183; 7-day backups &#183; password rotated by Secrets Manager</text>
+
+  <rect class="box" x="542" y="590" width="280" height="56" rx="6"/>
+  <text class="t" x="682" y="612" text-anchor="middle">Reachable from</text>
+  <text class="s" x="682" y="629" text-anchor="middle">API, worker and bastion only</text>
+
+  <!-- Regional services -->
+  <text class="zn" x="884" y="170">REGIONAL AWS SERVICES</text>
+
+  <rect class="mng" x="884" y="180" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="202" text-anchor="middle">Elastic Container Registry</text>
+  <text class="s" x="1050" y="218" text-anchor="middle">4 repositories &#183; immutable tags &#183; scanned on push</text>
+
+  <rect class="mng" x="884" y="242" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="264" text-anchor="middle">Secrets Manager</text>
+  <text class="s" x="1050" y="280" text-anchor="middle">Firebase service account &#183; Razorpay &#183; database</text>
+
+  <rect class="mng" x="884" y="304" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="326" text-anchor="middle">S3 (private uploads)</text>
+  <text class="s" x="1050" y="342" text-anchor="middle">CAD and STL files &#183; versioned &#183; no public access</text>
+
+  <rect class="mng" x="884" y="366" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="388" text-anchor="middle">Simple Email Service</text>
+  <text class="s" x="1050" y="404" text-anchor="middle">handover OTP, status updates, vendor alerts</text>
+
+  <rect class="mng" x="884" y="428" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="450" text-anchor="middle">CloudWatch Logs</text>
+  <text class="s" x="1050" y="466" text-anchor="middle">6 log groups &#183; 30-day retention &#183; Container Insights</text>
+
+  <rect class="mng" x="884" y="490" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="512" text-anchor="middle">CodeBuild</text>
+  <text class="s" x="1050" y="528" text-anchor="middle">builds and pushes all four container images</text>
+
+  <rect class="mng" x="884" y="552" width="332" height="52" rx="6"/>
+  <text class="t" x="1050" y="574" text-anchor="middle">Application Auto Scaling</text>
+  <text class="s" x="1050" y="590" text-anchor="middle">API and storefront 2&#8594;6 tasks at 60% CPU</text>
+
+  <!-- Flows. Routed through the gutters so no connector crosses a box. -->
+  <g class="ln" fill="none">
+    <line x1="130" y1="124" x2="150" y2="204"/>
+    <line x1="322" y1="124" x2="322" y2="204"/>
+    <line x1="742" y1="124" x2="480" y2="204"/>
+    <line x1="176" y1="270" x2="176" y2="318"/>
+    <line x1="428" y1="270" x2="428" y2="318"/>
+    <polyline points="72,270 48,292 48,408 52,408"/>
+    <line x1="691" y1="378" x2="691" y2="386"/>
+    <line x1="150" y1="446" x2="150" y2="586"/>
+    <polyline points="428,446 428,530 302,530 302,586"/>
+    <line x1="682" y1="206" x2="682" y2="132"/>
+  </g>
+  <g class="ln dash" fill="none">
+    <polyline points="604,99 868,99 868,349 826,349"/>
+  </g>
+
+  <text class="fl" x="404" y="172">webhook /v1/webhooks/razorpay</text>
+  <text class="fl" x="514" y="140" text-anchor="middle">SSM port-forward</text>
+  <text class="fl" x="682" y="170" text-anchor="middle">egress to Razorpay, Firebase, SES</text>
+  <text class="fl" x="60" y="290">/v1</text>
+
+  <!-- Legend and notes -->
+  <g>
+    <line x1="40" y1="706" x2="76" y2="706" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <text class="s2" x="84" y="710">live request traffic</text>
+    <line x1="220" y1="706" x2="256" y2="706" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+    <text class="s2" x="264" y="710">administrative or one-off path</text>
+    <rect x="470" y="699" width="14" height="12" rx="3" fill="#ffffff" stroke="#2563eb"/>
+    <text class="s2" x="492" y="710">stateful or primary component</text>
+  </g>
+  <text class="s" x="40" y="738">Customers never choose a vendor: the delivery location resolves every approved, online store whose radius covers it, and the server assigns the order to the store that</text>
+  <text class="s" x="40" y="752">can supply the whole cart, preferring the nearest, then the cheapest. Prices, fees and stock are always computed server-side inside one locking transaction.</text>
+</svg>
