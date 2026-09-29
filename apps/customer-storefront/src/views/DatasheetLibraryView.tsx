@@ -14,7 +14,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Product, AppView } from '../types';
-import { PRODUCTS } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 interface DatasheetLibraryViewProps {
   onNavigate: (view: AppView) => void;
@@ -25,8 +25,10 @@ interface DatasheetLibraryViewProps {
 export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({ 
   onNavigate, 
   onSelectProduct,
-  products = PRODUCTS
+  products: productsProp,
 }) => {
+  const { products: storeProducts } = useStore();
+  const PRODUCTS = productsProp ?? storeProducts;
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeModalProduct, setActiveModalProduct] = useState<Product | null>(null);

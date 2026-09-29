@@ -397,7 +397,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                 className="w-full bg-[#6366f1] hover:bg-[#d44000] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-md shadow-orange-500/20 cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
-                <span>Proceed to Stripe Checkout</span>
+                <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </button>
 
@@ -406,7 +406,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                 <div className="flex items-center justify-center space-x-3 text-[11px] text-slate-500">
                   <span className="flex items-center space-x-1">
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Stripe 256-Bit SSL</span>
+                    <span>Secured by Razorpay</span>
                   </span>
                   <span>•</span>
                   <span>PCI-DSS Level 1</span>

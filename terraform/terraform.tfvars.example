@@ -1,0 +1,21 @@
+# Copy to terraform.tfvars (git-ignored) and replace the placeholders.
+# AWS credentials do NOT go here. On the machine with access run:
+#   aws configure --profile spaceborn
+# and Terraform will pick them up through aws_profile.
+
+aws_profile    = "spaceborn"
+aws_account_id = "000000000000" # REPLACE: your 12-digit AWS account ID
+aws_region     = "ap-south-1"
+environment    = "dev"
+
+firebase_project_id = "REPLACE_WITH_FIREBASE_PROJECT_ID"
+
+domain_name         = "spaceborn.in"
+acm_certificate_arn = "" # REPLACE: arn:aws:acm:ap-south-1:<account>:certificate/<id> covering spaceborn.in and *.spaceborn.in
+
+admin_allowed_cidrs = [] # e.g. ["10.8.0.0/16"] if you add a VPN
+
+image_tag = "latest" # CI sets this to the git SHA
+
+db_instance_class = "db.t4g.micro"
+db_multi_az       = false # set true for prod

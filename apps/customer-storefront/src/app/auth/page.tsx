@@ -1,29 +1,31 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useStore } from '../../context/StoreContext';
-import { AuthView } from '../../views/AuthView';
+import { useAuth } from '@spaceborn/web-core/auth';
+import { SignInPanel } from '@spaceborn/web-core/sign-in';
+
+function safeRedirect(target: string | null) {
+  return target && target.startsWith('/') && !target.startsWith('//') ? target : '/catalog';
+}
 
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const mode = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
-  const { loginUser } = useStore();
+  const { user, loading } = useAuth();
+  const next = safeRedirect(searchParams.get('next'));
 
+  useEffect(() => {
+    if (!loading && user) router.replace(next);
+  }, [loading, user, next, router]);
+
+  if (loading || user) {
+    return <div className="min-h-[50vh] flex items-center justify-center text-xs text-[#7a6274]">Loading...</div>;
+  }
   return (
-    <AuthView
-      initialMode={mode}
-      onLoginSuccess={(user) => {
-        loginUser(user);
-        router.push('/catalog');
-      }}
-      onNavigate={(view) => {
-        if (view === 'catalog') router.push('/catalog');
-        else if (view === 'home') router.push('/');
-        else router.push(`/${view}`);
-      }}
-    />
+    <div className="py-10">
+      <SignInPanel title="Sign in to Spaceborn" subtitle="Electronics delivered in minutes from stores near you." allowSignUp />
+    </div>
   );
 }
 

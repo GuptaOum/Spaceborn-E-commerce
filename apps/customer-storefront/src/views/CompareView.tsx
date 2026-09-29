@@ -13,7 +13,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Product, AppView } from '../types';
-import { PRODUCTS } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 interface CompareViewProps {
   compareList: Product[];
@@ -34,6 +34,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
   onNavigate,
   onSelectProduct,
 }) => {
+  const { products: PRODUCTS } = useStore();
   const [selectedToAdd, setSelectedToAdd] = useState('');
   const activeProducts = compareList;
 

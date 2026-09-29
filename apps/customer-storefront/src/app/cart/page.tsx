@@ -15,16 +15,10 @@ export default function CartPage() {
     removeFromCart,
   } = useStore();
 
-  const [couponCode, setCouponCode] = useState('');
-  const [discountPercent, setDiscountPercent] = useState(0);
+  const [couponCode] = useState('');
+  const discountPercent = 0;
 
-  const handleApplyCoupon = (code: string) => {
-    if (code.toUpperCase() === 'SPACE10' || code.toUpperCase() === 'MAKER10') {
-      setDiscountPercent(10);
-      return { success: true, message: '10% Maker discount applied!' };
-    }
-    return { success: false, message: 'Invalid coupon code. Try SPACE10.' };
-  };
+  const handleApplyCoupon = (_code: string) => ({ success: false, message: 'Coupons are not available yet.' });
 
   return (
     <CartReviewView

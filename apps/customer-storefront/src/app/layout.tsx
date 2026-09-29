@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Script from 'next/script';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider } from '@spaceborn/web-core/auth';
 import { StoreProvider } from '../context/StoreContext';
 import { NextAppShell } from '../components/NextAppShell';
 

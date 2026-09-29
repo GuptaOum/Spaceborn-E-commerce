@@ -1,40 +1,62 @@
-# Subnet Group for RDS (RDS requires at least 2 subnets in different AZs normally, 
-# but for a simple dev setup we can create a secondary private subnet if needed, 
-# or force it into one if Multi-AZ is false)
-
-# Create a second private subnet for RDS in a different AZ to satisfy RDS subnet group requirements
-resource "aws_subnet" "private_db" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.3.0/24"
-  map_public_ip_on_launch = false
-  availability_zone       = "us-east-1b"
-  tags                    = { Name = "spaceborn-private-db-subnet" }
+resource "aws_db_subnet_group" "main" {
+  name       = "${local.name}-db"
+  subnet_ids = aws_subnet.db[*].id
 }
 
-resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "spaceborn-rds-subnet-group"
-  subnet_ids = [aws_subnet.private.id, aws_subnet.private_db.id]
+resource "aws_db_parameter_group" "main" {
+  name   = "${local.name}-pg16"
+  family = "postgres16"
 
-  tags = {
-    Name = "Spaceborn DB subnet group"
+  parameter {
+    name  = "rds.force_ssl"
+    value = "1"
+  }
+
+  parameter {
+    name  = "log_min_duration_statement"
+    value = "500"
+  }
+
+  parameter {
+    name  = "idle_in_transaction_session_timeout"
+    value = "60000"
   }
 }
 
-# RDS PostgreSQL Instance
-resource "aws_db_instance" "postgres" {
-  identifier             = "spaceborn-db"
-  instance_class         = "db.t3.micro"
-  allocated_storage      = 20
-  engine                 = "postgres"
-  engine_version         = "15.3"
-  username               = "postgres"
-  password               = var.db_password # Must be passed via variables or secrets
-  db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+resource "aws_db_instance" "main" {
+  identifier     = "${local.name}-db"
+  engine         = "postgres"
+  engine_version = var.db_engine_version
+  instance_class = var.db_instance_class
+
+  db_name  = "spaceborn"
+  username = "spaceborn_admin"
+
+  # RDS generates the password and rotates it in Secrets Manager; it never touches Terraform state.
+  manage_master_user_password = true
+
+  allocated_storage     = var.db_allocated_storage
+  max_allocated_storage = var.db_max_allocated_storage
+  storage_type          = "gp3"
+  storage_encrypted     = true
+
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  vpc_security_group_ids = [aws_security_group.db.id]
+  parameter_group_name   = aws_db_parameter_group.main.name
   publicly_accessible    = false
-  skip_final_snapshot    = true # Set to false for production
+  multi_az               = var.db_multi_az
 
-  tags = {
-    Name = "spaceborn-postgres-rds"
-  }
+  backup_retention_period    = var.db_backup_retention_days
+  backup_window              = "20:30-21:00"
+  maintenance_window         = "sun:21:30-sun:22:30"
+  auto_minor_version_upgrade = true
+  copy_tags_to_snapshot      = true
+
+  deletion_protection       = var.environment == "prod"
+  skip_final_snapshot       = var.environment != "prod"
+  final_snapshot_identifier = "${local.name}-db-final"
+
+  enabled_cloudwatch_logs_exports = ["postgresql"]
+
+  tags = { Name = "${local.name}-db" }
 }

@@ -8,9 +8,13 @@ import { Product } from '../../../types';
 
 export default function ProductClientPage({ productId }: { productId: string }) {
   const router = useRouter();
-  const { products, addToCart, setSelectedProduct } = useStore();
+  const { products, addToCart, setSelectedProduct, catalogStatus } = useStore();
 
-  const product = products.find((p) => p.id === productId) || products[0];
+  const product = products.find((p) => p.id === productId);
+
+  if (!product && catalogStatus === 'loading') {
+    return <div className="min-h-[50vh] flex items-center justify-center text-xs text-[#7a6274]">Loading...</div>;
+  }
 
   const handleSelectProduct = (prod: Product) => {
     setSelectedProduct(prod);
@@ -25,7 +29,7 @@ export default function ProductClientPage({ productId }: { productId: string }) 
   if (!product) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <p className="text-sm font-bold text-[#7a6274]">Product not found.</p>
+        <p className="text-sm font-bold text-[#7a6274]">This product is not available at the store near you.</p>
       </div>
     );
   }

@@ -36,17 +36,7 @@ interface HeaderProps {
   onSelectProduct: (p: Product) => void;
 }
 
-const WAREHOUSE_HUBS = [
-  { city: 'Kanpur', area: 'Kanpur Center, Mall Road', pincode: '208001', eta: '10 MINS', active: true },
-  { city: 'Bengaluru', area: 'Koramangala 4th Block', pincode: '560034', eta: '12 MINS', active: false },
-  { city: 'Delhi', area: 'Connaught Place / Okhla', pincode: '110020', eta: '10 MINS', active: false },
-  { city: 'Noida', area: 'Sector 62 Tech Hub', pincode: '201301', eta: '12 MINS', active: false },
-  { city: 'Pune', area: 'Hinjawadi Phase 1', pincode: '411057', eta: '15 MINS', active: false },
-  { city: 'Chennai', area: 'OMR Tech Corridor, Taramani', pincode: '600113', eta: '12 MINS', active: false },
-  { city: 'Hyderabad', area: 'HITEC City, Madhapur', pincode: '500081', eta: '15 MINS', active: false },
-];
-
-import { useStore } from '../context/StoreContext';
+import { LOCATION_PRESETS, useStore } from '../context/StoreContext';
 
 export const Header: React.FC<HeaderProps> = ({
   cart,
@@ -61,11 +51,17 @@ export const Header: React.FC<HeaderProps> = ({
   products,
   onSelectProduct,
 }) => {
-  const { selectedCity, setSelectedCity } = useStore();
+  const { location, setLocation, locateMe, activeStore, catalogStatus } = useStore();
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const selectedHub = WAREHOUSE_HUBS.find(h => h.city === selectedCity) || WAREHOUSE_HUBS[0];
+  const [locateError, setLocateError] = useState<string | null>(null);
+  const deliveryLabel =
+    catalogStatus === 'loading'
+      ? 'Finding nearest store…'
+      : activeStore
+        ? `Delivery in ${activeStore.etaMinutes} mins`
+        : 'Not serviceable here yet';
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Cycling search placeholder like Blinkit
@@ -131,11 +127,11 @@ export const Header: React.FC<HeaderProps> = ({
               className="hidden sm:flex flex-col text-left cursor-pointer group pl-2 sm:pl-3 border-l border-[#f9bf8f]/60"
             >
               <div className="flex items-center space-x-1 text-[#0c831f] font-bold text-xs">
-                <span>Delivery in {selectedHub.eta}</span>
+                <span>{deliveryLabel}</span>
               </div>
               <div className="flex items-center space-x-1 text-xs text-[#34222e]/80 font-medium">
                 <MapPin className="w-3.5 h-3.5 text-[#e2434b]" />
-                <span className="truncate max-w-[170px]">{selectedHub.area}</span>
+                <span className="truncate max-w-[170px]">{location.area}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-[#34222e]/60 group-hover:translate-y-0.5 transition-transform" />
               </div>
             </div>
@@ -334,16 +330,29 @@ export const Header: React.FC<HeaderProps> = ({
               Choose your location for 10-15 minute delivery.
             </p>
 
+            <button
+              onClick={() => {
+                setLocateError(null);
+                locateMe()
+                  .then(() => setShowLocationModal(false))
+                  .catch((err: Error) => setLocateError(err.message));
+              }}
+              className="mb-3 w-full rounded-2xl border border-[#0c831f] bg-[#f2fcf4] p-3 text-xs font-bold text-[#0c831f] cursor-pointer"
+            >
+              Use my current location
+            </button>
+            {locateError && <p className="mb-3 text-xs text-[#e2434b]">{locateError}</p>}
+
             <div className="space-y-2">
-              {WAREHOUSE_HUBS.map((hub) => (
+              {LOCATION_PRESETS.map((preset) => (
                 <div
-                  key={hub.pincode}
+                  key={preset.label}
                   onClick={() => {
-                    setSelectedCity(hub.city);
+                    setLocation(preset);
                     setShowLocationModal(false);
                   }}
                   className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
-                    selectedHub.pincode === hub.pincode
+                    location.label === preset.label
                       ? 'border-[#0c831f] bg-[#f2fcf4] ring-1 ring-[#0c831f]'
                       : 'border-[#f9bf8f]/40 hover:border-[#f9bf8f] hover:bg-[#fee9d7]/30'
                   }`}
@@ -352,17 +361,11 @@ export const Header: React.FC<HeaderProps> = ({
                     <MapPin className="w-4 h-4 text-[#e2434b] mt-0.5 shrink-0" />
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-[#34222e]">{hub.city}</span>
-                        <span className="text-[10px] bg-[#fee9d7] px-1.5 py-0.5 rounded text-[#34222e]">{hub.pincode}</span>
+                        <span className="text-xs font-bold text-[#34222e]">{preset.label}</span>
+                        <span className="text-[10px] bg-[#fee9d7] px-1.5 py-0.5 rounded text-[#34222e]">{preset.pincode}</span>
                       </div>
-                      <p className="text-xs text-[#7a6274] mt-0.5">{hub.area}</p>
+                      <p className="text-xs text-[#7a6274] mt-0.5">{preset.area}</p>
                     </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-xs font-bold text-[#0c831f] bg-white border border-[#0c831f]/20 px-2 py-0.5 rounded-md">
-                      {hub.eta}
-                    </span>
                   </div>
                 </div>
               ))}

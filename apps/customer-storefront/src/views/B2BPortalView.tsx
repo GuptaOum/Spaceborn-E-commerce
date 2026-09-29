@@ -16,7 +16,7 @@ import {
   Percent
 } from 'lucide-react';
 import { Product, CartItem, BomItem, AppView, UserProfile } from '../types';
-import { PRODUCTS } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 interface B2BPortalViewProps {
   onNavigate: (view: AppView) => void;
@@ -38,38 +38,10 @@ DEV-ESP32-S3-WROOM, 15
 SEN-TF-LUNA-LIDAR, 5`
   );
 
-  const [bomItems, setBomItems] = useState<BomItem[]>([
-    {
-      id: 'bom-1',
-      mpnOrQuery: 'MOT-N20-12V-300E',
-      quantity: 25,
-      matchedProduct: PRODUCTS[0],
-      status: 'matched'
-    },
-    {
-      id: 'bom-2',
-      mpnOrQuery: 'DRV-TB6600-4A',
-      quantity: 10,
-      matchedProduct: PRODUCTS[1],
-      status: 'matched'
-    },
-    {
-      id: 'bom-3',
-      mpnOrQuery: 'DEV-ESP32-S3-WROOM',
-      quantity: 15,
-      matchedProduct: PRODUCTS[2],
-      status: 'matched'
-    },
-    {
-      id: 'bom-4',
-      mpnOrQuery: 'SEN-TF-LUNA-LIDAR',
-      quantity: 5,
-      matchedProduct: PRODUCTS[3],
-      status: 'matched'
-    }
-  ]);
+  const { products: PRODUCTS } = useStore();
+  const [bomItems, setBomItems] = useState<BomItem[]>([]);
 
-  const [appliedGstin, setAppliedGstin] = useState('29AABCS9482Q1Z7');
+  const [appliedGstin, setAppliedGstin] = useState('');
   const [showRfqModal, setShowRfqModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 

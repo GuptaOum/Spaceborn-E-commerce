@@ -1,6 +1,0 @@
-{
-  "name": "Spaceborn.in - Aerospace & Robotics Megastore",
-  "description": "Spaceborn.in - Premier aerospace electronics, robotics components, and deep-tech hardware store with technical datasheets, B2B GST invoicing, live order telemetry, and secure Stripe payment processing.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

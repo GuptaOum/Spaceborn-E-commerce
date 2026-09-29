@@ -1,0 +1,19 @@
+{
+  "name": "spaceborn",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @spaceborn/api",
+    "dev:worker": "npm run dev:worker -w @spaceborn/api",
+    "dev:storefront": "npm run dev -w customer-storefront",
+    "dev:vendor": "npm run dev -w vendor-hub",
+    "dev:admin": "npm run dev -w admin-panel",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  }
+}

@@ -36,3 +36,13 @@ fix_all.py
 
 # TypeScript
 *.tsbuildinfo
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+.uploads/

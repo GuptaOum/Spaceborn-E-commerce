@@ -29,14 +29,13 @@ interface HomeViewProps {
 
 // Clean Blinkit-style category aisles with crisp Lucide icons
 const QUICK_CATEGORIES = [
-  { name: 'Motors & Drivers', icon: Cog, color: '#b45309', category: 'Motors & Drivers', bg: '#FEF3C7' },
-  { name: 'Dev Boards', icon: Cpu, color: '#0369a1', category: 'Development Boards', bg: '#E0F2FE' },
-  { name: 'Sensors & Modules', icon: Radio, color: '#047857', category: 'Sensors & Modules', bg: '#ECFDF5' },
-  { name: 'Batteries & Power', icon: BatteryCharging, color: '#b91c1c', category: 'Batteries & Chargers', bg: '#FEE2E2' },
-  { name: 'Tools & Soldering', icon: Wrench, color: '#6d28d9', category: 'Tools & Soldering', bg: '#EDE9FE' },
-  { name: 'Robotics & Drone', icon: Bot, color: '#c2410c', category: 'Robotics & Mechanical', bg: '#FFEDD5' },
-  { name: 'Cables & Passives', icon: Cable, color: '#0f766e', category: 'Components & Hardware', bg: '#CCFBF1' },
-  { name: 'DIY Maker Kits', icon: Package, color: '#be185d', category: 'DIY Kits', bg: '#FCE7F3' },
+  { name: 'Dev Boards', icon: Cpu, color: '#0369a1', category: 'Dev Boards & MCUs', bg: '#E0F2FE' },
+  { name: 'Sensors', icon: Radio, color: '#047857', category: 'Sensors & Modules', bg: '#ECFDF5' },
+  { name: 'Motors', icon: Cog, color: '#b45309', category: 'Motors & Drivers', bg: '#FEF3C7' },
+  { name: 'Batteries', icon: BatteryCharging, color: '#b91c1c', category: 'Batteries & Power', bg: '#FEE2E2' },
+  { name: 'Tools', icon: Wrench, color: '#6d28d9', category: 'Tools & Accessories', bg: '#EDE9FE' },
+  { name: 'Mechanical', icon: Bot, color: '#c2410c', category: 'Mechanical & Frames', bg: '#FFEDD5' },
+  { name: 'All Items', icon: Package, color: '#be185d', category: 'All Categories', bg: '#FCE7F3' },
 ];
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -49,7 +48,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   cart,
 }) => {
   const trendingProducts = products.slice(0, 16);
-  const devBoards = products.filter(p => p.category === 'Development Boards').slice(0, 8);
+  const devBoards = products.filter(p => p.category === 'Dev Boards & MCUs').slice(0, 8);
   const sensorsAndMotors = products.filter(p => p.category === 'Sensors & Modules' || p.category === 'Motors & Drivers').slice(0, 8);
 
   return (
@@ -79,6 +78,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
             >
               <span>Explore Catalog</span>
               <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onNavigate('fabrication')}
+              className="bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm cursor-pointer active:scale-95"
+            >
+              3D Print & CNC near you
             </button>
           </div>
         </div>
@@ -122,6 +127,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 </div>
               );
             })}
+            <div
+              onClick={() => onNavigate('fabrication')}
+              className="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
+            >
+              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border border-black/5 bg-[#34222e] flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-2">
+                <Cable className="w-6 h-6 text-[#f8cb46]" />
+              </div>
+              <span className="text-xs font-bold text-[#34222e] leading-tight line-clamp-1">Print & CNC</span>
+            </div>
           </div>
         </section>
 

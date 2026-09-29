@@ -1,208 +1,135 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, Loader2, Lock, ShieldCheck } from 'lucide-react';
+import { api, ApiError, newIdempotencyKey } from '@spaceborn/web-core/api';
+import type { CheckoutPayment, Order } from '@spaceborn/web-core/types';
 import { useStore } from '../context/StoreContext';
-import { Address, AppView, CartItem, Order } from '../types';
+import { payWithRazorpay } from '../lib/razorpay';
+import type { AppView } from '../types';
 
-type RazorpaySuccess = {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-};
-
-type CheckoutOrder = {
-  orderId: string;
-  razorpayOrderId: string;
-  amount: number;
-  currency: string;
-  keyId: string;
-};
+interface PlaceOrderResponse {
+  order: Order;
+  payment: CheckoutPayment;
+}
 
 interface CheckoutViewProps {
   onNavigate?: (view: AppView) => void;
-  cart?: CartItem[];
-  clearCart?: () => void;
-  currentUser?: any;
 }
 
-const emptyAddress = (fullName = '', email = '', phone = ''): Address => ({
-  id: 'checkout-address',
-  fullName,
-  email,
-  phone,
-  addressLine1: '',
-  addressLine2: '',
-  city: '',
-  state: '',
-  pincode: '',
-  type: 'residential',
-});
+interface AddressForm {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  landmark: string;
+  city: string;
+  pincode: string;
+}
 
-const loadRazorpay = () => new Promise<boolean>((resolve) => {
-  if (typeof window === 'undefined') return resolve(false);
-  if ((window as any).Razorpay) return resolve(true);
+const normalizePhone = (value: string) => value.replace(/\D/g, '').slice(-10);
 
-  const existingScript = document.querySelector<HTMLScriptElement>('script[data-razorpay-checkout]');
-  const script = existingScript || document.createElement('script');
-  if (!existingScript) {
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.dataset.razorpayCheckout = 'true';
-  }
-  script.addEventListener('load', () => resolve(Boolean((window as any).Razorpay)), { once: true });
-  script.addEventListener('error', () => resolve(false), { once: true });
-  if (!existingScript) document.body.appendChild(script);
-});
-
-export function CheckoutView(props: CheckoutViewProps) {
+export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   const router = useRouter();
-  let storeContext: any = {};
-  try {
-    storeContext = useStore();
-  } catch (e) {
-    // If rendered outside StoreProvider fallback to props
-  }
+  const { cart, clearCart, currentUser, authLoading, activeStore, location, catalogStatus } = useStore();
 
-  const cart: CartItem[] = props.cart ?? storeContext.cart ?? [];
-  const clearCart = props.clearCart ?? storeContext.clearCart ?? (() => {});
-  const currentUser = props.currentUser ?? storeContext.currentUser ?? null;
-  const addOrder = storeContext.addOrder ?? (() => {});
-
-  const [shippingAddress, setShippingAddress] = useState<Address>(() => emptyAddress());
+  const [address, setAddress] = useState<AddressForm>({
+    fullName: '',
+    phone: '',
+    line1: '',
+    line2: '',
+    landmark: '',
+    city: location.label === 'Current location' ? '' : location.label,
+    pincode: location.pincode,
+  });
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hasAccessToken, setHasAccessToken] = useState(false);
+  // One key per checkout attempt so a double click or retry never creates two orders.
+  const idempotencyKey = useRef(newIdempotencyKey());
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.unitPrice || 0) * item.quantity, 0);
-  const deliveryFee = subtotal > 500 ? 0 : (subtotal > 0 ? 49 : 0);
-  const totalAmount = subtotal + deliveryFee;
+  const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
 
   useEffect(() => {
-    setHasAccessToken(Boolean(typeof window !== 'undefined' && localStorage.getItem('spaceborn_access_token')));
-    const savedAddress = currentUser?.addresses?.find((address: Address) => address.isDefault) || currentUser?.addresses?.[0];
-    if (savedAddress) {
-      setShippingAddress(savedAddress);
-    } else if (currentUser) {
-      setShippingAddress((address) => ({
-        ...address,
-        fullName: currentUser.fullName || currentUser.name || '',
-        email: currentUser.email || '',
-        phone: currentUser.phone || '',
-      }));
-    }
+    if (!currentUser) return;
+    setAddress((a) => ({ ...a, fullName: a.fullName || currentUser.fullName, phone: a.phone || currentUser.phone }));
   }, [currentUser]);
 
-  const updateAddress = (field: keyof Address, value: string) => {
-    setShippingAddress((address) => ({ ...address, [field]: value }));
-  };
+  const navigateTo = (view: AppView) => (onNavigate ? onNavigate(view) : router.push(`/${view}`));
+  const update = (field: keyof AddressForm, value: string) => setAddress((a) => ({ ...a, [field]: value }));
 
-  const navigateTo = (view: AppView) => {
-    if (props.onNavigate) {
-      props.onNavigate(view);
-    } else {
-      router.push(`/${view}`);
-    }
+  const payOrder = async (placed: PlaceOrderResponse) => {
+    setProcessingStep('Complete the payment in Razorpay…');
+    const result = await payWithRazorpay(placed.payment, `Order #${placed.order.orderNumber}`, {
+      name: address.fullName,
+      email: currentUser?.email,
+      contact: normalizePhone(address.phone),
+    });
+    setProcessingStep('Verifying payment…');
+    await api('/payments/razorpay/verify', { method: 'POST', body: { orderId: placed.order.id, ...result } });
   };
 
   const handlePayment = async (event: React.FormEvent) => {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!shippingAddress.fullName.trim() || !shippingAddress.email.trim() || !shippingAddress.phone.trim() ||
-        !shippingAddress.addressLine1.trim() || !shippingAddress.city.trim() || !shippingAddress.state.trim() ||
-        !/^\d{6}$/.test(shippingAddress.pincode.trim())) {
-      setErrorMessage('Enter complete contact and shipping details, including a valid 6-digit PIN code.');
+    if (!currentUser) {
+      router.push('/auth?next=/checkout');
       return;
     }
-    if (!cart.length) {
-      setErrorMessage('Your cart is empty. Add an item before checking out.');
+    if (!activeStore) {
+      setErrorMessage('No store delivers to your selected location yet. Change the location from the header.');
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(normalizePhone(address.phone))) {
+      setErrorMessage('Enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+    if (!/^\d{6}$/.test(address.pincode)) {
+      setErrorMessage('Enter a valid 6-digit PIN code.');
       return;
     }
 
     setIsProcessing(true);
-    setProcessingStep('Preparing secure Razorpay checkout...');
-
-    const razorpayKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-
+    setProcessingStep('Reserving your items…');
     try {
-      // If Razorpay Key is configured, attempt real Razorpay checkout
-      if (razorpayKeyId && (await loadRazorpay())) {
-        setProcessingStep('Choose UPI or card in Razorpay Checkout...');
-        const paymentResult = await new Promise<RazorpaySuccess>((resolve, reject) => {
-          const razorpay = new (window as any).Razorpay({
-            key: razorpayKeyId,
-            amount: totalAmount * 100, // in paise
-            currency: 'INR',
-            name: 'Spaceborn',
-            description: 'Electronics & Robotics Components Order',
-            prefill: {
-              name: shippingAddress.fullName,
-              email: shippingAddress.email,
-              contact: shippingAddress.phone,
-            },
-            theme: { color: '#0c831f' },
-            method: { upi: true, card: true, netbanking: true, wallet: true },
-            handler: resolve,
-            modal: {
-              ondismiss: () => reject(new Error('Payment window was closed before payment completed.')),
-            },
-          });
+      const placed = await api<PlaceOrderResponse>('/orders', {
+        method: 'POST',
+        idempotencyKey: idempotencyKey.current,
+        body: {
+          storeId: activeStore.id,
+          items: cart.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
+          address: {
+            fullName: address.fullName.trim(),
+            phone: normalizePhone(address.phone),
+            line1: address.line1.trim(),
+            line2: address.line2.trim() || undefined,
+            landmark: address.landmark.trim() || undefined,
+            city: address.city.trim(),
+            pincode: address.pincode,
+            latitude: location.latitude,
+            longitude: location.longitude,
+          },
+        },
+      });
 
-          razorpay.on('payment.failed', (response: any) => {
-            reject(new Error(response?.error?.description || 'Razorpay could not complete the payment.'));
-          });
-          razorpay.open();
-        });
-
-        setProcessingStep('Verifying your payment securely...');
-      }
-
-      // Record Order via our secure server endpoint
-      setProcessingStep('Finalizing order securely...');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('spaceborn_access_token') : null;
-      let headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) {
-        try {
-          headers['Authorization'] = 'Bearer ' + JSON.parse(token);
-        } catch {
-          headers['Authorization'] = 'Bearer ' + token;
+      if (placed.order.status === 'pending_payment') {
+        if (placed.payment.provider === 'razorpay') {
+          await payOrder(placed);
+        } else {
+          setProcessingStep('Confirming test payment…');
+          await api('/payments/mock/confirm', { method: 'POST', body: { orderId: placed.order.id } });
         }
       }
 
-      const res = await fetch('/api/checkout-secure', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          cart,
-          total: totalAmount,
-          userId: currentUser?.id || 'guest-session',
-          shippingAddress
-        })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Server could not record order');
-      }
-
-      // Add local order tracking
-      const newOrder: Order = {
-        id: `ord_${Date.now()}`,
-        items: [...cart],
-        total: totalAmount,
-        status: 'placed',
-        date: new Date().toISOString(),
-        handoverPin: Math.floor(1000 + Math.random() * 9000).toString(),
-        shippingAddress
-      } as any;
-
-      if (addOrder) addOrder(newOrder);
       clearCart();
+      idempotencyKey.current = newIdempotencyKey();
       navigateTo('orders');
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        idempotencyKey.current = newIdempotencyKey();
+      }
       setErrorMessage(error instanceof Error ? error.message : 'Unable to complete checkout. Please retry.');
     } finally {
       setIsProcessing(false);
@@ -224,13 +151,19 @@ export function CheckoutView(props: CheckoutViewProps) {
     );
   }
 
-  const fieldClass = 'mt-1.5 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2.5 text-sm text-[#34222e] outline-none transition focus:border-[#0c831f] focus:ring-2 focus:ring-[#0c831f]/10';
+  const fieldClass =
+    'mt-1.5 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2.5 text-sm text-[#34222e] outline-none transition focus:border-[#0c831f] focus:ring-2 focus:ring-[#0c831f]/10';
+
+  const field = (label: string, key: keyof AddressForm, props: React.InputHTMLAttributes<HTMLInputElement> = {}, wide = false) => (
+    <label className={`text-xs font-semibold text-[#7a6274] ${wide ? 'sm:col-span-2' : ''}`}>
+      {label}
+      <input className={fieldClass} value={address[key]} onChange={(e) => update(key, e.target.value)} {...props} />
+    </label>
+  );
 
   return (
     <div className="min-h-screen bg-[#fee9d7] py-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 md:flex-row">
-        
-        {/* Left Column - Delivery & Payment Form */}
         <form onSubmit={handlePayment} className="flex-1 space-y-5 rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-6 shadow-sm">
           <button
             type="button"
@@ -244,6 +177,16 @@ export function CheckoutView(props: CheckoutViewProps) {
             <Lock className="h-5 w-5 text-[#0c831f]" /> Secure Checkout
           </h1>
 
+          {!authLoading && !currentUser && (
+            <div className="rounded-lg border border-[#f9bf8f] bg-white p-3 text-sm text-[#34222e]">
+              You need to{' '}
+              <button type="button" onClick={() => router.push('/auth?next=/checkout')} className="font-bold text-[#0c831f] underline">
+                sign in
+              </button>{' '}
+              before placing an order.
+            </div>
+          )}
+
           {errorMessage && (
             <div role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -251,127 +194,39 @@ export function CheckoutView(props: CheckoutViewProps) {
             </div>
           )}
 
-          {/* Delivery Details */}
           <div>
-            <h2 className="mb-3 font-semibold text-[#34222e]">Contact & Delivery Details</h2>
+            <h2 className="mb-1 font-semibold text-[#34222e]">Delivery details</h2>
+            <p className="mb-3 text-xs text-[#7a6274]">
+              Delivering near <b>{location.area}</b>
+              {activeStore ? ` from ${activeStore.name} (${activeStore.distanceKm} km, ~${activeStore.etaMinutes} min)` : ''}.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-xs font-semibold text-[#7a6274]">
-                Full Name *
-                <input
-                  className={fieldClass}
-                  autoComplete="name"
-                  placeholder="e.g. Rahul Sharma"
-                  required
-                  value={shippingAddress.fullName}
-                  onChange={(e) => updateAddress('fullName', e.target.value)}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274]">
-                Email Address *
-                <input
-                  className={fieldClass}
-                  autoComplete="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  required
-                  value={shippingAddress.email}
-                  onChange={(e) => updateAddress('email', e.target.value)}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274]">
-                Phone Number (for delivery updates) *
-                <input
-                  className={fieldClass}
-                  autoComplete="tel"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  required
-                  value={shippingAddress.phone}
-                  onChange={(e) => updateAddress('phone', e.target.value)}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274]">
-                PIN Code *
-                <input
-                  className={fieldClass}
-                  autoComplete="postal-code"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="6-digit PIN code"
-                  required
-                  value={shippingAddress.pincode}
-                  onChange={(e) => updateAddress('pincode', e.target.value.replace(/\D/g, ''))}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274] sm:col-span-2">
-                Street Address *
-                <input
-                  className={fieldClass}
-                  autoComplete="street-address"
-                  placeholder="Flat/House No., Building, Street area"
-                  required
-                  value={shippingAddress.addressLine1}
-                  onChange={(e) => updateAddress('addressLine1', e.target.value)}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274]">
-                City / Hub *
-                <input
-                  className={fieldClass}
-                  autoComplete="address-level2"
-                  placeholder="e.g. Bengaluru, Mumbai"
-                  required
-                  value={shippingAddress.city}
-                  onChange={(e) => updateAddress('city', e.target.value)}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274]">
-                State *
-                <input
-                  className={fieldClass}
-                  autoComplete="address-level1"
-                  placeholder="e.g. Karnataka, Maharashtra"
-                  required
-                  value={shippingAddress.state}
-                  onChange={(e) => updateAddress('state', e.target.value)}
-                />
-              </label>
-
-              <label className="text-xs font-semibold text-[#7a6274] sm:col-span-2">
-                Landmark, Suite, Apartment (optional)
-                <input
-                  className={fieldClass}
-                  placeholder="Near Tech Park, Floor 3"
-                  value={shippingAddress.addressLine2 || ''}
-                  onChange={(e) => updateAddress('addressLine2', e.target.value)}
-                />
-              </label>
+              {field('Full Name *', 'fullName', { autoComplete: 'name', required: true, minLength: 2 })}
+              {field('Mobile Number *', 'phone', { autoComplete: 'tel', type: 'tel', required: true, placeholder: '98765 43210' })}
+              {field('Flat / House No., Building, Street *', 'line1', { autoComplete: 'address-line1', required: true, minLength: 3 }, true)}
+              {field('Area / Locality', 'line2', { autoComplete: 'address-line2' })}
+              {field('Landmark', 'landmark')}
+              {field('City *', 'city', { autoComplete: 'address-level2', required: true })}
+              {field('PIN Code *', 'pincode', { autoComplete: 'postal-code', inputMode: 'numeric', maxLength: 6, required: true })}
             </div>
           </div>
 
-          {/* Razorpay Trust & Payment Methods Banner */}
           <div className="rounded-2xl border border-[#0c831f]/20 bg-[#f2fcf4] p-4 text-xs text-[#0c831f]">
             <div className="flex items-start gap-2.5">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
               <div>
-                <p className="font-semibold text-[#0c831f]">Instant Checkout via Razorpay</p>
+                <p className="font-semibold text-[#0c831f]">Pay securely via Razorpay</p>
                 <p className="mt-0.5 text-slate-600">
-                  Pay securely with UPI (GPay, PhonePe, Paytm), Credit/Debit Card, Net Banking, or Wallets through Razorpay. Card details are never stored on Spaceborn servers.
+                  UPI, cards, net banking and wallets. Prices and stock are confirmed by the store when you pay; card details never
+                  touch Spaceborn servers.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Checkout Submit Button */}
           <button
             type="submit"
-            disabled={isProcessing}
+            disabled={isProcessing || catalogStatus !== 'ready' || !activeStore}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0c831f] px-4 py-3.5 font-bold text-white shadow-sm transition hover:bg-[#096618] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {isProcessing ? (
@@ -379,53 +234,38 @@ export function CheckoutView(props: CheckoutViewProps) {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 {processingStep || 'Processing...'}
               </>
+            ) : currentUser ? (
+              'Place order & pay'
             ) : (
-              `Pay ₹${totalAmount.toLocaleString('en-IN')} with UPI or Card`
+              'Sign in to place order'
             )}
           </button>
         </form>
 
-        {/* Right Column - Order Summary */}
         <aside className="h-fit w-full space-y-4 md:w-80">
           <div className="rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-5 shadow-sm">
             <h2 className="mb-3 font-bold text-[#34222e]">Order Summary</h2>
-            
             <div className="mb-4 max-h-48 space-y-2.5 overflow-y-auto">
               {cart.map((item) => (
                 <div key={item.product.id} className="flex justify-between gap-3 text-sm">
                   <span className="truncate text-[#7a6274]">
                     {item.quantity}x {item.product.name}
                   </span>
-                  <span className="font-semibold text-[#34222e]">
-                    ₹{((item.unitPrice || 0) * item.quantity).toLocaleString('en-IN')}
-                  </span>
+                  <span className="font-semibold text-[#34222e]">₹{(item.unitPrice * item.quantity).toLocaleString('en-IN')}</span>
                 </div>
               ))}
             </div>
-
             <div className="space-y-2 border-t border-[#f9bf8f]/40 pt-3 text-sm">
-              <div className="flex justify-between text-[#7a6274]">
-                <span>Subtotal</span>
+              <div className="flex justify-between font-bold text-[#34222e]">
+                <span>Items</span>
                 <span>₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-[#7a6274]">
-                <span>Delivery (10 mins)</span>
-                <span>
-                  {deliveryFee === 0 ? (
-                    <b className="font-bold text-[#0c831f]">FREE</b>
-                  ) : (
-                    `₹${deliveryFee}`
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between border-t border-[#f9bf8f]/40 pt-3 text-lg font-bold text-[#34222e]">
-                <span>Total Pay</span>
-                <span>₹{totalAmount.toLocaleString('en-IN')}</span>
-              </div>
+              <p className="text-xs text-[#7a6274]">
+                Delivery is free above ₹499. Delivery and platform fees are added by the server and shown before you pay.
+              </p>
             </div>
           </div>
         </aside>
-
       </div>
     </div>
   );

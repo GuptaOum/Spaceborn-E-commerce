@@ -1063,16 +1063,13 @@ export const INITIAL_PRODUCTS: Product[] = [
 ];
 
 export const CATEGORIES = [
-  { id: 'all', name: 'All Categories', count: 1840 },
-  { id: 'motors-drivers', name: 'Motors & Drivers', count: 420 },
-  { id: 'dev-boards', name: 'Development Boards', count: 315 },
-  { id: 'sensors-modules', name: 'Sensors & Modules', count: 380 },
-  { id: 'batteries-chargers', name: 'Batteries & Chargers', count: 190 },
-  { id: 'diy-kits', name: 'DIY Kits', count: 145 },
-  { id: '3d-printing', name: '3D Printing & CNC', count: 185 },
-  { id: 'robotics-mechanical', name: 'Robotics & Mechanical', count: 260 },
-  { id: 'components', name: 'Components & Hardware', count: 450 },
-  { id: 'tools-soldering', name: 'Tools & Soldering', count: 120 }
+  { id: 'all', name: 'All Categories', count: 0 },
+  { id: 'dev-boards', name: 'Dev Boards & MCUs', count: 0 },
+  { id: 'sensors', name: 'Sensors & Modules', count: 0 },
+  { id: 'motors', name: 'Motors & Drivers', count: 0 },
+  { id: 'power', name: 'Batteries & Power', count: 0 },
+  { id: 'accessories', name: 'Tools & Accessories', count: 0 },
+  { id: 'mechanical', name: 'Mechanical & Frames', count: 0 },
 ];
 
 export const MOTOR_SUBCATEGORIES = [

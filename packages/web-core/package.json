@@ -1,0 +1,25 @@
+{
+  "name": "@spaceborn/web-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api.ts",
+    "./auth": "./src/auth.tsx",
+    "./types": "./src/types.ts",
+    "./format": "./src/format.ts",
+    "./sign-in": "./src/SignInPanel.tsx",
+    "./use-load": "./src/useLoad.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "firebase": "^11.0.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.8.0"
+  }
+}

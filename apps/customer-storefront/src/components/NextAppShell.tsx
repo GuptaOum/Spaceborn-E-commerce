@@ -55,13 +55,10 @@ export const NextAppShell: React.FC<{ children: React.ReactNode }> = ({ children
         router.push('/orders');
         break;
       case 'vendor':
-        router.push('/vendor');
+        window.location.href = process.env.NEXT_PUBLIC_VENDOR_HUB_URL ?? 'http://localhost:3001';
         break;
       case 'profile':
         router.push('/profile');
-        break;
-      case 'admin':
-        router.push('/admin');
         break;
       case 'b2b':
         router.push('/b2b');
