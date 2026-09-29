@@ -44,5 +44,14 @@ fix_all.py
 *.tfvars
 !*.tfvars.example
 crash.log
+tfplan
+*.tfplan
 
 .uploads/
+
+# Editor and local tooling metadata
+.vscode/
+.idea/
+CLAUDE.md
+AGENTS.md
+app.log

@@ -23,6 +23,11 @@ const schema = z.object({
   UPLOADS_BUCKET: z.string().optional().transform(unset),
   UPLOAD_DIR: z.string().default('.uploads'),
   MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(50),
+  MAIL_PROVIDER: z.enum(['log', 'ses']).default('log'),
+  MAIL_FROM: z.string().optional().transform(unset),
+  MAIL_CONFIGURATION_SET: z.string().optional().transform(unset),
+  PUBLIC_ORIGIN: z.string().url().default('http://localhost:3000'),
+  VENDOR_ORIGIN: z.string().url().default('http://localhost:3001'),
 });
 
 function load() {
@@ -34,6 +39,7 @@ function load() {
   if (isProd && !razorpayConfigured) throw new Error('Razorpay credentials are required in production');
   if (isProd && env.DB_SSL !== 'require') throw new Error('DB_SSL must be "require" in production');
   if (isProd && !env.UPLOADS_BUCKET) throw new Error('UPLOADS_BUCKET is required in production');
+  if (env.MAIL_PROVIDER === 'ses' && !env.MAIL_FROM) throw new Error('MAIL_FROM is required when MAIL_PROVIDER=ses');
 
   return {
     ...env,

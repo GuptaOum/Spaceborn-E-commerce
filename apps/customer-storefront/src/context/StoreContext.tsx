@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
-import type { CatalogProduct, NearbyStore } from '@spaceborn/web-core/types';
+import type { CatalogOffer, GeoPoint, NearbyStore } from '@spaceborn/web-core/types';
 import type { CartItem, GstDetails, Product, UserProfile } from '../types';
 
 export interface DeliveryLocation {
@@ -24,6 +24,14 @@ export const LOCATION_PRESETS: DeliveryLocation[] = [
 
 export type CatalogStatus = 'loading' | 'ready' | 'unserviceable' | 'error';
 
+/** What the customer sees about their delivery area. Individual vendors are chosen by the server. */
+export interface ServiceArea {
+  nearbyStores: number;
+  /** Fastest ETA among nearby stores, for the header badge. */
+  etaMinutes: number | null;
+  nearest: NearbyStore | null;
+}
+
 interface StoreContextType {
   products: Product[];
   selectedCategory: string;
@@ -38,7 +46,9 @@ interface StoreContextType {
   location: DeliveryLocation;
   setLocation: (location: DeliveryLocation) => void;
   locateMe: () => Promise<void>;
-  activeStore: NearbyStore | null;
+  locateByPincode: (pincode: string) => Promise<void>;
+  searchPlaces: (query: string) => Promise<DeliveryLocation[]>;
+  serviceArea: ServiceArea;
   catalogStatus: CatalogStatus;
   catalogError: string | null;
   refreshCatalog: () => Promise<void>;
@@ -74,7 +84,7 @@ const PLACEHOLDER_IMAGE = '/spaceborn-logo.png';
 const MAX_PER_LINE = 50;
 
 const KEYS = {
-  cart: 'spaceborn_cart_v2',
+  cart: 'spaceborn_cart_v3',
   location: 'spaceborn_location_v2',
   wishlist: 'spaceborn_wishlist',
   profile: (uid: string) => `spaceborn_profile_${uid}`,
@@ -89,12 +99,12 @@ function readJson<T>(key: string): T | null {
   }
 }
 
-function toProduct(p: CatalogProduct, store: NearbyStore): Product {
+function toProduct(p: CatalogOffer): Product {
   return {
     id: p.id,
-    vendorId: store.id,
-    vendorName: store.name,
-    city: store.city,
+    vendorId: p.storeId,
+    vendorName: p.storeName,
+    city: p.storeCity,
     name: p.name,
     sku: p.sku,
     category: p.categoryName,
@@ -112,14 +122,15 @@ function toProduct(p: CatalogProduct, store: NearbyStore): Product {
     brand: p.brand ?? '',
     packageIncludes: [],
     specifications: p.specs ?? {},
-    deliveryMins: store.etaMinutes,
+    deliveryMins: p.etaMinutes,
+    badge: p.offerCount > 1 ? `${p.offerCount} stores nearby` : undefined,
   };
 }
 
 const EMPTY_GST: GstDetails = { enabled: false, gstin: '', legalName: '', stateCode: '', verified: false };
+const EMPTY_AREA: ServiceArea = { nearbyStores: 0, etaMinutes: null, nearest: null };
 
 interface StoredCart {
-  storeId: string | null;
   items: CartItem[];
 }
 
@@ -127,7 +138,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const auth = useAuth();
 
   const [location, setLocationState] = useState<DeliveryLocation>(LOCATION_PRESETS[0]);
-  const [activeStore, setActiveStore] = useState<NearbyStore | null>(null);
+  const [serviceArea, setServiceArea] = useState<ServiceArea>(EMPTY_AREA);
   const [products, setProducts] = useState<Product[]>([]);
   const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>('loading');
   const [catalogError, setCatalogError] = useState<string | null>(null);
@@ -137,7 +148,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
-  const [cart, setCart] = useState<StoredCart>({ storeId: null, items: [] });
+  const [cart, setCart] = useState<StoredCart>({ items: [] });
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const [profileOverrides, setProfileOverrides] = useState<Partial<UserProfile>>({});
@@ -174,18 +185,19 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setCatalogStatus('loading');
     setCatalogError(null);
     try {
-      const nearby = await api<{ stores: NearbyStore[] }>(`/stores/nearby?lat=${loc.latitude}&lng=${loc.longitude}`);
-      const store = nearby.stores[0] ?? null;
-      setActiveStore(store);
-      if (!store) {
+      const at = `lat=${loc.latitude}&lng=${loc.longitude}`;
+      const [nearby, catalog] = await Promise.all([
+        api<{ stores: NearbyStore[] }>(`/stores/nearby?${at}`),
+        api<{ products: CatalogOffer[]; nearbyStores: number; serviceable: boolean }>(`/catalog/products?${at}&limit=100`),
+      ]);
+      const nearest = nearby.stores[0] ?? null;
+      setServiceArea({ nearbyStores: catalog.nearbyStores, etaMinutes: nearest?.etaMinutes ?? null, nearest });
+      if (!catalog.serviceable) {
         setProducts([]);
         setCatalogStatus('unserviceable');
         return;
       }
-      const res = await api<{ products: CatalogProduct[] }>(`/stores/${store.id}/products?limit=100`);
-      setProducts(res.products.map((p) => toProduct(p, store)));
-      // Each order is fulfilled by one store, so a cart from another store cannot be checked out.
-      setCart((prev) => (prev.storeId && prev.storeId !== store.id ? { storeId: store.id, items: [] } : { ...prev, storeId: store.id }));
+      setProducts(catalog.products.map(toProduct));
       setCatalogStatus('ready');
     } catch (err) {
       setCatalogError((err as Error).message);
@@ -221,6 +233,16 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       );
     });
 
+  const locateByPincode = async (pincode: string) => {
+    const { location: found } = await api<{ location: GeoPoint }>(`/geo/pincode/${pincode.trim()}`);
+    setLocation(found);
+  };
+
+  const searchPlaces = async (query: string) => {
+    const { results } = await api<{ results: GeoPoint[] }>(`/geo/search?q=${encodeURIComponent(query.trim())}`);
+    return results;
+  };
+
   // Prices shown in the cart are refreshed from the live catalog; the server re-prices at checkout anyway.
   const cartItems = useMemo(
     () =>
@@ -231,16 +253,15 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     [cart.items, products],
   );
 
+  // The cart is a list of products, not a store's basket: the server picks the vendor at checkout.
   const addToCart = (product: Product, quantity = 1) => {
     setCart((prev) => {
-      const storeId = product.vendorId ?? prev.storeId;
-      const items = prev.storeId && storeId !== prev.storeId ? [] : prev.items;
-      const existing = items.find((i) => i.product.id === product.id);
+      const existing = prev.items.find((i) => i.product.id === product.id);
       const limit = Math.min(product.stock, MAX_PER_LINE);
       const next = existing
-        ? items.map((i) => (i.product.id === product.id ? { ...i, quantity: Math.min(limit, i.quantity + quantity) } : i))
-        : [...items, { product, quantity: Math.min(limit, quantity), unitPrice: product.price }];
-      return { storeId, items: next.filter((i) => i.quantity > 0) };
+        ? prev.items.map((i) => (i.product.id === product.id ? { ...i, quantity: Math.min(limit, i.quantity + quantity) } : i))
+        : [...prev.items, { product, quantity: Math.min(limit, quantity), unitPrice: product.price }];
+      return { items: next.filter((i) => i.quantity > 0) };
     });
     setIsCartDrawerOpen(true);
   };
@@ -310,7 +331,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     location,
     setLocation,
     locateMe,
-    activeStore,
+    locateByPincode,
+    searchPlaces,
+    serviceArea,
     catalogStatus,
     catalogError,
     refreshCatalog: () => loadCatalog(location),

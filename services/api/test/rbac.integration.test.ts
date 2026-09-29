@@ -1,38 +1,9 @@
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
-import os from 'node:os';
-import path from 'node:path';
-import EmbeddedPostgres from 'embedded-postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { startTestDb } from './testdb.js';
 
-const PORT = 54329;
-const pg = new EmbeddedPostgres({
-  databaseDir: path.join(os.tmpdir(), `spaceborn-test-${process.pid}`),
-  user: 'spaceborn',
-  password: 'spaceborn',
-  port: PORT,
-  persistent: false,
-  initdbFlags: ['--encoding=UTF8', '--locale=C'],
-  onLog: () => {},
-  onError: () => {},
-});
-
-Object.assign(process.env, {
-  NODE_ENV: 'test',
-  DB_HOST: 'localhost',
-  DB_PORT: String(PORT),
-  DB_NAME: 'spaceborn_test',
-  DB_USER: 'spaceborn',
-  DB_PASSWORD: 'spaceborn',
-  DB_SSL: 'disable',
-  FIREBASE_PROJECT_ID: 'spaceborn-test',
-  AUTH_DEV_BYPASS: 'true',
-  RAZORPAY_KEY_ID: '',
-  RAZORPAY_KEY_SECRET: '',
-  LOG_LEVEL: 'silent',
-  UPLOAD_DIR: path.join(os.tmpdir(), `spaceborn-uploads-${process.pid}`),
-});
-
+let testDb: Awaited<ReturnType<typeof startTestDb>>;
 let server: Server;
 let base: string;
 let db: typeof import('../src/db/pool.js');
@@ -66,9 +37,7 @@ async function placeOrder(customer: string, quantity = 1, store = bengaluruStore
 }
 
 beforeAll(async () => {
-  await pg.initialise();
-  await pg.start();
-  await pg.createDatabase('spaceborn_test');
+  testDb = await startTestDb('spaceborn_test', 54329, 'rbac');
 
   db = await import('../src/db/pool.js');
   await (await import('../src/db/migrate.js')).migrate();
@@ -93,8 +62,8 @@ beforeAll(async () => {
 afterAll(async () => {
   server?.close();
   await db?.pool.end();
-  await pg.stop();
-});
+  await testDb?.stop();
+}, 60_000);
 
 const vendorBlr = () => `seed-vendor-bengaluru:vendor:${bengaluruStore}`;
 const vendorPune = () => `seed-vendor-pune:vendor:${puneStore}`;

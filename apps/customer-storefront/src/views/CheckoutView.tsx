@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, Loader2, Lock, ShieldCheck } from 'lucide-react';
 import { api, ApiError, newIdempotencyKey } from '@spaceborn/web-core/api';
-import type { CheckoutPayment, Order } from '@spaceborn/web-core/types';
+import type { CartResolution, CheckoutPayment, Order } from '@spaceborn/web-core/types';
 import { useStore } from '../context/StoreContext';
 import { payWithRazorpay } from '../lib/razorpay';
 import type { AppView } from '../types';
@@ -32,7 +32,9 @@ const normalizePhone = (value: string) => value.replace(/\D/g, '').slice(-10);
 
 export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   const router = useRouter();
-  const { cart, clearCart, currentUser, authLoading, activeStore, location, catalogStatus } = useStore();
+  const { cart, clearCart, removeFromCart, currentUser, authLoading, location, catalogStatus } = useStore();
+  const [resolution, setResolution] = useState<CartResolution | null>(null);
+  const [resolving, setResolving] = useState(false);
 
   const [address, setAddress] = useState<AddressForm>({
     fullName: '',
@@ -56,6 +58,28 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
     setAddress((a) => ({ ...a, fullName: a.fullName || currentUser.fullName, phone: a.phone || currentUser.phone }));
   }, [currentUser]);
 
+  // Ask the server which nearby store would take this cart, so fees and ETA are exact before paying.
+  const cartKey = cart.map((i) => `${i.product.id}:${i.quantity}`).join(',');
+  useEffect(() => {
+    if (!cart.length) return;
+    const controller = new AbortController();
+    setResolving(true);
+    api<CartResolution>('/catalog/resolve', {
+      method: 'POST',
+      signal: controller.signal,
+      body: { lat: location.latitude, lng: location.longitude, items: cart.map((i) => ({ productId: i.product.id, quantity: i.quantity })) },
+    })
+      .then(setResolution)
+      .catch((err) => {
+        if (!(err instanceof ApiError && err.status === 0)) setResolution(null);
+      })
+      .finally(() => setResolving(false));
+    return () => controller.abort();
+  }, [cartKey, location.latitude, location.longitude, cart.length]);
+
+  const unavailable = new Set(resolution?.unavailable ?? []);
+  const canOrder = Boolean(resolution?.store) && unavailable.size === 0;
+
   const navigateTo = (view: AppView) => (onNavigate ? onNavigate(view) : router.push(`/${view}`));
   const update = (field: keyof AddressForm, value: string) => setAddress((a) => ({ ...a, [field]: value }));
 
@@ -78,8 +102,12 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       router.push('/auth?next=/checkout');
       return;
     }
-    if (!activeStore) {
+    if (!resolution?.store) {
       setErrorMessage('No store delivers to your selected location yet. Change the location from the header.');
+      return;
+    }
+    if (unavailable.size) {
+      setErrorMessage('Remove the items marked unavailable to continue.');
       return;
     }
     if (!/^[6-9]\d{9}$/.test(normalizePhone(address.phone))) {
@@ -98,7 +126,6 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
         method: 'POST',
         idempotencyKey: idempotencyKey.current,
         body: {
-          storeId: activeStore.id,
           items: cart.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
           address: {
             fullName: address.fullName.trim(),
@@ -129,6 +156,10 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         idempotencyKey.current = newIdempotencyKey();
+        const details = error.details as { items?: { productId: string }[] } | undefined;
+        if (details?.items?.length) {
+          setResolution((r) => (r ? { ...r, unavailable: details.items!.map((i) => i.productId) } : r));
+        }
       }
       setErrorMessage(error instanceof Error ? error.message : 'Unable to complete checkout. Please retry.');
     } finally {
@@ -198,7 +229,12 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
             <h2 className="mb-1 font-semibold text-[#34222e]">Delivery details</h2>
             <p className="mb-3 text-xs text-[#7a6274]">
               Delivering near <b>{location.area}</b>
-              {activeStore ? ` from ${activeStore.name} (${activeStore.distanceKm} km, ~${activeStore.etaMinutes} min)` : ''}.
+              {resolution?.store
+                ? ` · fulfilled by ${resolution.store.name} (${resolution.store.distanceKm} km away, ~${resolution.store.etaMinutes} min)`
+                : resolving
+                  ? ' · finding the fastest store…'
+                  : ''}
+              .
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {field('Full Name *', 'fullName', { autoComplete: 'name', required: true, minLength: 2 })}
@@ -226,7 +262,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
 
           <button
             type="submit"
-            disabled={isProcessing || catalogStatus !== 'ready' || !activeStore}
+            disabled={isProcessing || catalogStatus !== 'ready' || resolving || !canOrder}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0c831f] px-4 py-3.5 font-bold text-white shadow-sm transition hover:bg-[#096618] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {isProcessing ? (
@@ -245,23 +281,60 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
         <aside className="h-fit w-full space-y-4 md:w-80">
           <div className="rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-5 shadow-sm">
             <h2 className="mb-3 font-bold text-[#34222e]">Order Summary</h2>
-            <div className="mb-4 max-h-48 space-y-2.5 overflow-y-auto">
-              {cart.map((item) => (
-                <div key={item.product.id} className="flex justify-between gap-3 text-sm">
-                  <span className="truncate text-[#7a6274]">
-                    {item.quantity}x {item.product.name}
-                  </span>
-                  <span className="font-semibold text-[#34222e]">₹{(item.unitPrice * item.quantity).toLocaleString('en-IN')}</span>
-                </div>
-              ))}
+            <div className="mb-4 max-h-56 space-y-2.5 overflow-y-auto">
+              {cart.map((item) => {
+                const line = resolution?.lines.find((l) => l.productId === item.product.id);
+                const price = line?.unitPrice ?? item.unitPrice;
+                const missing = unavailable.has(item.product.id);
+                return (
+                  <div key={item.product.id} className="text-sm">
+                    <div className="flex justify-between gap-3">
+                      <span className={`truncate ${missing ? 'text-[#e2434b] line-through' : 'text-[#7a6274]'}`}>
+                        {item.quantity}x {item.product.name}
+                      </span>
+                      <span className="font-semibold text-[#34222e]">₹{(price * item.quantity).toLocaleString('en-IN')}</span>
+                    </div>
+                    {missing && (
+                      <button
+                        type="button"
+                        onClick={() => removeFromCart(item.product.id)}
+                        className="mt-0.5 text-xs font-semibold text-[#e2434b] underline cursor-pointer"
+                      >
+                        Not available nearby right now · remove
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <div className="space-y-2 border-t border-[#f9bf8f]/40 pt-3 text-sm">
-              <div className="flex justify-between font-bold text-[#34222e]">
-                <span>Items</span>
-                <span>₹{subtotal.toLocaleString('en-IN')}</span>
-              </div>
-              <p className="text-xs text-[#7a6274]">
-                Delivery is free above ₹499. Delivery and platform fees are added by the server and shown before you pay.
+            <div className="space-y-1.5 border-t border-[#f9bf8f]/40 pt-3 text-sm">
+              {resolution?.pricing ? (
+                <>
+                  <div className="flex justify-between text-[#7a6274]">
+                    <span>Items</span>
+                    <span>₹{resolution.pricing.itemsTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-[#7a6274]">
+                    <span>Delivery{resolution.store ? ` · ${resolution.store.distanceKm} km` : ''}</span>
+                    <span>{resolution.pricing.deliveryFee === 0 ? 'Free' : `₹${resolution.pricing.deliveryFee.toLocaleString('en-IN')}`}</span>
+                  </div>
+                  <div className="flex justify-between text-[#7a6274]">
+                    <span>Platform fee</span>
+                    <span>₹{resolution.pricing.platformFee.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-[#f9bf8f]/40 pt-2 font-bold text-[#34222e]">
+                    <span>To pay</span>
+                    <span>₹{resolution.pricing.grandTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between font-bold text-[#34222e]">
+                  <span>Items</span>
+                  <span>₹{subtotal.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              <p className="pt-1 text-xs text-[#7a6274]">
+                Delivery is free above ₹499. The nearest store with your items in stock fulfils the order.
               </p>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { errorHandler, notFound } from './errors.js';
 import { adminRouter } from './routes/admin.js';
 import { catalogRouter } from './routes/catalog.js';
 import { fabricationRouter } from './routes/fabrication.js';
+import { geoRouter } from './routes/geo.js';
 import { meRouter } from './routes/me.js';
 import { ordersRouter } from './routes/orders.js';
 import { paymentsRouter } from './routes/payments.js';
@@ -31,6 +32,7 @@ export function createApp() {
   v1.use('/admin', adminRouter);
   v1.use(fabricationRouter);
   v1.use(catalogRouter);
+  v1.use(geoRouter);
 
   app.use('/v1', v1);
   app.use(() => {

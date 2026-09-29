@@ -119,6 +119,12 @@ variable "storefront_max_count" {
   default = 6
 }
 
+variable "mail_from" {
+  type        = string
+  description = "Verified SES sender for transactional mail. Empty disables email (events are only logged)."
+  default     = ""
+}
+
 variable "log_retention_days" {
   type    = number
   default = 30

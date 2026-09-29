@@ -2,7 +2,9 @@ import { config } from './config.js';
 import { pool, withTransaction } from './db/pool.js';
 import { logger } from './logger.js';
 import { expireQuotes, removeOrphanFiles } from './fabrication/service.js';
+import { notifyJobStatus, notifyJobSubmitted, notifyOrderPlaced, notifyOrderStatus } from './notifications.js';
 import { expireReservations } from './orders/service.js';
+import type { OrderStatus } from './orders/status.js';
 import { refundPayment } from './payments/razorpay.js';
 
 const POLL_MS = 3_000;
@@ -35,16 +37,19 @@ async function handle(row: OutboxRow) {
       return;
     }
     case 'fab_job.submitted':
+      await notifyJobSubmitted(row.payload.jobId as string);
+      return;
     case 'fab_job.paid':
+      await notifyJobStatus(row.payload.jobId as string, 'in_production');
+      return;
     case 'fab_job.status_changed':
-      logger.info({ topic: row.topic, ...row.payload }, 'fabrication job event');
+      await notifyJobStatus(row.payload.jobId as string, row.payload.to as string);
       return;
     case 'order.placed':
-      // Hook for vendor push notifications / rider dispatch.
-      logger.info({ orderId: row.payload.orderId }, 'new order for store');
+      await notifyOrderPlaced(row.payload.orderId as string);
       return;
     case 'order.status_changed':
-      logger.info(row.payload, 'order status changed');
+      await notifyOrderStatus(row.payload.orderId as string, row.payload.to as OrderStatus);
       return;
     default:
       logger.warn({ topic: row.topic }, 'unknown outbox topic');
@@ -87,7 +92,7 @@ const ORPHAN_SWEEP_MS = 60 * 60_000;
 let lastOrphanSweep = 0;
 
 async function loop() {
-  logger.info({ payments: config.paymentsMode }, 'worker started');
+  logger.info({ payments: config.paymentsMode, mail: config.MAIL_PROVIDER }, 'worker started');
   while (running) {
     try {
       const expired = await expireReservations();

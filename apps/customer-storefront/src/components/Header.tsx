@@ -36,7 +36,7 @@ interface HeaderProps {
   onSelectProduct: (p: Product) => void;
 }
 
-import { LOCATION_PRESETS, useStore } from '../context/StoreContext';
+import { LOCATION_PRESETS, useStore, type DeliveryLocation } from '../context/StoreContext';
 
 export const Header: React.FC<HeaderProps> = ({
   cart,
@@ -51,17 +51,43 @@ export const Header: React.FC<HeaderProps> = ({
   products,
   onSelectProduct,
 }) => {
-  const { location, setLocation, locateMe, activeStore, catalogStatus } = useStore();
+  const { location, setLocation, locateMe, locateByPincode, searchPlaces, serviceArea, catalogStatus } = useStore();
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
+  const [locateBusy, setLocateBusy] = useState(false);
+  const [placeQuery, setPlaceQuery] = useState('');
+  const [placeResults, setPlaceResults] = useState<DeliveryLocation[]>([]);
   const deliveryLabel =
     catalogStatus === 'loading'
-      ? 'Finding nearest store…'
-      : activeStore
-        ? `Delivery in ${activeStore.etaMinutes} mins`
+      ? 'Finding stores near you…'
+      : serviceArea.etaMinutes
+        ? `Delivery in ${serviceArea.etaMinutes} mins · ${serviceArea.nearbyStores} store${serviceArea.nearbyStores === 1 ? '' : 's'} nearby`
         : 'Not serviceable here yet';
+
+  const submitPlace = async () => {
+    const q = placeQuery.trim();
+    if (!q) return;
+    setLocateError(null);
+    setLocateBusy(true);
+    try {
+      if (/^\d{6}$/.test(q)) {
+        await locateByPincode(q);
+        setShowLocationModal(false);
+        setPlaceQuery('');
+        setPlaceResults([]);
+      } else {
+        const results = await searchPlaces(q);
+        setPlaceResults(results);
+        if (!results.length) setLocateError('No matching place found. Try a PIN code or a landmark.');
+      }
+    } catch (err) {
+      setLocateError((err as Error).message);
+    } finally {
+      setLocateBusy(false);
+    }
+  };
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Cycling search placeholder like Blinkit
@@ -327,7 +353,7 @@ export const Header: React.FC<HeaderProps> = ({
               Select delivery location
             </h3>
             <p className="text-xs text-[#7a6274] mb-4">
-              Choose your location for 10-15 minute delivery.
+              We show everything in stock at stores around you and pick the fastest one for each order.
             </p>
 
             <button
@@ -341,7 +367,50 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Use my current location
             </button>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void submitPlace();
+              }}
+              className="mb-3 flex items-center gap-2"
+            >
+              <input
+                value={placeQuery}
+                onChange={(e) => setPlaceQuery(e.target.value)}
+                placeholder="PIN code or area, e.g. 208001 or Swaroop Nagar"
+                inputMode="text"
+                className="flex-1 rounded-xl border border-[#f9bf8f]/70 bg-white px-3 py-2.5 text-xs text-[#34222e] outline-none focus:border-[#0c831f]"
+              />
+              <button
+                type="submit"
+                disabled={locateBusy || placeQuery.trim().length < 3}
+                className="rounded-xl bg-[#34222e] px-3.5 py-2.5 text-xs font-bold text-[#fee9d7] disabled:opacity-50 cursor-pointer"
+              >
+                {locateBusy ? '…' : 'Find'}
+              </button>
+            </form>
             {locateError && <p className="mb-3 text-xs text-[#e2434b]">{locateError}</p>}
+
+            {placeResults.length > 0 && (
+              <div className="mb-3 space-y-1.5 rounded-2xl border border-[#f9bf8f]/40 p-2">
+                {placeResults.map((r, i) => (
+                  <button
+                    key={`${r.latitude}-${r.longitude}-${i}`}
+                    onClick={() => {
+                      setLocation(r);
+                      setPlaceResults([]);
+                      setPlaceQuery('');
+                      setShowLocationModal(false);
+                    }}
+                    className="w-full rounded-xl px-3 py-2 text-left text-xs hover:bg-[#fee9d7]/50 cursor-pointer"
+                  >
+                    <span className="font-bold text-[#34222e]">{r.area}</span>
+                    {r.pincode && <span className="ml-2 rounded bg-[#fee9d7] px-1.5 py-0.5 text-[10px]">{r.pincode}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="space-y-2">
               {LOCATION_PRESETS.map((preset) => (

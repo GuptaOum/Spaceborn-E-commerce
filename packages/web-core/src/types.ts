@@ -43,6 +43,34 @@ export interface CatalogProduct {
   stock: number;
 }
 
+/** A product as offered near the customer: the best nearby store's price/stock, chosen by the server. */
+export interface CatalogOffer extends CatalogProduct {
+  storeId: string;
+  storeName: string;
+  storeCity: string;
+  distanceKm: number;
+  prepMinutes: number;
+  etaMinutes: number;
+  offerCount: number;
+  minPrice: number | null;
+}
+
+export interface CartResolution {
+  store: { id: string; name: string; city: string; distanceKm: number; etaMinutes: number } | null;
+  lines: { productId: string; quantity: number; unitPrice: number | null; available: number; ok: boolean }[];
+  unavailable: string[];
+  pricing: { itemsTotal: number; deliveryFee: number; platformFee: number; grandTotal: number } | null;
+  nearbyStores: number;
+}
+
+export interface GeoPoint {
+  latitude: number;
+  longitude: number;
+  label: string;
+  area: string;
+  pincode: string;
+}
+
 export interface DeliveryAddress {
   fullName: string;
   phone: string;

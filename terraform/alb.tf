@@ -92,6 +92,59 @@ resource "aws_lb_listener" "public_https" {
 
 locals {
   public_listener_arn = local.https_enabled ? aws_lb_listener.public_https[0].arn : aws_lb_listener.public_http.arn
+  public_origin       = local.https_enabled ? "https://${var.domain_name}" : "http://${aws_lb.public.dns_name}"
+  vendor_origin       = local.https_enabled ? "https://vendor.${var.domain_name}" : "http://${aws_lb.public.dns_name}:8080"
+}
+
+# Without a real domain there is no host header to route on, so the vendor hub gets its own port.
+resource "aws_lb_listener" "vendor_http" {
+  count             = local.https_enabled ? 0 : 1
+  load_balancer_arn = aws_lb.public.arn
+  port              = 8080
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.vendor_hub.arn
+  }
+}
+
+resource "aws_lb_listener_rule" "vendor_block_admin_api" {
+  count        = local.https_enabled ? 0 : 1
+  listener_arn = aws_lb_listener.vendor_http[0].arn
+  priority     = 10
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "application/json"
+      message_body = "{\"error\":\"forbidden\"}"
+      status_code  = "403"
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/v1/admin", "/v1/admin/*"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "vendor_api" {
+  count        = local.https_enabled ? 0 : 1
+  listener_arn = aws_lb_listener.vendor_http[0].arn
+  priority     = 20
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api_public.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/v1/*"]
+    }
+  }
 }
 
 # Admin endpoints are only reachable through the internal load balancer.

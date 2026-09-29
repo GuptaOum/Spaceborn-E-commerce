@@ -8,6 +8,7 @@ import { logger } from '../logger.js';
 import { enqueue } from '../outbox.js';
 import { markFabPaid } from '../fabrication/service.js';
 import { createProviderOrder } from '../payments/razorpay.js';
+import { rankStores } from './fulfilment.js';
 import { etaMinutes, MAX_ITEMS_PER_LINE, priceOrder, RESERVATION_MINUTES, toPaise } from './pricing.js';
 import { canTransition, HOLDS_STOCK, PAID_STATUSES, type Actor, type OrderStatus } from './status.js';
 
@@ -25,7 +26,8 @@ export interface DeliveryAddress {
 
 export interface PlaceOrderInput {
   customerId: string;
-  storeId: string;
+  /** Optional: when omitted the nearest store that can supply the whole cart is chosen. */
+  storeId?: string;
   idempotencyKey: string;
   items: { productId: string; quantity: number }[];
   address: DeliveryAddress;
@@ -173,10 +175,30 @@ export async function placeOrder(input: PlaceOrderInput) {
   let grandTotal: number;
   try {
     ({ orderId, grandTotal } = await withTransaction(async (c) => {
+      let storeId = input.storeId;
+      if (!storeId) {
+        const ranked = await rankStores(c, input.address.latitude, input.address.longitude, quantities);
+        const best = ranked[0];
+        if (!best) throw unprocessable('unserviceable', 'No store delivers to your location yet');
+        if (best.coverable < quantities.size) {
+          const offered = await c.query<{ product_id: string; stock: number }>(
+            `select i.product_id, i.stock from inventory i join products p on p.id = i.product_id
+              where i.store_id = $1 and i.product_id = any($2::uuid[]) and i.is_listed and p.is_active`,
+            [best.storeId, productIds],
+          );
+          const stockById = new Map(offered.rows.map((r) => [r.product_id, r.stock]));
+          const items = productIds
+            .filter((id) => (stockById.get(id) ?? 0) < quantities.get(id)!)
+            .map((id) => ({ productId: id, reason: stockById.has(id) ? 'insufficient_stock' : 'unavailable', available: stockById.get(id) ?? 0 }));
+          throw conflict('No single store near you has everything in your cart', { code: 'partial_availability', storeId: best.storeId, items });
+        }
+        storeId = best.storeId;
+      }
+
       const storeResult = await c.query(
         `select id, latitude, longitude, delivery_radius_km, avg_prep_minutes
            from stores where id = $1 and status = 'approved' and is_online for share`,
-        [input.storeId],
+        [storeId],
       );
       const store = storeResult.rows[0];
       if (!store) throw unprocessable('store_unavailable', 'This store is not taking orders right now');
@@ -192,7 +214,7 @@ export async function placeOrder(input: PlaceOrderInput) {
           where i.store_id = $1 and i.product_id = any($2::uuid[])
           order by i.product_id
           for update of i`,
-        [input.storeId, productIds],
+        [storeId, productIds],
       );
       const byId = new Map(inventory.rows.map((row) => [row.product_id as string, row]));
 
@@ -211,7 +233,7 @@ export async function placeOrder(input: PlaceOrderInput) {
         `update inventory i set stock = i.stock - x.qty
            from unnest($2::uuid[], $3::int[]) as x(product_id, qty)
           where i.store_id = $1 and i.product_id = x.product_id`,
-        [input.storeId, productIds, productIds.map((id) => quantities.get(id))],
+        [storeId, productIds, productIds.map((id) => quantities.get(id))],
       );
 
       const inserted = await c.query<{ id: string }>(
@@ -222,7 +244,7 @@ export async function placeOrder(input: PlaceOrderInput) {
          on conflict (customer_id, idempotency_key) do nothing
          returning id`,
         [
-          input.customerId, input.storeId, pricing.itemsTotal, pricing.deliveryFee, pricing.platformFee,
+          input.customerId, storeId, pricing.itemsTotal, pricing.deliveryFee, pricing.platformFee,
           pricing.grandTotal, JSON.stringify(input.address), input.address.latitude, input.address.longitude,
           Math.round(distanceKm * 100) / 100, etaMinutes(store.avg_prep_minutes, distanceKm),
           crypto.randomInt(1000, 10000).toString(), RESERVATION_MINUTES, input.idempotencyKey,

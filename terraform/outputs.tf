@@ -3,8 +3,28 @@ output "public_url" {
   value       = aws_lb.public.dns_name
 }
 
+output "vendor_url" {
+  value = local.vendor_origin
+}
+
 output "admin_internal_url" {
   value = aws_lb.admin.dns_name
+}
+
+output "bastion_instance_id" {
+  value = aws_instance.bastion.id
+}
+
+output "cluster_name" {
+  value = aws_ecs_cluster.main.name
+}
+
+output "app_subnets" {
+  value = aws_subnet.app[*].id
+}
+
+output "api_security_group" {
+  value = aws_security_group.api.id
 }
 
 output "ecr_repositories" {

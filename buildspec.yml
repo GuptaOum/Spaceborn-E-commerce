@@ -1,0 +1,34 @@
+version: 0.2
+
+# Builds the four container images on AWS CodeBuild and pushes them to ECR.
+# Required environment variables (set on the CodeBuild project):
+#   AWS_ACCOUNT_ID, IMAGE_TAG, NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+#   NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_APP_ID
+
+env:
+  variables:
+    DOCKER_BUILDKIT: "1"
+
+phases:
+  pre_build:
+    commands:
+      - REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+      - echo "Building tag $IMAGE_TAG"
+  build:
+    commands:
+      - docker build -f services/api/Dockerfile -t "$REGISTRY/spaceborn/api:$IMAGE_TAG" .
+      - |
+        for app in customer-storefront:storefront vendor-hub:vendor-hub admin-panel:admin-panel; do
+          dir="${app%%:*}"; repo="${app##*:}"
+          docker build -f "apps/$dir/Dockerfile" \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="$NEXT_PUBLIC_FIREBASE_API_KEY" \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="$NEXT_PUBLIC_FIREBASE_PROJECT_ID" \
+            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="$NEXT_PUBLIC_FIREBASE_APP_ID" \
+            -t "$REGISTRY/spaceborn/$repo:$IMAGE_TAG" .
+        done
+  post_build:
+    commands:
+      - for repo in api storefront vendor-hub admin-panel; do docker push "$REGISTRY/spaceborn/$repo:$IMAGE_TAG"; done
+      - echo "Pushed $IMAGE_TAG"

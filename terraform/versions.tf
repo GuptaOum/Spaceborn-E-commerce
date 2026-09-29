@@ -8,14 +8,13 @@ terraform {
     }
   }
 
-  # Remote state. Create the bucket once, fill in the name, then run `terraform init -migrate-state`.
-  # backend "s3" {
-  #   bucket       = "REPLACE_WITH_STATE_BUCKET"
-  #   key          = "spaceborn/terraform.tfstate"
-  #   region       = "ap-south-1"
-  #   encrypt      = true
-  #   use_lockfile = true
-  # }
+  backend "s3" {
+    bucket       = "spaceborn-tfstate-758530010955"
+    key          = "spaceborn/dev/terraform.tfstate"
+    region       = "ap-south-1"
+    encrypt      = true
+    use_lockfile = true
+  }
 }
 
 # Credentials are never stored here. Configure them on the machine that runs Terraform:

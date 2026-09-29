@@ -20,7 +20,7 @@ const placeOrderLimiter = rateLimit({
 });
 
 const placeOrderBody = z.object({
-  storeId: uuid,
+  storeId: uuid.optional(),
   items: z
     .array(z.object({ productId: uuid, quantity: z.number().int().min(1).max(MAX_ITEMS_PER_LINE) }))
     .min(1)

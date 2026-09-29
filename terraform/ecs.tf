@@ -66,6 +66,26 @@ resource "aws_iam_role" "backend_task" {
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
 }
 
+data "aws_iam_policy_document" "backend_s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      aws_s3_bucket.uploads.arn,
+      "${aws_s3_bucket.uploads.arn}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "backend_s3_access" {
+  name   = "s3-uploads-access"
+  role   = aws_iam_role.backend_task.id
+  policy = data.aws_iam_policy_document.backend_s3.json
+}
+
 resource "aws_iam_role" "web_task" {
   name               = "${local.name}-web-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
@@ -107,6 +127,12 @@ locals {
     { name = "DB_SSL", value = "require" },
     { name = "FIREBASE_PROJECT_ID", value = var.firebase_project_id },
     { name = "DB_SSL_CA_PATH", value = "/etc/ssl/certs/rds-global-bundle.pem" },
+    { name = "UPLOADS_BUCKET", value = aws_s3_bucket.uploads.bucket },
+    { name = "MAIL_PROVIDER", value = var.mail_from == "" ? "log" : "ses" },
+    { name = "MAIL_FROM", value = var.mail_from },
+    { name = "MAIL_CONFIGURATION_SET", value = aws_sesv2_configuration_set.main.configuration_set_name },
+    { name = "PUBLIC_ORIGIN", value = local.public_origin },
+    { name = "VENDOR_ORIGIN", value = local.vendor_origin },
   ]
 
   backend_secrets = [
@@ -234,6 +260,7 @@ resource "aws_ecs_service" "service" {
   depends_on = [
     aws_lb_listener.public_http,
     aws_lb_listener.public_https,
+    aws_lb_listener.vendor_http,
     aws_lb_listener.admin_http,
   ]
 }
