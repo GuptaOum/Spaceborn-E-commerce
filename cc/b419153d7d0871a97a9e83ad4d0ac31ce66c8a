@@ -1,0 +1,19 @@
+.github/workflows/ci.yml
+  s_8791a54e9ad15b::t_8eee8f0e55873a 1,14-15,18,20,23-27,29-30,32-33,35-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "ccb419153d7d0871a97a9e83ad4d0ac31ce66c8a",
+  "prompts": {},
+  "sessions": {
+    "s_8791a54e9ad15b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7518f792-c62b-484c-a976-b1838c910d40",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Aakrati Gupta <aakrati.gupta+JAgithub@justanswer.com>"
+    }
+  }
+}
