@@ -1,0 +1,331 @@
+services/api/src/logger.ts
+  s_8791a54e9ad15b::t_86bee32d527618 1-6
+services/api/src/fabrication/service.ts
+  s_8791a54e9ad15b::t_5d4745e7c13b98 1-388
+apps/customer-storefront/src/views/CartReviewView.tsx
+  s_8791a54e9ad15b::t_ec92b6fc71bcde 409
+  s_8791a54e9ad15b::t_626c8561d036f7 400
+services/api/src/auth.ts
+  s_8791a54e9ad15b::t_45480942e733bb 105-106
+  s_8791a54e9ad15b::t_39bfc5148fb693 91-99
+  s_8791a54e9ad15b::t_3ab366047074ad 107-109,111-114
+  s_8791a54e9ad15b::t_bd2b1482630e37 1-4,6-90,100-104,110,115
+  s_8791a54e9ad15b::t_c037da0779a742 5
+services/api/src/orders/status.ts
+  s_8791a54e9ad15b::t_7b91e7112bcd7f 1-46
+apps/customer-storefront/src/context/StoreContext.tsx
+  s_8791a54e9ad15b::t_5808f68fdc16b3 25
+  s_8791a54e9ad15b::t_be2828d5448609 149,158,162-163
+  s_8791a54e9ad15b::t_89ec7d3409fdf6 132
+  s_8791a54e9ad15b::t_81b52db6dfc767 3-24,37-39,41-43,55,57,73-74,76-124,127-131,133-136,140,143-145,152-157,159,166-167,170-171,173-175,177-183,185-192,194,196,200-202,206-222,224-243,245,248-292,295-297,300-311,313-338,341,346
+  s_8791a54e9ad15b::t_6a2a7e95267feb 197-198
+  s_8791a54e9ad15b::t_7f2cdbe9673ef7 40,205,312
+services/api/src/fabrication/status.ts
+  s_8791a54e9ad15b::t_809b3c0f2a1802 1-38
+packages/web-core/src/SignInPanel.tsx
+  s_8791a54e9ad15b::t_5e150ad8def7af 1-95
+apps/vendor-hub/src/components/Dashboard.tsx
+  s_8791a54e9ad15b::t_27cb161ed3fb4d 1-7,9-10,20-30,32-82,85-87,89,91-94,99-101
+  s_8791a54e9ad15b::t_dab6ff4da0d050 8,11-19
+  s_8791a54e9ad15b::t_d5ba192bc3a7ae 83-84,88,90,95-98
+  s_8791a54e9ad15b::t_d64fa28e493a3d 31
+apps/customer-storefront/src/app/auth/page.tsx
+  s_8791a54e9ad15b::t_5d266958cbd5c1 3,5-10,15-20,22-24,26-28
+terraform/security.tf
+  s_8791a54e9ad15b::t_2b2fd6125cde76 1-3,7-17,23,27,31-33,37-39,41-63,67,71,75-77,81-83,85,96-102,104-141
+  s_8791a54e9ad15b::t_7f987166751a16 103
+  s_8791a54e9ad15b::t_58360ab0ab048f 89
+terraform/rds.tf
+  s_8791a54e9ad15b::t_a1abfb60ca1015 1-3,6-8,10-22,26-45,47,49-61
+services/api/src/routes/catalog.ts
+  s_8791a54e9ad15b::t_0b9669e6705d23 1-93
+apps/customer-storefront/src/views/B2BPortalView.tsx
+  s_8791a54e9ad15b::t_93384087ab78e6 19
+  s_8791a54e9ad15b::t_3f34b8b2e1f061 41-42,44
+apps/admin-panel/package.json
+  s_8791a54e9ad15b::t_cca815cf04633a 4,6-9,12-13,15-17,20-25
+terraform/alb.tf
+  s_8791a54e9ad15b::t_b63181e4190085 1-213
+apps/customer-storefront/src/app/layout.tsx
+  s_8791a54e9ad15b::t_8678105899af73 4
+services/api/test/rbac.integration.test.ts
+  s_8791a54e9ad15b::t_8db73ae88bcc0c 33
+  s_8791a54e9ad15b::t_84734dc8bda41a 258-408
+  s_8791a54e9ad15b::t_e94c658b6d45d7 15
+  s_8791a54e9ad15b::t_5fff7346006165 16-17
+  s_8791a54e9ad15b::t_ef967b0cabf679 1-14,18-32,34-257
+apps/customer-storefront/package.json
+  s_8791a54e9ad15b::t_5e329d93d0ef62 4,6-9,12-13,16-18,21-26
+services/api/src/routes/orders.ts
+  s_8791a54e9ad15b::t_3125c8a021f525 28
+  s_8791a54e9ad15b::t_07f437bf12a879 1-8,10-27,29-62
+  s_8791a54e9ad15b::t_30d182b3160ce9 9
+services/api/src/errors.ts
+  s_8791a54e9ad15b::t_40422db20a1ef7 1-44
+services/api/src/routes/schemas.ts
+  s_8791a54e9ad15b::t_03eb98fc51aade 1,3-23,42
+  s_8791a54e9ad15b::t_a14cc1b7d2e96c 2
+  s_8791a54e9ad15b::t_7474d0bc89837b 24-41
+packages/web-core/src/types.ts
+  s_8791a54e9ad15b::t_4f502c895d891e 111-182
+  s_8791a54e9ad15b::t_4058f75b294fa0 1-110,183-190
+services/api/src/worker.ts
+  s_8791a54e9ad15b::t_47bde63ff517fa 86-87
+  s_8791a54e9ad15b::t_03441ebc045616 1-3,5-20,25-27,30,32,35-36,42-85,88-94,102,104-119
+  s_8791a54e9ad15b::t_ec5d1ad6126ec1 21-24,28,31,33-34,37-41
+  s_8791a54e9ad15b::t_f3bf2407f058ee 4
+  s_8791a54e9ad15b::t_a4fdbb5bf3806d 29
+  s_8791a54e9ad15b::t_95811ffb6bc726 95-101,103
+package.json
+  s_8791a54e9ad15b::t_5244f324743882 1-19
+apps/admin-panel/src/app/layout.tsx
+  s_8791a54e9ad15b::t_cebc197fbfebcd 2-3,7-8,11,13-15
+terraform/bastion.tf
+  s_8791a54e9ad15b::t_458c2fd40f7160 1-4,6-12,16-18,21-23,26-28,32-40,42-44,47,49-51
+services/api/src/app.ts
+  s_8791a54e9ad15b::t_80e37f4ed665ea 32
+  s_8791a54e9ad15b::t_760ec127c67f2e 1-6,8-31,34-41
+  s_8791a54e9ad15b::t_00de685d8029c2 7
+  s_8791a54e9ad15b::t_723e4d88657cee 33
+services/api/src/db/migrate.ts
+  s_8791a54e9ad15b::t_2df94084340eea 1-12,17-53
+  s_8791a54e9ad15b::t_843752d0172406 13-16
+terraform/variables.tf
+  s_8791a54e9ad15b::t_51807c81af42eb 1-6,8-9,12,14-34,37-49,51,55-91,93,96,98-99,102-105,107-124
+services/api/.dockerignore
+  s_8791a54e9ad15b::t_37cdf7ff8417c2 1-4
+services/api/src/payments/signatures.ts
+  s_8791a54e9ad15b::t_31beda4f38a73f 1-19
+apps/admin-panel/src/components/StoresTab.tsx
+  s_8791a54e9ad15b::t_3f2cdfce2258e0 1-114
+apps/admin-panel/src/components/OrdersTab.tsx
+  s_8791a54e9ad15b::t_6416cf78b4ea03 1-95
+services/api/test/domain.test.ts
+  s_8791a54e9ad15b::t_db8d54f03df7ea 1-4,6-86
+  s_8791a54e9ad15b::t_9669bd10dc6af8 5
+services/api/tsconfig.json
+  s_8791a54e9ad15b::t_8dd52409e96998 1-15
+services/api/tsconfig.build.json
+  s_8791a54e9ad15b::t_5e36e2f7b6f8ab 1-2,8
+  s_8791a54e9ad15b::t_77e7389fc1c733 3-7
+services/api/package.json
+  s_8791a54e9ad15b::t_79b9e1ad72f5fc 1-41
+apps/vendor-hub/src/app/page.tsx
+  s_8791a54e9ad15b::t_22a0b169aec708 3-10,12,14-111
+terraform/ecr.tf
+  s_8791a54e9ad15b::t_416ac182569bb1 1-2,5-10,15-32
+apps/admin-panel/src/components/Overview.tsx
+  s_8791a54e9ad15b::t_3b0b56a7550fe6 1-4,6-14,17-28,31-34,36-44
+  s_8791a54e9ad15b::t_77532c7a08482b 35
+  s_8791a54e9ad15b::t_da68fb697e2773 15-16
+  s_8791a54e9ad15b::t_afd32be7d3027e 29-30
+  s_8791a54e9ad15b::t_bf61b27ba3a466 5
+apps/vendor-hub/src/components/OrdersPanel.tsx
+  s_8791a54e9ad15b::t_63b111477b5b7c 1-131
+services/api/src/lib/geo.ts
+  s_8791a54e9ad15b::t_7ae66d0f596dfa 1-17
+services/api/src/server.ts
+  s_8791a54e9ad15b::t_382a52ef911d86 1-23
+apps/vendor-hub/src/app/layout.tsx
+  s_8791a54e9ad15b::t_cb5e6d876d0bb1 2-3,7-8,11,13-15
+apps/customer-storefront/src/components/Header.tsx
+  s_8791a54e9ad15b::t_c5a40791c93b0a 333-345,347,349,351,355,364-365,367
+  s_8791a54e9ad15b::t_a0e4ca15eb72e6 130,134
+  s_8791a54e9ad15b::t_1cd36397be031b 39
+  s_8791a54e9ad15b::t_a48c5007537436 54,58-64
+apps/customer-storefront/src/app/orders/page.tsx
+  s_8791a54e9ad15b::t_15fdba0e4a9789 3,5-99,103-122,125-135,137-138
+apps/customer-storefront/src/views/CheckoutView.tsx
+  s_8791a54e9ad15b::t_ebdf736f20059c 62,64-67,70
+  s_8791a54e9ad15b::t_a05fd3401dbd42 119
+  s_8791a54e9ad15b::t_b7e36feaa46985 9
+  s_8791a54e9ad15b::t_8a4962edfe310d 3,6-7,10,12-15,21-29,31,33,35-45,49-50,52,55-56,59-61,63,68-69,77-78,81-90,95,97,99-114,117-118,120-123,127,130-132,154-162,180-189,198-202,204-210,218,220-221,229,237-238,240,254,259-260,263-265
+services/api/migrations/002_fabrication.sql
+  s_8791a54e9ad15b::t_01c178f8937b23 1-89
+services/api/src/storage.ts
+  s_8791a54e9ad15b::t_f9e49621cd66f8 1-53
+services/api/src/db/seed.ts
+  s_8791a54e9ad15b::t_9315d519eff4cd 3-22,24-72
+  s_8791a54e9ad15b::t_5c4ef7d92a158c 23
+  s_8791a54e9ad15b::t_5abc17c466b68b 1-2
+  s_8791a54e9ad15b::t_7f7452e8e05943 73-80
+apps/customer-storefront/src/views/HomeView.tsx
+  s_8791a54e9ad15b::t_43827157b9e50e 32-38
+  s_8791a54e9ad15b::t_2bb1d516506175 51
+  s_8791a54e9ad15b::t_b0ef8e105148af 82-87
+  s_8791a54e9ad15b::t_9c4ae9cc122f4d 130-138
+apps/customer-storefront/src/data/products.ts
+  s_8791a54e9ad15b::t_49bf18b508c409 1066-1072
+packages/web-core/src/auth.tsx
+  s_8791a54e9ad15b::t_a7f00ed63ed06d 1-115
+services/api/src/routes/admin.ts
+  s_8791a54e9ad15b::t_ae227b0f1eb242 164-242
+  s_8791a54e9ad15b::t_7109b7cc5ed7e8 12
+  s_8791a54e9ad15b::t_fab8609d6a9d49 63-64
+  s_8791a54e9ad15b::t_29acd2c1bc7645 7-9
+  s_8791a54e9ad15b::t_fc5a7a9f06094e 22-24
+  s_8791a54e9ad15b::t_d8185298437703 74
+  s_8791a54e9ad15b::t_79c50ef4f954d7 1-2,4-6,10-11,13-21,25-62,65-70,72,75-163,243-252
+  s_8791a54e9ad15b::t_2de380b71c611c 3
+  s_8791a54e9ad15b::t_596b64f78ed4fe 71,73
+terraform/versions.tf
+  s_8791a54e9ad15b::t_0dc8d6275c9de2 1-48
+apps/customer-storefront/src/views/DatasheetLibraryView.tsx
+  s_8791a54e9ad15b::t_86b188a56f1fc4 30-31
+  s_8791a54e9ad15b::t_ddf1d048f20e98 17,28
+apps/vendor-hub/src/components/InventoryPanel.tsx
+  s_8791a54e9ad15b::t_b3e826eaf5277b 1-192
+apps/customer-storefront/src/app/product/[id]/ProductClientPage.tsx
+  s_8791a54e9ad15b::t_bd7578b07d852a 11,13-17
+  s_8791a54e9ad15b::t_78b834efe10cd6 32
+apps/customer-storefront/src/app/fabrication/page.tsx
+  s_8791a54e9ad15b::t_b3ddd1335fc8b1 3,5-9,11-266,270-298,301-367
+terraform/ecs.tf
+  s_8791a54e9ad15b::t_30bb8023bda846 109
+  s_8791a54e9ad15b::t_fd16d305d2fec2 2-23,26-39,42-43,47-62,64-68,75-76,81,83-85,94-108,110-166,169-177,180-194,198-243,248-249,252-265,269-272,276-283,285-300
+  s_8791a54e9ad15b::t_bdaa67320e120f 63,69-74,77-80,82,86-93
+docs/agent-memory/HANDOFF.md
+  s_8791a54e9ad15b::t_1b5009c6961e99 1-153
+apps/admin-panel/src/app/globals.css
+  s_8791a54e9ad15b::t_b17b51a063ba08 2,5-7
+terraform/terraform.tfvars.example
+  s_8791a54e9ad15b::t_687e8ba87cdbfd 1-21
+terraform/secrets.tf
+  s_8791a54e9ad15b::t_b5061c9098b2df 1-22
+apps/admin-panel/tsconfig.json
+  s_8791a54e9ad15b::t_cc615e5ee29fce 9,11
+  s_8791a54e9ad15b::t_adff83ba4e7aba 33-34,39
+services/api/src/config.ts
+  s_8791a54e9ad15b::t_4cd2dac7964d24 22-25
+  s_8791a54e9ad15b::t_07b0eef76072de 1-21,26-35,37-46
+  s_8791a54e9ad15b::t_187822ed8d45b4 36
+apps/customer-storefront/src/app/cart/page.tsx
+  s_8791a54e9ad15b::t_c5659a9e6d2881 18-19,21
+services/api/src/routes/payments.ts
+  s_8791a54e9ad15b::t_0d9b006799b0b9 1-8,10-12,14-24,26-47,49-83
+  s_8791a54e9ad15b::t_0ad1bfd39d321b 25
+  s_8791a54e9ad15b::t_b030fe1dae1abb 48
+  s_8791a54e9ad15b::t_8323c66897c0d6 13
+  s_8791a54e9ad15b::t_640880115ca8d2 9
+apps/vendor-hub/src/components/FabJobsPanel.tsx
+  s_8791a54e9ad15b::t_d6fde58d0d32f5 1-176
+services/api/src/orders/service.ts
+  s_8791a54e9ad15b::t_9d4d2bd00e395e 9
+  s_8791a54e9ad15b::t_c3e41aa76d9117 326
+  s_8791a54e9ad15b::t_72ac9d5a830ba6 1-8,10-281,284-285,298,305-325,327-351,353-382,388-395,397-428
+  s_8791a54e9ad15b::t_740b104aaf02d1 352
+  s_8791a54e9ad15b::t_63fae35add5c81 396
+  s_8791a54e9ad15b::t_13e19cbe5324de 383-387
+  s_8791a54e9ad15b::t_7c058918deea21 282-283,286-297,299-304
+apps/customer-storefront/src/app/product/[id]/page.tsx
+  s_8791a54e9ad15b::t_979265a59a53e3 3
+services/api/src/db/pool.ts
+  s_8791a54e9ad15b::t_b2d8cbd75abf5f 1-45
+terraform/network.tf
+  s_8791a54e9ad15b::t_1835adcaae77ba 2,5,8,10,13,15-28,31-37,40,44,46,49-52,55-60,62,65-70,73-74,78,80-97,100-106
+services/api/src/routes/me.ts
+  s_8791a54e9ad15b::t_3558816bfe8b0f 3,5,9,11,23
+  s_8791a54e9ad15b::t_34783daee9de61 1-2,4,6-8,10,12-22,24-31
+terraform/outputs.tf
+  s_8791a54e9ad15b::t_a67bf3a41c3f0c 1-38
+services/api/Dockerfile
+  s_8791a54e9ad15b::t_4c962dba246111 1-19
+packages/web-core/package.json
+  s_8791a54e9ad15b::t_7c1934d86916f0 10
+  s_8791a54e9ad15b::t_d3d746773b5530 1-9,13-25
+  s_8791a54e9ad15b::t_0f263d90ded538 11-12
+services/api/src/scripts/grant-admin.ts
+  s_8791a54e9ad15b::t_564adea4c47b06 1-17
+apps/admin-panel/src/app/page.tsx
+  s_8791a54e9ad15b::t_e44a7172c7e490 71,73
+  s_8791a54e9ad15b::t_b3785dde6fe3ad 3-5,7,9-11,13-14,16,18-39,42-70,72,74-76
+  s_8791a54e9ad15b::t_0bbc895ddcfc5e 6,8
+  s_8791a54e9ad15b::t_78ecd2afeeb2b4 15,17
+apps/vendor-hub/src/components/ApplicationForm.tsx
+  s_8791a54e9ad15b::t_0b5527477e1b8b 1-96
+packages/web-core/tsconfig.json
+  s_8791a54e9ad15b::t_7ff1a203d1161f 1-14
+apps/vendor-hub/package.json
+  s_8791a54e9ad15b::t_649ff040584072 4,6-9,12-16,19-24
+services/api/src/routes/vendor.ts
+  s_8791a54e9ad15b::t_96eb6b5fa0264f 9-12
+  s_8791a54e9ad15b::t_062dbbc292b7ef 1-8,13-186,279-293
+  s_8791a54e9ad15b::t_4946a0d9787c4a 187-278
+packages/web-core/src/firebase.ts
+  s_8791a54e9ad15b::t_0d5682eb260bb2 2,4,6-19
+  s_8791a54e9ad15b::t_992ec3add12eba 1,3,5
+apps/admin-panel/src/components/FabJobsTab.tsx
+  s_8791a54e9ad15b::t_bd224c7c6f7bdf 1-93
+services/api/.env.example
+  s_8791a54e9ad15b::t_6eee31cfe86f63 1-21
+  s_8791a54e9ad15b::t_54dbd6856616b7 22-26
+services/api/src/outbox.ts
+  s_8791a54e9ad15b::t_0037c546b0b2a4 3-9
+  s_8791a54e9ad15b::t_3b719b48be6825 1-2,10-13
+packages/web-core/src/api.ts
+  s_8791a54e9ad15b::t_1100f4563af9f2 23
+  s_8791a54e9ad15b::t_9bc48bb0eb2293 51-83
+  s_8791a54e9ad15b::t_91daf69e33c649 1-22,24-50
+services/api/src/payments/razorpay.ts
+  s_8791a54e9ad15b::t_12f35a6114c721 1-24
+apps/admin-panel/next.config.mjs
+  s_8791a54e9ad15b::t_db0335eca7a88f 1-6,10,12-16
+apps/customer-storefront/next.config.mjs
+  s_8791a54e9ad15b::t_221ca5aa63be79 1-6,10,12-13,16-17,20-22
+apps/customer-storefront/.env.example
+  s_8791a54e9ad15b::t_410feec1efe351 1-5
+packages/web-core/src/format.ts
+  s_8791a54e9ad15b::t_b243e33a397673 19-37
+  s_8791a54e9ad15b::t_3380f8e42caaa7 1-18
+apps/admin-panel/src/components/ProductsTab.tsx
+  s_8791a54e9ad15b::t_2e92cd47fc0968 1-129
+services/api/migrations/001_init.sql
+  s_8791a54e9ad15b::t_a99285b154495b 1-171
+apps/customer-storefront/src/components/NextAppShell.tsx
+  s_8791a54e9ad15b::t_2d0dd9ac126221 58
+services/api/src/routes/fabrication.ts
+  s_8791a54e9ad15b::t_9eacb1b703fce1 1-198
+apps/customer-storefront/src/lib/razorpay.ts
+  s_8791a54e9ad15b::t_d1f50f3dfca673 1-55
+apps/vendor-hub/src/components/ServicesPanel.tsx
+  s_8791a54e9ad15b::t_225551bad0d7d7 1-159
+apps/admin-panel/src/components/ServicesTab.tsx
+  s_8791a54e9ad15b::t_58031f132d5b39 1-114
+services/api/src/orders/pricing.ts
+  s_8791a54e9ad15b::t_61c74141bcfe91 1-40
+.gitignore
+  s_8791a54e9ad15b::t_e5fba524f713be 39-46
+  s_8791a54e9ad15b::t_d55a97e0db1d02 47-48
+apps/admin-panel/next-env.d.ts
+  s_8791a54e9ad15b::t_15d87dd246b76c 3-4
+apps/customer-storefront/src/views/CompareView.tsx
+  s_8791a54e9ad15b::t_e7ac3efd6f5e97 16,37
+apps/vendor-hub/next.config.mjs
+  s_8791a54e9ad15b::t_2780185e6683ce 1-6,10,12-16
+apps/vendor-hub/src/app/globals.css
+  s_8791a54e9ad15b::t_a3d0772d470fee 2,5-7
+apps/vendor-hub/tsconfig.json
+  s_8791a54e9ad15b::t_8bcfb554daf81c 9,11,33-34,39
+package-lock.json
+  s_8791a54e9ad15b::t_9428270cd6804a 2,7-37,40-60,63-68,75,84-535,1603-1605,1609-1610,1612-1613,1616,1619-1622,1626-1627,1630,1634-1636,1640,1644-1646,1650,1654-1656,1660-1662,1672-1673,1676,2258,2269,2280,2290,2297,2315-2331,2489-2493,2552-2555,2559,2564,2566-2569,2573,2578,2580-2583,2587,2592,2594-2597,2601,2606-2613,2615-2620,2622-2625,2629,2634-2641,2643-2648,2650-2653,2657,2662-2669,2671-2676,2678-2681,2685,2690-2697,2699-2704,2706-2709,2711,2713,2718-2725,2727-2732,2734-2737,2741,2746-2753,2755-2760,2762-2765,2767,2769,2774-2781,2783-2788,2790-2793,2797,2802,2804-2807,2811,2816-2823,2825-2830,2832-2835,2839,2844,2846-2849,2853,2858,2860-2863,2865,2867,2872,2874-2881,2883-2886,2888-2895,2897-2900,2902-2906,2908-2909,2912,2915-2919,2921-2923,2926,2929-2933,2935-2937,2940,2943-2947,2949-2951,2954,2957-2961,2963-2965,2968,2971-2975,2977,2980,2983-2990,3004,3020,3047,3064,3081,3098,3115,3132,3149,3166,3183,3208,3230,3247,3261,3271-3274,3276-3278,3292-3309,3320-3333,3335-3337,3342-3343,3347-3349,3376-3381,3390-3392,3398-3409,3444-3447,3449,3451-3454,3457-3460,3462,3464-3472,3475-3478,3482,3485-3489,3491-3493,3495,3498-3501,3503-3505,3508-3511,3513-3516,3519-3529,3531-3540,3543-3546,3548-3567,3570-3573,3575-3580,3583-3586,3588-3595,3598-3601,3603-3610,3613-3616,3618-3623,3626-3629,3631-3638,3641-3645,3647-3649,3651,3654-3662,3664,3667-3675,3677,3680-3684,3686,3717-3745,3757-3775,3778-3790,3793,3796-3799,3801-3807,3851-3853,3856-3864,3867-3871,3874-3877,3880-3884,3887-3892,3908-3917,3967-3993,4032-4035,4038,4041-4054,4076-4078,4081,4091-4094,4105-4107,4110-4137,4153,4201-4204,4206-4223,4251-4254,4282-4288,4301-4315,4373-4382,4402-4411,4413-4448,4455-4469,4476-4484,4548,4586-4588,4591-4596,4599-4603,4643-4645,4649-4651,4653,4655,4658,4661-4662,4665-4675,4677,4680,4685-4689,4691-4695,4698,4701-4705,4707,4710-4714,4716,4719,4771-4773,4776,4783,4811-4813,4815,4819-4821,4824,4841-4872,4936-4967,4969-4971,4975-4981,4983-4986,4989,5006,5026-5028,5032-5033,5037,5041-5043,5049-5051,5055,5059-5061,5065,5093,5097-5099,5103,5107,5122-5136,5149-5160,5205-5207,5211-5213,5216,5219-5222,5226,5229,5246-5248,5251,5255-5258,5291-5296,5327,5334-5336,5343-5346,5392-5394,5399,5401,5404,5421,5454,5475,5496,5517,5538,5559,5580,5601,5622,5643,5664,5743-5748,5751-5757,5759,5763-5765,5769,5785,5801-5803,5806-5810,5814-5816,5818-5820,5826-5828,5830,5835,5839-5841,5848-5850,5853,5856-5860,5905-5907,5929-5931,5933-5935,5937-5954,6059-6061,6063,6065,6068,6070-6076,6101-6109,6172-6193,6196,6199-6203,6205-6209,6212,6214-6223,6226-6230,6233-6260,6263-6287,6298,6307-6343,6348,6373-6398,6400-6403,6406-6409,6412-6427,6429-6431,6435,6438,6481-6489,6506-6511,6513-6515,6519-6522,6526-6528,6533,6537-6546,6585-6593,6608,6614-6616,6620,6622,6625,6628-6632,6635,6638,6641-6642,6645-6687,6710-6718,6744-6759,6762-6766,6770-6772,6775-6778,6781-6786,6916-6929,6941-6956,6966-6972,7026-7030,7033,7035-7036,7089,7096,7107-7109,7113-7117,7120,7123-7172,7177,7190-7219,7262-7264,7267-7269,7272,7276,7279-7283,7285,7289,7292-7300,7302-7303,7306-7335,7337,7339-7347,7349-7374,7377-7428,7431-7446,7448,7451,7454-7487,7489,7492-7524,7583-7588,7590-7591,7594,7597,7621,7639-7647,7657-7662,7702-7749
+packages/web-core/src/useLoad.ts
+  s_8791a54e9ad15b::t_1db167c0c4779d 3,5-8,10-27
+terraform/.terraform.lock.hcl
+  s_8791a54e9ad15b::t_9ef4c2a47e517f 1-2,4-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "155ba37155fce512ac67b76f3a3453b39a71dc92",
+  "prompts": {},
+  "sessions": {
+    "s_8791a54e9ad15b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "7518f792-c62b-484c-a976-b1838c910d40",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Aakrati Gupta <aakrati.gupta+JAgithub@justanswer.com>"
+    }
+  }
+}
