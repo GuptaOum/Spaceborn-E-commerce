@@ -1,0 +1,88 @@
+name: CI & Merge Conflict Prevention
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. Ensure branch is cleanly mergeable with main without conflicts
+  check-conflicts:
+    name: Check Merge Conflicts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify clean merge with main
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Verifying PR can be cleanly merged into main..."
+          git config --global user.email "ci@spaceborn.com"
+          git config --global user.name "Spaceborn CI"
+          git fetch origin main
+          git merge --no-commit --no-ff origin/main || {
+            echo "::error::Merge conflict detected! Please rebase your branch on origin/main before merging."
+            exit 1
+          }
+          echo "Merge check passed without conflicts."
+
+  # 2. Build & Typecheck Matrix across all Monorepo Apps
+  verify-apps:
+    name: Verify ${{ matrix.app }}
+    needs: check-conflicts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - customer-storefront
+          - vendor-hub
+          - admin-panel
+    env:
+      NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyCB2tLrOx-_JZJQE7EiRP5uvkvcJWQ6JCM"
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "spaceborn-ecommerce-app.firebaseapp.com"
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: "spaceborn-ecommerce-app"
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "spaceborn-ecommerce-app.firebasestorage.app"
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "680304879047"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:680304879047:web:11ad9fd173b0757a39a5e2"
+      NEXT_PUBLIC_SUPABASE_URL: "https://rhbjmzbwvqvuouhgoiox.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoYmptemJ3dnF2dW91aGdvaW94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NjUwOTEsImV4cCI6MjEwNjI0MTA5MX0.8pRxUkQexhvamutJcPDJAnloHDfiZo_HC-4yH4uH1_Q"
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: "rzp_test_placeholder"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'apps/${{ matrix.app }}/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+          else
+            npm install --legacy-peer-deps
+          fi
+
+      - name: Run TypeScript Check
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          npx tsc --noEmit
+
+      - name: Build Next.js Application
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          node ./node_modules/next/dist/bin/next build

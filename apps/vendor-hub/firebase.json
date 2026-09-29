@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Spaceborn",
+        "supportEmail": "spaceborn@example.com"
+      }
+    }
+  }
+}

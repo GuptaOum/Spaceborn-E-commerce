@@ -1,0 +1,231 @@
+[
+  {
+    "id": "n20-12v-300rpm-encoder",
+    "name": "N20 12V 300RPM Micro Metal Gear Motor with Magnetic Hall Encoder",
+    "sku": "MOT-N20-12V-300E",
+    "category": "Motors",
+    "price": 365,
+    "stock": 142,
+    "description": "Precision engineered N20 micro metal gear motor operating at 12V DC with 300 RPM output. Integrates a dual-channel magnetic Hall encoder delivering 7 PPR (pulses per revolution) on the motor shaft, enabling ultra-precise closed-loop velocity and position control in micromouse, robotic arms, and medical automation prototypes.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuB0jHiFhzcyrFgJgyr2JGnA-MA0qfoSEqiw2nll3M7zYpo4FfhZMOt0LZqLOiJkRjls09xH8rCqZf29RPN8lTZcnrVuy9e-9pNt_q9vf35L5QPlEZBAK5V6H9wnrMa9HCfeDqh6-x6FsXLtVNLOEmn2IRKFdszN8Movn0r2N87BFmGQzISC2K7uU0qHvqJtFQr54SrVgv2BvpG4HaxLKt-zbiCeoq3tScb1zhEA15I3CSVvtmADPTfd",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 9,
+        "price": 365
+      },
+      {
+        "minQty": 10,
+        "maxQty": 49,
+        "price": 342
+      },
+      {
+        "minQty": 50,
+        "maxQty": 99,
+        "price": 320
+      },
+      {
+        "minQty": 100,
+        "maxQty": null,
+        "price": 298
+      }
+    ]
+  },
+  {
+    "id": "esp32-wroom-32d",
+    "name": "ESP32-WROOM-32D Dual-Core Wi-Fi & Bluetooth MCU Module (PCB Antenna)",
+    "sku": "MCU-ESP32-32D-MOD",
+    "category": "Controllers",
+    "price": 185,
+    "stock": 580,
+    "description": "Espressif official ESP32-WROOM-32D module featuring the ESP32-D0WD chip. Offers high computing power with dual Xtensa 32-bit LX6 microprocessors running up to 240 MHz, integrated 4MB SPI flash, Wi-Fi 802.11 b/g/n, and Bluetooth 4.2 BR/EDR and BLE.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBnMVjJT1-pt_AUMIcro80-s0aL2aPVMCoDou9qgbwJANIBVazQ1s39mu2vq1BLesHXaAFSkkpALE_XVjtV3y7azHza4PJbe25tANLFpKG6RPVKvXpoQ_qya7IRJBaN2UcX9MS9fdjvLIdfp1rIlUtIsMMiIjI8RtrobB9REuUC-iURkIpotv160m7Satr4zsxsEt0Inn5LEXj8WMRXDP7zFsw-WcZJ9_KnlsHly_uVy_3HVRHTksl8",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 9,
+        "price": 185
+      },
+      {
+        "minQty": 10,
+        "maxQty": 49,
+        "price": 172
+      },
+      {
+        "minQty": 50,
+        "maxQty": null,
+        "price": 158
+      }
+    ]
+  },
+  {
+    "id": "a4988-stepper-driver",
+    "name": "A4988 Stepper Motor Driver Module with Anodized Aluminum Heatsink",
+    "sku": "DRV-A4988-HS-RED",
+    "category": "Motors",
+    "price": 68,
+    "stock": 920,
+    "description": "Complete microstepping motor driver with built-in translator for easy operation. Designed to operate bipolar stepper motors in full-, half-, quarter-, eighth-, and sixteenth-step modes with adjustable current limiting.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuA7MbAg2aOt9c0PIZXaIsM3lNoLNg02Fal2iUQLOKcDbCYjSEHZeCumhEDNKc9O-sqGoTufreP8tdWy7ThPeD8-hh6Zq2W1ds4D8gliDklvzGnIAjG5fnSU5T8YcnomeFRUcAYvuQhoNY6HGYQmWSu0KJTzAwM0I-DZlSxSaMNGEr4z4o7Spltz_GU8oH3QviWT8Ov9VnfIJaVUU2oBgbQJa1hMEGvBA3vwHyC-vDkhHzGt-eorAkCd"
+  },
+  {
+    "id": "hc-sr04-ultrasonic-sensor",
+    "name": "HC-SR04 Precision Ultrasonic Distance Sensor Module (2cm - 400cm)",
+    "sku": "SEN-HCSR04-US-MOD",
+    "category": "Sensors",
+    "price": 48,
+    "stock": 640,
+    "description": "Standard ultrasonic ranging module providing 2cm - 400cm non-contact measurement function with ranging accuracy reaching up to 3mm. Module includes ultrasonic transmitter, receiver, and control circuit.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuA8Bco-GJy5xmzGD-2iQZBB_bYzhCLMXqxw6IVPvhvsBM8zTBC5zC6GEdTRv7nA7i7jUQEU3v-a3gIedLlBrHgQuHcYV9RRo5zRlL3N0VF01wzoOaQ02MyCWFqNJVxVAdDX4R6vl95okcPQZK-qoLyUrgifsT1oMyEoXphC0TdLL0YI1gdLC-rS5QF_7aNFfo9wvOdb3y8Kqiy_Tg0lSwgQ77pmwUJ88WD7RYwQDTWClYvTyoDf6A1x"
+  },
+  {
+    "id": "sg90-micro-servo",
+    "name": "TowerPro SG90 9g Micro Servo Motor 180 Degree with Accessory Horns",
+    "sku": "MOT-SG90-9G-SRV",
+    "category": "Motors",
+    "price": 89,
+    "stock": 450,
+    "description": "Lightweight, high-quality and lightning-fast 9g servo motor with high torque. Ideal for aeromodelling, RC planes, quadcopters, and robotic pans/tilts.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDo7afDqjx2LxDyqnmEQX0fRpsAaAXUONlsq8xg4nZK5kU2ydc9OrFb8iQ8cDRCoaBk1rVn4fJWrgi7VQPwDmi8q7NibX0WLPSmBm1ULidpdEi4e6WRf5iA7RIAxG36lQwxFGclcLoITSdRBQErMtJmUJVfgpbaFbNY_2TUPFrP8Rf89mWfc5zNAebCWa7gP1U34SYwmYOLmltR_M3sJf6NR09VtEpqRNuChunlvOjX3Gulu9qcd-rj"
+  },
+  {
+    "id": "lipo-3s-2200mah",
+    "name": "Orange 3S 11.1V 2200mAh 40C Lithium Polymer (LiPo) Battery Pack",
+    "sku": "BAT-3S-2200-40C",
+    "category": "Batteries",
+    "price": 1240,
+    "stock": 84,
+    "description": "High-discharge Lithium Polymer battery pack designed for multirotor drones, RC fixed-wing planes, and robotics platforms. Features genuine XT60 connector and JST-XH balance lead.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBf0XjfJbrhdjhg0VbpvLiPKoO99LBFE6uCTP-_KxA7_79w9ZX4bIG2qSK7tzk__a0aXVJYpAy9tla2Ov7NtXgdJVfDe641HkNv20Vvl5U3VkekKeIXRhJKzeftuu1jHEFuFjSWMxrMEBWzVzGVoCz4wX3uPe1r-dzg6i67KrUgOrEVxwrMvACitKF89MRhhIwBWIJ4E0fbLYP1i6X3_HT1VPgLXDdlyk74i4dPl3qv3QR65L3F_qFq"
+  },
+  {
+    "id": "tb6600-stepper-driver",
+    "name": "TB6600 Upgraded 4A 9-42V Microstepping Stepper Motor Driver CNC",
+    "sku": "DRV-TB6600-4A-IND",
+    "category": "Motors",
+    "price": 495,
+    "stock": 165,
+    "description": "Industrial-grade TB6600 single-axis bipolar stepper driver suitable for driving NEMA 17, 23, and 24 two-phase stepper motors. Built-in high-speed optocoupler isolation prevents signal interference.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDRmBPdtL0H_ze2YP5iYsYMiUUgpuTgqfDUM0BwCcuMN6rEc72KdSmjsQbz9-FIdCMnnKdxIc2kdrmQn6laakvWbp_-tS5sdsCB8c0RkLxLt00Xu0dCp3_V1NlW4KeQx-_jg9OPDZ9chfX9xmAdqkeaS8AUesEFqcbgDEkX4BfKpjB9jmG3BvrDi9_pvrAbmKWPAgfY2aL3kWKFQHcSbdGiEF7bGwqUWaxIOwexboCHFEc0N15bD49f"
+  },
+  {
+    "id": "arduino-uno-r3",
+    "name": "Arduino Uno R3 Compatible Development Board (CH340G with USB Cable)",
+    "sku": "DEV-ARD-UNO-R3",
+    "category": "Controllers",
+    "price": 320,
+    "stock": 310,
+    "description": "Standard Arduino Uno R3 clone board based on the ATmega328P microcontroller with CH340G USB interface. Ideal for STEM education, DIY maker projects, and sensor interfacing.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuB1ca24-sSVDMcQ0hDEXcMloGCMOyCEK1gXNBNlYOF_JknIwQmJPmdtA62t69lSyZHzbDq-jmA-zhHkBMiZHLFu_Pv5KRx9fOhgccKWnN9l6skbRGdq3CqM-v443F5Sp_AUvRDlFtANm5IxcVk2iW5lOHWx75rO9mLKNNwz8d6HS_4gDN32uxqDJpef4Si1ZSC4V3T3hwzrZnxCPLrZiRnJydn7Dj8jVK4V_w1e0IAGfErx_27fIWx6"
+  },
+  {
+    "id": "smart-car-4wd-kit",
+    "name": "4WD Autonomous Smart Car Robot Chassis Kit with Encoder Speed Discs",
+    "sku": "KIT-4WD-SMARTCAR-PRO",
+    "category": "Accessories",
+    "price": 1290,
+    "stock": 62,
+    "description": "Complete 4-wheel drive mobile robotics platform chassis with 4 TT gear motors, speed encoder slotted discs, dual acrylic baseplates, battery box, and toggle switch. Perfect foundation for line-following, obstacle avoidance, and ROS navigation.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuD1EBOVKTN9lBo3XxDGF9LL-lAbNx9WLj6Hnyg54Qe7blIxW5zRMJa40q-wYdtTLpv5YdgTPFyrrigKZbBrCAv88hjkialyND-0QaGLybbGTrTNeQrg6z_SwVSQcuim_JrZNXUkn1hiXkWQAXyWDT-In1iRCqwaWzOxW152jAxYUWXisJXNTYBuWhN77DP4j9PUHO9Qcw2Hwodh8DYrwTxKFyOpCCFEeKoEOst9aTuJ5Z_jy4CY-yQ8"
+  },
+  {
+    "id": "sensor-starter-suite-37in1",
+    "name": "37-in-1 Sensor Modules Ultimate Learning Suite in Compartment Box",
+    "sku": "KIT-SENS-37IN1-BOX",
+    "category": "Accessories",
+    "price": 1150,
+    "stock": 95,
+    "description": "Comprehensive 37 sensor module kit designed for Arduino, Raspberry Pi, and STM32 developers. Contains infrared obstacle sensors, rotary encoders, flame sensors, temperature, ultrasonic, buzzer, relay, Hall sensor, and more.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ7zGMqFmIhNGKM1m5f3wD0Q4BlXSaKeHDBZrzVzhLO7rbmodr2w56Wk5FyMiFEViICZtIzWdtA7nmanXvvesjm-cZwRtOiCyXcXM21KffMcKedf3Ysu3NIrRTFEaPcxSoihTEez3iGbACheR98YSVBPDoNzXau7_e7X8If5P5n1Rq_yDV6XvK3g-DS5rYXMjfcpAASULT0QhKX_7hzMryox9VW4XDL4Vd_0gZ1-Au2047I6320Vxw"
+  },
+  {
+    "id": "digital-soldering-station-60w",
+    "name": "Pro-Grade 60W Digital Temperature-Controlled ESD-Safe Soldering Station",
+    "sku": "TLS-SOLD-60W-ESD",
+    "category": "Accessories",
+    "price": 2450,
+    "stock": 35,
+    "description": "Industrial-grade 60W ESD-safe soldering station with PID microcomputer temperature control. Quick heating ceramic heating core reaches 350°C in under 15 seconds.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCjvAbxTfrfAnhAjitKctJvG9aEKKyIcVkNLu07HeoPo3SXzzTKbkg3eAIg6QVDKzyJtEjw9ufjS-qr2bXghqchZUnOrxXGtHSGM_Do_s7WGWcwYwoe-3MarB6Ts2DLbLIuPh90oXSUMUo-vfIRI3zNkI7fiVWC1t_nwmcZKk2ETQmYdl-EdPCc4pg-n9X4WPn78i1wiVtLUOehQzbvozCEkc5tckQYut8fBmDdIP5CDL53nhHezC0q"
+  },
+  {
+    "id": "ga12-n20-6v-100rpm",
+    "name": "GA12-N20 6V 100RPM Micro Metal Gear Motor High Torque",
+    "sku": "MOT-N20-6V-100",
+    "category": "Motors",
+    "price": 210,
+    "stock": 230,
+    "description": "High-quality 6V miniature metal gear motor with 100 RPM output speed. Rugged all-metal gearbox ensures longevity in combat robotics and robotic locks.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBc1gZM5MkAPlJ6lKzLqPkUCI8kPItS8aW5Ef0V4OEjub5z8x0INKhdLv5N6fsT7dARL_AK179s7KfpIhqaYW52mVlUHlB29cgclBAtlCMxd4yuAULqMn9lVco2W0FxRX8BOBE9D1RL60xQqtzo5vyR7EV15Pe9bxJxJjJZ16NPlte6_QXBLI4PFNXYR3Va8NiNNQ23heF7UJwfh3xCfb2q6IPXSx0-ACIohucWmsI57E37LrQWT5kX"
+  },
+  {
+    "id": "jgb37-520-12v-330rpm",
+    "name": "JGB37-520 12V 330RPM High Torque DC Geared Motor with Optical Encoder",
+    "sku": "MOT-JGB37-12V-330E",
+    "category": "Motors",
+    "price": 840,
+    "stock": 75,
+    "description": "Industrial 37mm diameter heavy-duty geared motor delivering 5.5 kg.cm torque with built-in dual channel encoder. Ideal for heavy AGVs and service robots.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuCpH3nYM1uToJW_JH-QI6_M7bwCoFVNTCIjFgeA-N3RLNHo4Uje1wDsydI5ojByobYKEoBevZpBFYsKR0eJ3jPFATOs2sQKZA2_mWyyUHMFNdQCdxN0kdJzGK7h6r0-Gmul9Mr-PDIWlZbsZDG90-2ac6MSS9Mm4_51iE69ybyIstqTBVMRx9lYGhNc1xmEvCTUu_AtxIFNQUT4BZFpf4p7AoLHQjnv5i9dWpS0Z4EB67AMt5vCtfnb"
+  },
+  {
+    "id": "motor-775-highspeed",
+    "name": "775 Ball Bearing High Speed 12V-24V DC Motor 12000 RPM for Drills & CNC",
+    "sku": "MOT-775-12V-12K",
+    "category": "Motors",
+    "price": 340,
+    "stock": 190,
+    "description": "High power 775 motor with front dual ball bearings and built-in cooling fan. Delivers massive starting torque for mini table saws, PCB drills, and lawn mowers.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuD6Ce71ENU9j9TE8uhzncTpBWOYDjunPp6Rg4yMI7iGai_jHJEFtjRuk_GTmClbEx-HHARNoedUcTgR0QbOXpfMF4mbsZRNqfERGBPQDbyGeV-GcGtHY2IUQ3N8Zn_d3X93K6hXOoNVrsuxOalhxX6EZmVuTys-R6bG2E3OB08dYSI2PtuV8QTQcMLRdm19gC8JKOJ1sDTe23YUaQL3SK5xEwszbO3WDw7Y2X21SFEMcbv03SoxRTAc"
+  },
+  {
+    "id": "l298n-dual-hbridge",
+    "name": "L298N Dual H-Bridge Motor Driver Module with 5V Regulated Output",
+    "sku": "DRV-L298N-DUAL-H",
+    "category": "Motors",
+    "price": 135,
+    "stock": 420,
+    "description": "Classic dual full-bridge driver chip designed to accept standard TTL logic levels and drive inductive loads such as relays, solenoids, DC and stepping motors.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAUQdLPPNUUqoW6K8F9ALeurpL1jr4Kxw5Z-l24M7iY4H9l34I0DX9ZGJOS4ALflaAiIla_jalsB81I0Gk3bRXz6fjL0IEFTQY53qPob92EKnCLHYczOnG8ACXLqOFHlEoxnQw9-2maGr45TL4rU1ny0wBN4k_ce2H12mnuTCZsv3vDOkEmarBwgg5GsQmw2-snuCQOo3Wv9rbtrktJbcXbTIwsDahfvZ4Aus4fz5pewUNSxypCj7Cr"
+  },
+  {
+    "id": "n20-rubber-wheel-30mm",
+    "name": "30mm High Traction Silicone Rubber Wheel for N20 Motors (Pair)",
+    "sku": "MEC-WHL-N20-30MM",
+    "category": "Structural",
+    "price": 85,
+    "stock": 310,
+    "description": "Precision molded 30mm diameter wheel with high-friction silicone rubber tire. Press-fits onto standard 3mm D-shafts of N20 gear motors.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBaJNsmXpBWhZoJxAGar-eL2Y0Od7MSjXyY5ZXKYCcEYA5k3A7zGziKDq4etekl8nfVtUU1YA6Du795fy3MpZkB_zPxXOV6EXCVa1BWy2MM6hhyNC_KCNbT3GYzm_z4ckeRQrhQ4HGz39X2Phq_-c9kebwl-nicM6FGrMddghVSQw2mH5bL20aAVAUsLjIZer9PEgyd-sepAckbttCXV9-XmesY2midLmYog3i5kyniUk5dIp6Z8rc7"
+  },
+  {
+    "id": "n20-mounting-bracket-steel",
+    "name": "N20 Micro Metal Gear Motor Stamped Steel Mounting Bracket Kit (Pair)",
+    "sku": "MEC-BRK-N20-STL",
+    "category": "Structural",
+    "price": 45,
+    "stock": 440,
+    "description": "Rigid stamped steel mounting brackets with black electrophoresis finish, specifically engineered for N20 motors. Includes M1.6 and M2 fasteners.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuABVWRn2ggqdF_7GYjNCyKB7ZDDatCtspOB4f4YCz357yh7jhXP8bWc_0i1PuHnoj4wtBdqzDMIUQ_Aezv4w6Oag1i2F50Bue4bIvwTUihifPhrb37q9ka7NDkGGafTx-QvKJAh4fftvCF59LgYjEexIq1s48ADiPc9xRY1BHiE_9JfchKALDPJ2OD3s_jjG81Wc0kWeKZUI1Uten12-Y7Q1gRY43EhOMI1rM0UPiHWDDKnEra6RXGf"
+  },
+  {
+    "id": "breadboard-mb102",
+    "name": "MB-102 830 Tie Points Solderless Breadboard with Power Rails",
+    "sku": "CMP-BRD-MB102-830",
+    "category": "Accessories",
+    "price": 110,
+    "stock": 510,
+    "description": "Standard 830-point solderless prototyping breadboard with colored power distribution rails and peelable self-adhesive foam backing.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuANSSL66Vs36nEIVGOWr6oVYwvz7aptIzzozUqM8whqiS4AyxnY3-mcKe1Yx6v7Omlh5B8H6enAqMig373kFw8iV66ON_selvZjiejMj5uHWQ5AvwcyHp4ZtAngiK5AhyzJtmKQ7S9EU7QP-xzD-trM45ewS7VfVerKlBD8vSSvJXcGUCLuoyBpzTBiNyAS2-dzllESL8TxvhhXz9Bn_ICk-F2Wh7uO7oQbyuOLcFX6ozf3_-MvISB1"
+  },
+  {
+    "id": "jumper-wires-65pcs",
+    "name": "65 Pcs Flexible Male-to-Male Solderless Breadboard Jumper Wires Kit",
+    "sku": "CMP-WIR-65PCS-MM",
+    "category": "Accessories",
+    "price": 90,
+    "stock": 670,
+    "description": "Assorted set of 65 flexible male-to-male jumper wires in 4 convenient lengths (120mm, 150mm, 200mm, 250mm) with molded connector ends.",
+    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAWiaqc6bIswO3xQjeteWYd6moSYk0Lvm1GhxDquTmmVgRqoOoJ1GQTeen8wAhu2LbioOk1F_1b7gaS417d0Aexgw5T5Ouu3GALOXd5NNCA57c1TKi3l4fs8hHQNaufUH1Hsp4I1HNkLp3lIjlE21lyV1oH4TqO9TL1ZquPB6Gj8XsVIaqAPwIRDlq7Kzf7pYrW5AVnd1HDS4R9Hy1biXwbx8kAegX4IgXWCfCwlRFl-PVdJNxjJCxk"
+  }
+]
