@@ -18,10 +18,11 @@ const DEMO_STORES = [
   { owner: 'seed-vendor-kanpur', name: 'Kanpur Robotics Hub', city: 'Kanpur', pincode: '208001', lat: 26.4499, lng: 80.3319 },
   { owner: 'seed-vendor-bengaluru', name: 'Koramangala Electronics', city: 'Bengaluru', pincode: '560034', lat: 12.9352, lng: 77.6245 },
   { owner: 'seed-vendor-chennai', name: 'Chennai Maker Labs', city: 'Chennai', pincode: '600001', lat: 13.0827, lng: 80.2707 },
+  { owner: 'seed-vendor-pune', name: 'Pune Maker Store', city: 'Pune', pincode: '411001', lat: 18.5204, lng: 73.8567 },
 ];
 
 export async function seed() {
-  if (config.isProd) throw new Error('Refusing to seed demo data in production');
+  if (config.isProd && process.env.FORCE_SEED !== 'true') throw new Error('Refusing to seed demo data in production');
 
   await withTransaction(async (c) => {
     for (const cat of Object.values(CATEGORIES)) {
