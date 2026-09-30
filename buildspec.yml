@@ -3,7 +3,9 @@ version: 0.2
 # Builds the four container images on AWS CodeBuild and pushes them to ECR.
 # Required environment variables (set on the CodeBuild project):
 #   AWS_ACCOUNT_ID, IMAGE_TAG, NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-#   NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_APP_ID
+#   NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_APP_ID, NEXT_PUBLIC_VENDOR_HUB_URL
+# NEXT_PUBLIC_* values are inlined at build time, so a missing one ships its source-code fallback
+# (which for the vendor hub URL was localhost) to real browsers.
 
 env:
   variables:
@@ -19,6 +21,7 @@ phases:
     commands:
       - docker build -f services/api/Dockerfile -t "$REGISTRY/spaceborn/api:$IMAGE_TAG" .
       - |
+        set -e
         for app in customer-storefront:storefront vendor-hub:vendor-hub admin-panel:admin-panel; do
           dir="${app%%:*}"; repo="${app##*:}"
           docker build -f "apps/$dir/Dockerfile" \
@@ -26,9 +29,11 @@ phases:
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="$NEXT_PUBLIC_FIREBASE_PROJECT_ID" \
             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="$NEXT_PUBLIC_FIREBASE_APP_ID" \
+            --build-arg NEXT_PUBLIC_VENDOR_HUB_URL="$NEXT_PUBLIC_VENDOR_HUB_URL" \
             -t "$REGISTRY/spaceborn/$repo:$IMAGE_TAG" .
         done
   post_build:
     commands:
-      - for repo in api storefront vendor-hub admin-panel; do docker push "$REGISTRY/spaceborn/$repo:$IMAGE_TAG"; done
+      - set -e
+      - for repo in api storefront vendor-hub admin-panel; do docker push "$REGISTRY/spaceborn/$repo:$IMAGE_TAG" || exit 1; done
       - echo "Pushed $IMAGE_TAG"

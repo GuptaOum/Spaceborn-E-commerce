@@ -32,8 +32,9 @@ async function call(as: As, method: string, url: string, body?: unknown, headers
 let keyCounter = 0;
 const idem = () => ({ 'Idempotency-Key': `test-key-${Date.now()}-${keyCounter++}` });
 
-async function placeOrder(customer: string, quantity = 1, store = bengaluruStore) {
-  return call(`${customer}:customer`, 'POST', '/v1/orders', { storeId: store, items: [{ productId, quantity }], address }, idem());
+// The server assigns the store from the delivery coordinates; clients cannot name one.
+async function placeOrder(customer: string, quantity = 1) {
+  return call(`${customer}:customer`, 'POST', '/v1/orders', { items: [{ productId, quantity }], address }, idem());
 }
 
 beforeAll(async () => {
@@ -200,7 +201,7 @@ describe('order lifecycle across roles', () => {
 
   it('same idempotency key never creates two orders', async () => {
     const headers = idem();
-    const body = { storeId: bengaluruStore, items: [{ productId, quantity: 1 }], address };
+    const body = { items: [{ productId, quantity: 1 }], address };
     const [a, b] = await Promise.all([
       call('cust-e:customer', 'POST', '/v1/orders', body, headers),
       call('cust-e:customer', 'POST', '/v1/orders', body, headers),
@@ -217,11 +218,24 @@ describe('order lifecycle across roles', () => {
     expect(rows[0].stock).toBe(0);
   });
 
-  it('customers outside the delivery radius are refused', async () => {
+  it('customers outside every delivery radius are refused', async () => {
     const res = await call('cust-f:customer', 'POST', '/v1/orders', {
-      storeId: puneStore, items: [{ productId, quantity: 1 }], address,
+      items: [{ productId, quantity: 1 }],
+      address: { ...address, latitude: 22.0, longitude: 76.0, city: 'Khandwa', pincode: '450001' },
     }, idem());
     expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('unserviceable');
+  });
+
+  it('a client cannot pin the store that fulfils its order', async () => {
+    // The oversell test above drains this row.
+    await db.pool.query('update inventory set stock = 5 where store_id = $1 and product_id = $2', [bengaluruStore, productId]);
+    // storeId is not part of the schema, so naming Pune must not route the order there.
+    const res = await call('cust-g:customer', 'POST', '/v1/orders', {
+      storeId: puneStore, items: [{ productId, quantity: 1 }], address,
+    }, idem());
+    expect(res.status).toBe(201);
+    expect(res.body.order.storeId).toBe(bengaluruStore);
   });
 });
 

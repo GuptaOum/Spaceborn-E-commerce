@@ -19,8 +19,8 @@ const placeOrderLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// No storeId: which store fulfils a cart is the server's decision, never the client's.
 const placeOrderBody = z.object({
-  storeId: uuid.optional(),
   items: z
     .array(z.object({ productId: uuid, quantity: z.number().int().min(1).max(MAX_ITEMS_PER_LINE) }))
     .min(1)

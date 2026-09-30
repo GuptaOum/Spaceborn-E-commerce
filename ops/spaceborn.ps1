@@ -201,8 +201,11 @@ switch ($Command) {
 
   'migrate' { Invoke-OneOffTask -TaskCommand @('node', 'dist/db/migrate.js') -Label 'Running migrations' }
 
-  # The seed script refuses to touch a production database, so it runs with NODE_ENV=development.
-  'seed' { Invoke-OneOffTask -TaskCommand @('node', 'dist/db/seed.js') -Env @{ NODE_ENV = 'development' } -Label 'Seeding demo data' }
+  # Runs with the task's own NODE_ENV so seed.js keeps its production guard. This previously forced
+  # NODE_ENV=development purely to defeat that guard, which made one typo enough to overwrite a
+  # live catalog with demo vendors. If the target really is non-production, set NODE_ENV on the
+  # service itself rather than lying to the seed script here.
+  'seed' { Invoke-OneOffTask -TaskCommand @('node', 'dist/db/seed.js') -Label 'Seeding demo data' }
 
   'status' {
     $names = @($DesiredCounts.Keys)

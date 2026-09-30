@@ -26,8 +26,6 @@ export interface DeliveryAddress {
 
 export interface PlaceOrderInput {
   customerId: string;
-  /** Optional: when omitted the nearest store that can supply the whole cart is chosen. */
-  storeId?: string;
   idempotencyKey: string;
   items: { productId: string; quantity: number }[];
   address: DeliveryAddress;
@@ -232,52 +230,51 @@ export async function placeOrder(input: PlaceOrderInput) {
       let won: Extract<Awaited<ReturnType<typeof attempt>>, { ok: true }> | undefined;
       let shortfall: Map<string, number> | undefined;
 
-      if (input.storeId) {
-        const only = await attempt(input.storeId);
-        if (!only.ok) {
-          if (only.reason === 'store_unavailable') throw unprocessable('store_unavailable', 'This store is not taking orders right now');
-          if (only.reason === 'out_of_range') throw unprocessable('out_of_range', 'This store does not deliver to your location');
-          shortfall = only.stock;
-        }
-        if (only.ok) won = only;
-      } else {
-        const ranked = await rankStores(c, input.address.latitude, input.address.longitude, quantities);
-        if (!ranked.length) throw unprocessable('unserviceable', 'No store delivers to your location yet');
+      const ranked = await rankStores(c, input.address.latitude, input.address.longitude, quantities);
+      if (!ranked.length) throw unprocessable('unserviceable', 'No store delivers to your location yet');
 
-        const complete = ranked.filter((r) => r.coverable === quantities.size);
-        if (!complete.length) {
-          const nearby = await availabilityNearby(c, input.address.latitude, input.address.longitude, productIds);
-          const best = ranked[0]!;
-          const offered = await c.query<{ product_id: string; stock: number }>(
-            `select i.product_id, i.stock from inventory i join products p on p.id = i.product_id
-              where i.store_id = $1 and i.product_id = any($2::uuid[]) and i.is_listed and p.is_active`,
-            [best.storeId, productIds],
-          );
-          const items = classifyShortfall(quantities, new Map(offered.rows.map((r) => [r.product_id, r.stock])), nearby);
-          const splits = items.filter((i) => i.reason === 'split_required').length;
-          throw conflict(
-            splits
-              ? 'These items are nearby but no single store has all of them'
-              : 'Some items in your cart are not available near you',
-            { code: 'partial_availability', storeId: best.storeId, items },
-          );
-        }
+      const complete = ranked.filter((r) => r.coverable === quantities.size);
+      if (!complete.length) {
+        const nearby = await availabilityNearby(c, input.address.latitude, input.address.longitude, productIds);
+        const best = ranked[0]!;
+        const offered = await c.query<{ product_id: string; stock: number }>(
+          `select i.product_id, i.stock from inventory i join products p on p.id = i.product_id
+            where i.store_id = $1 and i.product_id = any($2::uuid[]) and i.is_listed and p.is_active`,
+          [best.storeId, productIds],
+        );
+        const items = classifyShortfall(quantities, new Map(offered.rows.map((r) => [r.product_id, r.stock])), nearby);
+        const splits = items.filter((i) => i.reason === 'split_required').length;
+        throw conflict(
+          splits
+            ? 'These items are nearby but no single store has all of them'
+            : 'Some items in your cart are not available near you',
+          { code: 'partial_availability', storeId: best.storeId, items },
+        );
+      }
 
-        // Walk the ranked candidates so one store selling out doesn't fail a serviceable cart.
-        for (const candidate of complete) {
-          const tried = await attempt(candidate.storeId);
-          if (tried.ok) {
-            won = tried;
-            break;
-          }
+      // Walk the ranked candidates so one store selling out doesn't fail a serviceable cart.
+      let sawStockShortfall = false;
+      for (const candidate of complete) {
+        const tried = await attempt(candidate.storeId);
+        if (tried.ok) {
+          won = tried;
+          break;
+        }
+        if (tried.reason === 'stock') {
+          sawStockShortfall = true;
           // Report against the best-ranked store that fell short, not whichever failed last.
-          if (tried.reason === 'stock') shortfall ??= tried.stock;
+          shortfall ??= tried.stock;
         }
       }
 
       if (!won) {
+        // Every candidate went offline or out of range between ranking and locking, so this is not
+        // a stock problem and naming items would be misleading.
+        if (!sawStockShortfall) {
+          throw unprocessable('store_unavailable', 'The stores near you just stopped taking orders. Please try again shortly.');
+        }
         const nearby = await availabilityNearby(c, input.address.latitude, input.address.longitude, productIds);
-        const items = classifyShortfall(quantities, shortfall ?? new Map(), nearby);
+        const items = classifyShortfall(quantities, shortfall!, nearby);
         throw conflict('Some items in your cart are no longer available', { items });
       }
 

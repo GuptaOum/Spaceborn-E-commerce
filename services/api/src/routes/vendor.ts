@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { currentUser, requireAuth } from '../auth.js';
 import { pool } from '../db/pool.js';
@@ -13,6 +14,21 @@ import { escapeLike, fabStatusList, latitude, longitude, pagination, phone, pinc
 
 export const vendorRouter = Router();
 vendorRouter.use(requireAuth);
+
+/**
+ * Handover codes are short, so the only thing standing between an assigned vendor and marking an
+ * order delivered without handing it over is the number of guesses allowed. Keyed per order so one
+ * vendor's fumbled code cannot lock out their other deliveries.
+ */
+const handoverLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 5,
+  keyGenerator: (req) => `${currentUser(req).storeId ?? 'none'}:${req.params.id}`,
+  skipSuccessfulRequests: true,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: { code: 'too_many_attempts', message: 'Too many incorrect handover codes. Try again later.' } },
+});
 
 const STORE_COLUMNS = `
   id, name, phone, gstin, address_line as "addressLine", city, pincode, latitude, longitude,
@@ -264,7 +280,7 @@ vendorRouter.post('/fab-jobs/:id/quote', requireApprovedStore, async (req, res) 
   res.json({ job: await quoteJob({ jobId: parse(uuid, req.params.id), vendor: vendorActor(req), ...b }) });
 });
 
-vendorRouter.post('/fab-jobs/:id/transition', requireApprovedStore, async (req, res) => {
+vendorRouter.post('/fab-jobs/:id/transition', requireApprovedStore, handoverLimiter, async (req, res) => {
   const b = parse(
     z.object({
       to: z.enum(['declined', 'ready', 'out_for_delivery', 'delivered', 'cancelled']),
@@ -276,7 +292,7 @@ vendorRouter.post('/fab-jobs/:id/transition', requireApprovedStore, async (req, 
   res.json({ job: await transitionJob({ jobId: parse(uuid, req.params.id), actor: vendorActor(req), ...b }) });
 });
 
-vendorRouter.post('/orders/:id/transition', requireApprovedStore, async (req, res) => {
+vendorRouter.post('/orders/:id/transition', requireApprovedStore, handoverLimiter, async (req, res) => {
   const body = parse(
     z.object({ to: z.enum(ORDER_STATUSES), reason: reason.optional(), otp: z.string().regex(/^\d{4}$/).optional() }),
     req.body,
