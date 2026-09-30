@@ -18,65 +18,78 @@ Spaceborn is designed as a cloud-native, multi-tier distributed system running i
 
 ---
 
-### Network & Infrastructure Topology
+### 🗺️ Visual Architecture Canvas
 
+```mermaid
+flowchart TD
+    %% Styling
+    classDef client fill:#f8fafc,stroke:#64748b,stroke-width:1.5px,color:#0f172a;
+    classDef edge fill:#ecfdf5,stroke:#059669,stroke-width:1.5px,color:#064e3b;
+    classDef ingress fill:#eff6ff,stroke:#2563eb,stroke-width:1.5px,color:#1e3a8a;
+    classDef app fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f;
+    classDef data fill:#fdf2f8,stroke:#db2777,stroke-width:1.5px,color:#831843;
+    classDef security fill:#f3f4f6,stroke:#4b5563,stroke-width:1.5px,color:#111827;
+
+    subgraph Tier1["1. Users & Entry Points"]
+        CUST["🛍️ Shoppers / Customers<br/>(Storefront Web)"]:::client
+        VEND["🏪 Sellers / Vendors<br/>(Vendor Hub)"]:::client
+        ADMIN["🛡️ Platform Admins<br/>(SSM Secure Tunnel)"]:::client
+    end
+
+    subgraph Tier2["2. Edge & Front Door (AWS ap-south-1)"]
+        CF["⚡ CloudFront CDN Edge PoPs<br/>• Mumbai • Chennai • Hyderabad<br/>• SSL/TLS Termination & WebP Caching"]:::edge
+        ALB["🔀 Public Load Balancer (ALB)<br/>• Port 80 ➔ Storefront<br/>• Port 8080 ➔ Vendor Hub<br/>• /v1/* ➔ Backend API"]:::ingress
+    end
+
+    subgraph Tier3["3. Private Application Tier (ECS Fargate Containers)"]
+        STORE["🛒 Customer Storefront<br/>(Next.js 16 :3000)"]:::app
+        VENDOR["📦 Vendor Hub Portal<br/>(Next.js 16 :3000)"]:::app
+        API["⚙️ Core Express API<br/>(Node.js :4000)"]:::app
+        WORKER["🔄 Outbox Worker<br/>(Event Poller & Refunds)"]:::app
+        ADMIN_APP["📊 Admin Dashboard<br/>(Isolated Internal ALB)"]:::security
+    end
+
+    subgraph Tier4["4. Dedicated Storage & Regional Services"]
+        RDS[("🗄️ PostgreSQL 16 (Multi-AZ)<br/>Orders • Catalog • Inventory")]:::data
+        S3["🪣 S3 Private Uploads<br/>CAD, STL & Product Images"]:::data
+        SES["📧 Amazon SES<br/>4-Digit Handover OTPs"]:::data
+        PAY["💳 Razorpay<br/>Webhooks & Idempotent Refunds"]:::data
+    end
+
+    %% Flows
+    CUST -->|Browse & Checkout| CF
+    VEND -->|Manage Stock & Orders| CF
+    CF --> ALB
+
+    ALB -->|Port 80| STORE
+    ALB -->|Port 8080| VENDOR
+    ALB -->|API Calls /v1/*| API
+
+    ADMIN -.->|Zero-SSH Session| ADMIN_APP
+    
+    STORE --> API
+    VENDOR --> API
+
+    API -->|Read / Write| RDS
+    API -->|Pre-signed URLs| S3
+    
+    API -.->|Transactional Events| WORKER
+    WORKER -->|Send OTP| SES
+    WORKER -->|Reconcile & Refund| PAY
 ```
-                                  [ INTERNET ]
-                                        │
-           ┌────────────────────────────┼────────────────────────────┐
-           ▼                            ▼                            ▼
-      [Customers]                   [Vendors]                 [Administrators]
-   (Public Storefront)             (Vendor Hub)              (SSM Session Only)
-           │                            │                            │
-           ▼                            ▼                            │
-┌────────────────────────────────────────────────────────┐           │
-│  AWS CloudFront CDN Edge Cache (PriceClass_200)        │           │
-│  • Edge PoPs: Mumbai, Chennai, Hyderabad               │           │
-│  • HTTPS Termination & Next.js Asset Caching           │           │
-└───────────────────────────────┬────────────────────────┘           │
-                                │                                    │
-                                ▼                                    │
-┌────────────────────────────────────────────────────────────────────┼────────┐
-│  AWS VPC (10.20.0.0/16)                                            │        │
-│                                                                    │        │
-│  ┌──────────────────────────────────────────────────────────────┐  │        │
-│  │  PUBLIC SUBNETS (10.20.0.0/24 & 10.20.1.0/24)                │  │        │
-│  │                                                              │  │        │
-│  │   Internet-Facing Application Load Balancer (ALB)            │  │        │
-│  │   ├── Port 80   ──► Next.js Storefront Container             │  │        │
-│  │   ├── Port 8080 ──► Next.js Vendor Hub Container             │  │        │
-│  │   └── /v1/*     ──► Express API Container                    │  │        │
-│  │   (Note: /v1/admin* automatically rejected with 403)         │  │        │
-│  │                                                              │  │        │
-│  │   Shared NAT Gateway (Zone 1a)  │  S3 Gateway Endpoint       │  │        │
-│  └──────────────────┬──────────────────────────┬────────────────┘  │        │
-│                     │                          │                   │        │
-│  ┌──────────────────▼──────────────────────────▼────────────────┐  │        │
-│  │  PRIVATE APPLICATION SUBNETS (10.20.10.0/24 & 10.20.11.0/24) │  │        │
-│  │                                                              │  │        │
-│  │  ECS Fargate Cluster:                                        │  │        │
-│  │  ├── customer-storefront (Next.js 16 Standalone :3000)       │  │        │
-│  │  ├── vendor-hub          (Next.js 16 Standalone :3000)       │  │        │
-│  │  ├── spaceborn-api       (Node.js / Express :4000)           │  │        │
-│  │  └── outbox-worker       (Event bus, refunds, transactional) │  │        │
-│  │                                                              │  │        │
-│  │  Internal ALB (Non-Internet Facing):                         │  │        │
-│  │  └── admin-panel         (Next.js 16 Standalone :3000)       │  │        │
-│  │                                                              │  │        │
-│  │  Bastion Host (t4g.nano):                                    │  │        │
-│  │  └── AWS Systems Manager (SSM Session Manager only, no SSH) ◄┼──────────┘
-│  └──────────────────┬───────────────────────────────────────────┘
-│                     │
-│  ┌──────────────────▼───────────────────────────────────────────┐
-│  │  ISOLATED DATABASE SUBNETS (10.20.20.0/24 & 10.20.21.0/24)    │
-│  │  (Zero Internet Egress / Strict Security Group Ingress)      │
-│  │                                                              │
-│  │  AWS RDS PostgreSQL 16 (Multi-AZ Ready)                      │
-│  │  • Enforced SSL/TLS In-Transit & AES-256 At-Rest Encryption   │
-│  │  • Master credentials auto-rotated via AWS Secrets Manager    │
-│  └──────────────────────────────────────────────────────────────┘
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+
+---
+
+### 💡 The Architecture Explained in Plain English
+
+| Layer | Component | What It Does (In 1 Sentence) |
+|---|---|---|
+| **Edge Cache** | AWS CloudFront | Caches product images and Next.js bundles in Mumbai, Chennai, and Hyderabad for **< 15ms page loads**. |
+| **Front Door** | Public ALB | Directs customers to the **Storefront**, sellers to the **Vendor Hub**, and data queries to the **API**. |
+| **Compute** | ECS Fargate Docker | Runs all 3 Next.js applications and the Express API in private subnets with **no public IPs**. |
+| **Admin Shield** | Internal ALB & Bastion | Keeps the Admin Dashboard **physically invisible** from the public internet (accessible only via AWS SSM). |
+| **Database** | RDS PostgreSQL 16 | Stores orders, users, and 55 product catalog entries with Multi-AZ failover and auto-rotated secrets. |
+| **Workers** | Asynchronous Outbox | Handles 4-digit handover OTP emails via SES and auto-refunds via Razorpay with zero checkout delays. |
 
 ---
 
