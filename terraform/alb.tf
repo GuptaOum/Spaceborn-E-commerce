@@ -92,7 +92,9 @@ resource "aws_lb_listener" "public_https" {
 
 locals {
   public_listener_arn = local.https_enabled ? aws_lb_listener.public_https[0].arn : aws_lb_listener.public_http.arn
-  public_origin       = local.https_enabled ? "https://${var.domain_name}" : "http://${aws_lb.public.dns_name}"
+  public_origin = local.https_enabled ? "https://${var.domain_name}" : (
+    local.cloudfront_enabled ? "https://${aws_cloudfront_distribution.main[0].domain_name}" : "http://${aws_lb.public.dns_name}"
+  )
   vendor_origin       = local.https_enabled ? "https://vendor.${var.domain_name}" : "http://${aws_lb.public.dns_name}:8080"
 }
 

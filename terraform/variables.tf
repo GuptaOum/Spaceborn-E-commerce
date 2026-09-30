@@ -119,6 +119,12 @@ variable "storefront_max_count" {
   default = 6
 }
 
+variable "enable_cloudfront" {
+  type        = bool
+  description = "Front the public load balancer with CloudFront. Gives edge caching and HTTPS while no domain is attached; ignored once acm_certificate_arn is set."
+  default     = true
+}
+
 variable "mail_from" {
   type        = string
   description = "Verified SES sender for transactional mail. Empty disables email (events are only logged)."

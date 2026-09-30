@@ -3,6 +3,15 @@ output "public_url" {
   value       = aws_lb.public.dns_name
 }
 
+output "storefront_url" {
+  description = "What customers should use: HTTPS and edge-cached when CloudFront is enabled."
+  value       = local.public_origin
+}
+
+output "razorpay_webhook_url" {
+  value = "${local.public_origin}/v1/webhooks/razorpay"
+}
+
 output "vendor_url" {
   value = local.vendor_origin
 }
