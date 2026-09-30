@@ -1,181 +1,318 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 780" width="1240" height="780" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1040" width="1400" height="1040"
+     font-family="Amazon Ember, Inter, Segoe UI, Helvetica, Arial, sans-serif">
   <defs>
-    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
-      <path d="M0,0 L8,4 L0,8 z" fill="#94a3b8"/>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#545B64"/>
     </marker>
-    <style>
-      .t  { font-size: 12.5px; font-weight: 600; fill: #0f172a; }
-      .s  { font-size: 10.5px; fill: #64748b; }
-      .s2 { font-size: 10.5px; fill: #475569; }
-      .zn { font-size: 10px; font-weight: 700; fill: #64748b; letter-spacing: .7px; }
-      .fl { font-size: 9.5px; fill: #64748b; }
-      .box   { fill: #ffffff; stroke: #cbd5e1; }
-      .boxhi { fill: #ffffff; stroke: #2563eb; }
-      .zone  { fill: #f8fafc; stroke: #e2e8f0; }
-      .mng   { fill: #f1f5f9; stroke: #cbd5e1; }
-      .dash  { stroke-dasharray: 4 3; }
-      .ln    { stroke: #94a3b8; stroke-width: 1.2; marker-end: url(#arrow); }
-    </style>
+    <style><![CDATA[
+      .grp-label { font-size: 11.5px; font-weight: 700; }
+      .lbl  { font-size: 11px; font-weight: 600; fill: #232F3E; }
+      .sub  { font-size: 9.5px; fill: #545B64; }
+      .sn   { font-size: 9.5px; font-weight: 700; fill: #545B64; letter-spacing: .3px; }
+      .fl   { font-size: 9px; fill: #545B64; }
+      .ln   { stroke: #545B64; stroke-width: 1.3; fill: none; marker-end: url(#a); }
+      .dash { stroke-dasharray: 5 3; }
+      .ext  { fill: #ffffff; stroke: #879196; }
+    ]]></style>
+
+    <!-- White service glyphs, drawn inside a 34x34 tile -->
+    <g id="g-alb" stroke="#fff" stroke-width="1.6" fill="none">
+      <circle cx="17" cy="9" r="2.6" fill="#fff" stroke="none"/>
+      <path d="M17 12 V17 M8 24 V21 H26 V24"/>
+      <circle cx="8" cy="26" r="2.2" fill="#fff" stroke="none"/>
+      <circle cx="17" cy="26" r="2.2" fill="#fff" stroke="none"/>
+      <circle cx="26" cy="26" r="2.2" fill="#fff" stroke="none"/>
+      <path d="M17 17 V21"/>
+    </g>
+    <g id="g-nat" stroke="#fff" stroke-width="1.6" fill="none">
+      <rect x="7" y="7" width="20" height="20" rx="3"/>
+      <path d="M11 14 H20 l-3 -3 M23 20 H14 l3 3"/>
+    </g>
+    <g id="g-igw" stroke="#fff" stroke-width="1.6" fill="none">
+      <circle cx="17" cy="17" r="9"/>
+      <path d="M17 6 V28 M8 13 H26 M8 21 H26"/>
+    </g>
+    <g id="g-endpoint" stroke="#fff" stroke-width="1.6" fill="none">
+      <circle cx="17" cy="17" r="8"/>
+      <circle cx="17" cy="17" r="2.6" fill="#fff" stroke="none"/>
+      <path d="M17 6 V9 M17 25 V28"/>
+    </g>
+    <g id="g-task" stroke="#fff" stroke-width="1.5" fill="none">
+      <rect x="6" y="9" width="22" height="16" rx="2"/>
+      <path d="M11 13 V21 M17 13 V21 M23 13 V21"/>
+    </g>
+    <g id="g-rds" stroke="#fff" stroke-width="1.6" fill="none">
+      <ellipse cx="17" cy="10" rx="9" ry="3.4"/>
+      <path d="M8 10 V24 a9 3.4 0 0 0 18 0 V10"/>
+      <path d="M8 17 a9 3.4 0 0 0 18 0"/>
+    </g>
+    <g id="g-s3" stroke="#fff" stroke-width="1.6" fill="none">
+      <path d="M8 9 H26 l-2.5 18 H10.5 z"/>
+      <path d="M9.4 16 H24.6"/>
+    </g>
+    <g id="g-secret" stroke="#fff" stroke-width="1.6" fill="none">
+      <circle cx="13" cy="13" r="5"/>
+      <path d="M16.5 16.5 L26 26 M22 22 l-3 3 M25 19 l-3 3"/>
+    </g>
+    <g id="g-ses" stroke="#fff" stroke-width="1.6" fill="none">
+      <rect x="6" y="10" width="22" height="15" rx="2"/>
+      <path d="M6.5 11 L17 19 L27.5 11"/>
+    </g>
+    <g id="g-cw" stroke="#fff" stroke-width="1.6" fill="none">
+      <rect x="6" y="7" width="22" height="20" rx="3"/>
+      <path d="M10 21 L14 15 L18 19 L24 11"/>
+    </g>
+    <g id="g-build" stroke="#fff" stroke-width="1.6" fill="none">
+      <circle cx="17" cy="17" r="5"/>
+      <path d="M17 6 V9 M17 25 V28 M6 17 H9 M25 17 H28 M9.6 9.6 L11.7 11.7 M22.3 22.3 L24.4 24.4 M24.4 9.6 L22.3 11.7 M11.7 22.3 L9.6 24.4"/>
+    </g>
+    <g id="g-ecr" stroke="#fff" stroke-width="1.5" fill="none">
+      <path d="M17 6 L27 11 L17 16 L7 11 z"/>
+      <path d="M7 17 L17 22 L27 17 M7 23 L17 28 L27 23"/>
+    </g>
+    <g id="g-ec2" stroke="#fff" stroke-width="1.6" fill="none">
+      <rect x="8" y="8" width="18" height="18" rx="2"/>
+      <rect x="13" y="13" width="8" height="8" rx="1"/>
+      <path d="M11 5 V8 M23 5 V8 M11 26 V29 M23 26 V29"/>
+    </g>
+    <g id="g-scale" stroke="#fff" stroke-width="1.6" fill="none">
+      <circle cx="17" cy="17" r="9"/>
+      <path d="M17 22 V12 l-3.5 3.5 M17 12 l3.5 3.5"/>
+    </g>
+    <g id="g-user" stroke="#232F3E" stroke-width="1.5" fill="none">
+      <circle cx="17" cy="12" r="4.6"/>
+      <path d="M8 27 a9 7.5 0 0 1 18 0"/>
+    </g>
+    <g id="g-cloud" stroke="#232F3E" stroke-width="1.5" fill="none">
+      <path d="M6 14 a4.5 4.5 0 0 1 4.6 -4.4 a6 6 0 0 1 11.3 1.4 a4 4 0 0 1 -0.5 8 H10 a4.2 4.2 0 0 1 -4 -5 z"/>
+    </g>
+    <g id="g-region" stroke="#00A4A6" stroke-width="1.5" fill="none">
+      <circle cx="10" cy="10" r="8"/>
+      <path d="M2 10 H18 M10 2 a11 8 0 0 0 0 16 a11 8 0 0 0 0 -16"/>
+    </g>
+    <g id="g-vpc" stroke="#8C4FFF" stroke-width="1.5" fill="none">
+      <rect x="2" y="2" width="16" height="16" rx="3"/>
+      <circle cx="10" cy="6.5" r="1.8" fill="#8C4FFF" stroke="none"/>
+      <path d="M10 8.3 V11 M6 14.5 V11 H14 V14.5"/>
+    </g>
   </defs>
 
-  <rect width="1240" height="780" fill="#ffffff"/>
+  <rect width="1400" height="1040" fill="#ffffff"/>
 
-  <text x="40" y="34" font-size="19" font-weight="700" fill="#0f172a">Spaceborn &#8212; quick commerce for electronics, 3D printing and CNC</text>
-  <text x="40" y="54" font-size="12" fill="#475569">Deployed architecture &#183; AWS ap-south-1 (Mumbai) &#183; Terraform, 91 resources &#183; ECS Fargate, RDS PostgreSQL, Firebase Auth, Razorpay, SES</text>
+  <text x="40" y="22" font-size="17" font-weight="700" fill="#232F3E">Spaceborn &#8212; quick commerce for electronics with 3D printing and CNC fabrication</text>
 
-  <!-- Clients and third parties -->
+  <!-- External actors -->
   <g>
-    <rect class="mng" x="40"  y="76" width="180" height="46" rx="6"/>
-    <text class="t" x="130" y="97"  text-anchor="middle">Customers</text>
-    <text class="s" x="130" y="111" text-anchor="middle">browser &#183; Firebase ID token</text>
+    <rect class="ext" x="40" y="40" width="152" height="52" rx="4"/>
+    <g transform="translate(50,48)"><use href="#g-user"/></g>
+    <text class="lbl" x="92" y="64">Customers</text>
+    <text class="sub" x="92" y="78">browser, Firebase ID token</text>
 
-    <rect class="mng" x="232" y="76" width="180" height="46" rx="6"/>
-    <text class="t" x="322" y="97"  text-anchor="middle">Vendors</text>
-    <text class="s" x="322" y="111" text-anchor="middle">store, inventory, print jobs</text>
+    <rect class="ext" x="204" y="40" width="152" height="52" rx="4"/>
+    <g transform="translate(214,48)"><use href="#g-user"/></g>
+    <text class="lbl" x="256" y="64">Vendors</text>
+    <text class="sub" x="256" y="78">stores, stock, print jobs</text>
 
-    <rect class="mng dash" x="424" y="76" width="180" height="46" rx="6"/>
-    <text class="t" x="514" y="97"  text-anchor="middle">Admins</text>
-    <text class="s" x="514" y="111" text-anchor="middle">SSM tunnel only</text>
+    <rect class="ext dash" x="368" y="40" width="152" height="52" rx="4" fill="#ffffff" stroke="#879196"/>
+    <g transform="translate(378,48)"><use href="#g-user"/></g>
+    <text class="lbl" x="420" y="64">Administrators</text>
+    <text class="sub" x="420" y="78">no public entry point</text>
 
-    <rect class="mng" x="660" y="76" width="180" height="46" rx="6"/>
-    <text class="t" x="750" y="97"  text-anchor="middle">Razorpay</text>
-    <text class="s" x="750" y="111" text-anchor="middle">payments + webhook</text>
+    <rect class="ext" x="860" y="40" width="240" height="52" rx="4"/>
+    <text class="lbl" x="980" y="62" text-anchor="middle">Firebase Authentication</text>
+    <text class="sub" x="980" y="78" text-anchor="middle">identity provider, role claims server-side</text>
 
-    <rect class="mng" x="884" y="76" width="332" height="46" rx="6"/>
-    <text class="t" x="1050" y="97"  text-anchor="middle">Firebase Authentication</text>
-    <text class="s" x="1050" y="111" text-anchor="middle">identity provider &#183; role claims set server-side only</text>
+    <rect class="ext" x="1112" y="40" width="200" height="52" rx="4"/>
+    <text class="lbl" x="1212" y="62" text-anchor="middle">Razorpay</text>
+    <text class="sub" x="1212" y="78" text-anchor="middle">payments and webhook</text>
   </g>
+
+  <!-- AWS Cloud -->
+  <rect x="190" y="100" width="1180" height="880" rx="4" fill="none" stroke="#232F3E" stroke-width="1.4"/>
+  <g transform="translate(198,106)"><use href="#g-cloud"/></g>
+  <text class="grp-label" x="226" y="124" fill="#232F3E">AWS Cloud</text>
+
+  <!-- Region -->
+  <rect x="214" y="140" width="1140" height="820" rx="4" fill="none" stroke="#00A4A6" stroke-width="1.3" stroke-dasharray="6 4"/>
+  <g transform="translate(226,148)"><use href="#g-region"/></g>
+  <text class="grp-label" x="252" y="166" fill="#00A4A6">Region: ap-south-1 (Mumbai)</text>
 
   <!-- VPC -->
-  <rect x="24" y="150" width="830" height="530" rx="8" fill="none" stroke="#2563eb" stroke-width="1.3"/>
-  <text x="40" y="170" font-size="11" font-weight="700" fill="#2563eb">VPC 10.20.0.0/16 &#183; 2 availability zones</text>
+  <rect x="238" y="190" width="790" height="750" rx="4" fill="none" stroke="#8C4FFF" stroke-width="1.6"/>
+  <g transform="translate(250,196)"><use href="#g-vpc"/></g>
+  <text class="grp-label" x="276" y="212" fill="#8C4FFF">VPC 10.20.0.0/16</text>
+
+  <!-- Internet gateway on the VPC boundary -->
+  <g transform="translate(616,173)"><rect width="34" height="34" rx="5" fill="#8C4FFF"/><use href="#g-igw"/></g>
+  <text class="lbl" x="658" y="188">Internet gateway</text>
+  <text class="sub" x="658" y="201">the only route in or out</text>
+
+  <!-- VPC gateway endpoint -->
+  <g transform="translate(858,236)"><rect width="34" height="34" rx="5" fill="#8C4FFF"/><use href="#g-endpoint"/></g>
+  <text class="lbl" x="900" y="251">S3 gateway endpoint</text>
+  <text class="sub" x="900" y="264">image layer pulls bypass the NAT</text>
+
+  <!-- Availability zones -->
+  <rect x="254" y="300" width="372" height="620" rx="4" fill="none" stroke="#00A4A6" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <text class="grp-label" x="268" y="322" fill="#00A4A6">Availability Zone ap-south-1a</text>
+
+  <rect x="642" y="300" width="372" height="620" rx="4" fill="none" stroke="#00A4A6" stroke-width="1.2" stroke-dasharray="5 3"/>
+  <text class="grp-label" x="656" y="322" fill="#00A4A6">Availability Zone ap-south-1b</text>
 
   <!-- Public subnets -->
-  <rect class="zone" x="40" y="180" width="798" height="98" rx="6"/>
-  <text class="zn" x="54" y="198">PUBLIC SUBNETS</text>
-  <rect class="boxhi" x="56" y="208" width="470" height="60" rx="6"/>
-  <text class="t"  x="291" y="230" text-anchor="middle">Application Load Balancer (internet-facing)</text>
-  <text class="s2" x="291" y="246" text-anchor="middle">:80 &#8594; storefront     :8080 &#8594; vendor hub     /v1/* &#8594; API</text>
-  <text class="s"  x="291" y="261" text-anchor="middle">/v1/admin* &#8594; fixed 403 response</text>
+  <rect x="266" y="336" width="348" height="150" rx="3" fill="#F1F8E9" stroke="#7AA116"/>
+  <text class="sn" x="278" y="354">PUBLIC SUBNET 10.20.0.0/24</text>
+  <rect x="654" y="336" width="348" height="150" rx="3" fill="#F1F8E9" stroke="#7AA116"/>
+  <text class="sn" x="666" y="354">PUBLIC SUBNET 10.20.1.0/24</text>
 
-  <rect class="box" x="542" y="208" width="280" height="60" rx="6"/>
-  <text class="t" x="682" y="232" text-anchor="middle">NAT Gateway</text>
-  <text class="s" x="682" y="248" text-anchor="middle">the only egress path for private tasks</text>
+  <g transform="translate(520,362)"><rect width="34" height="34" rx="5" fill="#8C4FFF"/><use href="#g-nat"/></g>
+  <text class="lbl" x="537" y="410" text-anchor="middle">NAT gateway</text>
+  <text class="sub" x="537" y="422" text-anchor="middle">single, shared</text>
 
-  <!-- App subnets -->
-  <rect class="zone" x="40" y="294" width="798" height="252" rx="6"/>
-  <text class="zn" x="54" y="312">PRIVATE APP SUBNETS &#183; ECS FARGATE &#183; NO PUBLIC IP</text>
+  <text class="fl" x="666" y="372">One NAT gateway is shared from</text>
+  <text class="fl" x="666" y="384">zone 1a to halve the hourly cost.</text>
+  <text class="fl" x="666" y="396">Load balancer nodes run in both</text>
+  <text class="fl" x="666" y="408">public subnets.</text>
 
-  <rect class="box" x="56" y="322" width="240" height="54" rx="6"/>
-  <text class="t" x="176" y="344" text-anchor="middle">Storefront</text>
-  <text class="s" x="176" y="359" text-anchor="middle">Next.js &#183; 2 tasks &#183; :3000</text>
+  <!-- Private app subnets -->
+  <rect x="266" y="502" width="348" height="290" rx="3" fill="#E8F6F7" stroke="#00A4A6"/>
+  <text class="sn" x="278" y="520">PRIVATE SUBNET 10.20.10.0/24</text>
+  <rect x="654" y="502" width="348" height="290" rx="3" fill="#E8F6F7" stroke="#00A4A6"/>
+  <text class="sn" x="666" y="520">PRIVATE SUBNET 10.20.11.0/24</text>
 
-  <rect class="box" x="308" y="322" width="240" height="54" rx="6"/>
-  <text class="t" x="428" y="344" text-anchor="middle">Vendor hub</text>
-  <text class="s" x="428" y="359" text-anchor="middle">Next.js &#183; 1 task &#183; :3000</text>
+  <!-- Load balancer spanning both public subnets (drawn last so it sits on top) -->
+  <rect x="266" y="428" width="736" height="50" rx="4" fill="#ffffff" stroke="#8C4FFF" stroke-width="1.4"/>
+  <g transform="translate(282,436)"><rect width="34" height="34" rx="5" fill="#8C4FFF"/><use href="#g-alb"/></g>
+  <text class="lbl" x="328" y="449">Application Load Balancer (internet-facing)</text>
+  <text class="sub" x="328" y="464">:80 storefront &#183; :8080 vendor hub &#183; /v1/* to the API &#183; /v1/admin* answered with 403</text>
 
-  <rect class="box dash" x="560" y="322" width="262" height="54" rx="6"/>
-  <text class="t" x="691" y="344" text-anchor="middle">Internal load balancer</text>
-  <text class="s" x="691" y="359" text-anchor="middle">admin only &#183; not internet facing</text>
+  <!-- Tasks, zone a -->
+  <g transform="translate(303,534)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="320" y="580" text-anchor="middle">API</text>
+  <text class="sub" x="320" y="592" text-anchor="middle">Fargate :4000</text>
 
-  <rect class="boxhi" x="56" y="390" width="240" height="54" rx="6"/>
-  <text class="t"  x="176" y="412" text-anchor="middle">API</text>
-  <text class="s2" x="176" y="427" text-anchor="middle">Express &#183; 2&#8211;6 tasks &#183; :4000</text>
+  <g transform="translate(460,534)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="477" y="580" text-anchor="middle">Storefront</text>
+  <text class="sub" x="477" y="592" text-anchor="middle">Next.js :3000</text>
 
-  <rect class="box" x="308" y="390" width="240" height="54" rx="6"/>
-  <text class="t" x="428" y="412" text-anchor="middle">Worker</text>
-  <text class="s" x="428" y="427" text-anchor="middle">outbox &#183; refunds &#183; email</text>
+  <g transform="translate(303,616)"><rect width="34" height="34" rx="5" fill="#8C4FFF"/><use href="#g-alb"/></g>
+  <text class="lbl" x="320" y="662" text-anchor="middle">Internal ALB</text>
+  <text class="sub" x="320" y="674" text-anchor="middle">not internet-facing</text>
 
-  <rect class="box" x="560" y="390" width="262" height="54" rx="6"/>
-  <text class="t" x="691" y="412" text-anchor="middle">Admin panel</text>
-  <text class="s" x="691" y="427" text-anchor="middle">Next.js &#183; 1 task &#183; :3000</text>
+  <g transform="translate(460,616)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="477" y="662" text-anchor="middle">Admin panel</text>
+  <text class="sub" x="477" y="674" text-anchor="middle">Next.js :3000</text>
 
-  <rect class="box" x="56" y="458" width="240" height="54" rx="6"/>
-  <text class="t" x="176" y="480" text-anchor="middle">Bastion</text>
-  <text class="s" x="176" y="495" text-anchor="middle">t4g.nano &#183; SSM entry for admin and DB</text>
+  <g transform="translate(382,698)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-ec2"/></g>
+  <text class="lbl" x="399" y="744" text-anchor="middle">Bastion (t4g.nano)</text>
+  <text class="sub" x="399" y="756" text-anchor="middle">Session Manager only, no SSH key</text>
 
-  <rect class="box dash" x="308" y="458" width="240" height="54" rx="6"/>
-  <text class="t" x="428" y="480" text-anchor="middle">Migration task</text>
-  <text class="s" x="428" y="495" text-anchor="middle">one-off &#183; same image as API</text>
+  <!-- Tasks, zone b -->
+  <g transform="translate(690,534)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="707" y="580" text-anchor="middle">API</text>
+  <text class="sub" x="707" y="592" text-anchor="middle">Fargate :4000</text>
 
-  <rect class="box" x="560" y="458" width="262" height="54" rx="6"/>
-  <text class="t" x="691" y="480" text-anchor="middle">S3 gateway endpoint</text>
-  <text class="s" x="691" y="495" text-anchor="middle">image layer pulls skip the NAT</text>
+  <g transform="translate(850,534)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="867" y="580" text-anchor="middle">Storefront</text>
+  <text class="sub" x="867" y="592" text-anchor="middle">Next.js :3000</text>
 
-  <!-- DB subnets -->
-  <rect class="zone" x="40" y="562" width="798" height="96" rx="6"/>
-  <text class="zn" x="54" y="580">ISOLATED DB SUBNETS &#183; NO ROUTE TO THE INTERNET</text>
-  <rect class="boxhi" x="56" y="590" width="470" height="56" rx="6"/>
-  <text class="t"  x="291" y="612" text-anchor="middle">RDS PostgreSQL 16 &#183; db.t4g.micro</text>
-  <text class="s2" x="291" y="629" text-anchor="middle">TLS forced &#183; encrypted &#183; 7-day backups &#183; password rotated by Secrets Manager</text>
+  <g transform="translate(690,616)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="707" y="662" text-anchor="middle">Worker</text>
+  <text class="sub" x="707" y="674" text-anchor="middle">outbox, refunds, email</text>
 
-  <rect class="box" x="542" y="590" width="280" height="56" rx="6"/>
-  <text class="t" x="682" y="612" text-anchor="middle">Reachable from</text>
-  <text class="s" x="682" y="629" text-anchor="middle">API, worker and bastion only</text>
+  <g transform="translate(850,616)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-task"/></g>
+  <text class="lbl" x="867" y="662" text-anchor="middle">Vendor hub</text>
+  <text class="sub" x="867" y="674" text-anchor="middle">Next.js :3000</text>
 
-  <!-- Regional services -->
-  <text class="zn" x="884" y="170">REGIONAL AWS SERVICES</text>
+  <g transform="translate(770,698)"><rect width="34" height="34" rx="5" fill="#8C4FFF"/><use href="#g-alb"/></g>
+  <text class="lbl" x="787" y="744" text-anchor="middle">Internal ALB node</text>
+  <text class="sub" x="787" y="756" text-anchor="middle">second zone</text>
 
-  <rect class="mng" x="884" y="180" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="202" text-anchor="middle">Elastic Container Registry</text>
-  <text class="s" x="1050" y="218" text-anchor="middle">4 repositories &#183; immutable tags &#183; scanned on push</text>
+  <!-- Private database subnets -->
+  <rect x="266" y="808" width="348" height="100" rx="3" fill="#E8F6F7" stroke="#00A4A6"/>
+  <text class="sn" x="278" y="826">PRIVATE SUBNET 10.20.20.0/24 &#183; NO INTERNET ROUTE</text>
+  <rect x="654" y="808" width="348" height="100" rx="3" fill="#E8F6F7" stroke="#00A4A6"/>
+  <text class="sn" x="666" y="826">PRIVATE SUBNET 10.20.21.0/24 &#183; NO INTERNET ROUTE</text>
 
-  <rect class="mng" x="884" y="242" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="264" text-anchor="middle">Secrets Manager</text>
-  <text class="s" x="1050" y="280" text-anchor="middle">Firebase service account &#183; Razorpay &#183; database</text>
+  <g transform="translate(288,840)"><rect width="34" height="34" rx="5" fill="#C925D1"/><use href="#g-rds"/></g>
+  <text class="lbl" x="332" y="854">RDS PostgreSQL 16</text>
+  <text class="sub" x="332" y="867">db.t4g.micro &#183; TLS forced &#183; encrypted</text>
+  <text class="sub" x="332" y="880">master password rotated by Secrets Manager</text>
 
-  <rect class="mng" x="884" y="304" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="326" text-anchor="middle">S3 (private uploads)</text>
-  <text class="s" x="1050" y="342" text-anchor="middle">CAD and STL files &#183; versioned &#183; no public access</text>
+  <text class="fl" x="666" y="846">Subnet reserved by the DB subnet group.</text>
+  <text class="fl" x="666" y="858">Single-AZ today; flipping db_multi_az</text>
+  <text class="fl" x="666" y="870">places the standby here.</text>
 
-  <rect class="mng" x="884" y="366" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="388" text-anchor="middle">Simple Email Service</text>
-  <text class="s" x="1050" y="404" text-anchor="middle">handover OTP, status updates, vendor alerts</text>
+  <!-- Regional services outside the VPC -->
+  <text class="sn" x="1060" y="200">REGIONAL SERVICES</text>
 
-  <rect class="mng" x="884" y="428" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="450" text-anchor="middle">CloudWatch Logs</text>
-  <text class="s" x="1050" y="466" text-anchor="middle">6 log groups &#183; 30-day retention &#183; Container Insights</text>
+  <g transform="translate(1060,210)"><rect width="34" height="34" rx="5" fill="#ED7100"/><use href="#g-ecr"/></g>
+  <text class="lbl" x="1102" y="224">Elastic Container Registry</text>
+  <text class="sub" x="1102" y="237">4 repositories, immutable tags</text>
 
-  <rect class="mng" x="884" y="490" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="512" text-anchor="middle">CodeBuild</text>
-  <text class="s" x="1050" y="528" text-anchor="middle">builds and pushes all four container images</text>
+  <g transform="translate(1060,288)"><rect width="34" height="34" rx="5" fill="#DD344C"/><use href="#g-secret"/></g>
+  <text class="lbl" x="1102" y="302">Secrets Manager</text>
+  <text class="sub" x="1102" y="315">Firebase key, Razorpay, database</text>
 
-  <rect class="mng" x="884" y="552" width="332" height="52" rx="6"/>
-  <text class="t" x="1050" y="574" text-anchor="middle">Application Auto Scaling</text>
-  <text class="s" x="1050" y="590" text-anchor="middle">API and storefront 2&#8594;6 tasks at 60% CPU</text>
+  <g transform="translate(1060,366)"><rect width="34" height="34" rx="5" fill="#7AA116"/><use href="#g-s3"/></g>
+  <text class="lbl" x="1102" y="380">S3 private uploads</text>
+  <text class="sub" x="1102" y="393">CAD and STL files, versioned</text>
 
-  <!-- Flows. Routed through the gutters so no connector crosses a box. -->
-  <g class="ln" fill="none">
-    <line x1="130" y1="124" x2="150" y2="204"/>
-    <line x1="322" y1="124" x2="322" y2="204"/>
-    <line x1="742" y1="124" x2="480" y2="204"/>
-    <line x1="176" y1="270" x2="176" y2="318"/>
-    <line x1="428" y1="270" x2="428" y2="318"/>
-    <polyline points="72,270 48,292 48,408 52,408"/>
-    <line x1="691" y1="378" x2="691" y2="386"/>
-    <line x1="150" y1="446" x2="150" y2="586"/>
-    <polyline points="428,446 428,530 302,530 302,586"/>
-    <line x1="682" y1="206" x2="682" y2="132"/>
+  <g transform="translate(1060,444)"><rect width="34" height="34" rx="5" fill="#C925D1"/><use href="#g-ses"/></g>
+  <text class="lbl" x="1102" y="458">Simple Email Service</text>
+  <text class="sub" x="1102" y="471">handover OTP, status, vendor alerts</text>
+
+  <g transform="translate(1060,522)"><rect width="34" height="34" rx="5" fill="#E7157B"/><use href="#g-cw"/></g>
+  <text class="lbl" x="1102" y="536">CloudWatch Logs</text>
+  <text class="sub" x="1102" y="549">6 log groups, 30-day retention</text>
+
+  <g transform="translate(1060,600)"><rect width="34" height="34" rx="5" fill="#01A88D"/><use href="#g-build"/></g>
+  <text class="lbl" x="1102" y="614">CodeBuild</text>
+  <text class="sub" x="1102" y="627">builds and pushes all four images</text>
+
+  <g transform="translate(1060,678)"><rect width="34" height="34" rx="5" fill="#E7157B"/><use href="#g-scale"/></g>
+  <text class="lbl" x="1102" y="692">Application Auto Scaling</text>
+  <text class="sub" x="1102" y="705">API and storefront 2 to 6 tasks at 60% CPU</text>
+
+  <!-- Traffic -->
+  <g class="ln">
+    <line x1="116" y1="94" x2="620" y2="172"/>
+    <line x1="280" y1="94" x2="626" y2="174"/>
+    <line x1="978" y1="94" x2="648" y2="176"/>
+    <line x1="1210" y1="94" x2="652" y2="180"/>
+    <line x1="633" y1="209" x2="633" y2="424"/>
+    <line x1="537" y1="360" x2="628" y2="210"/>
+    <line x1="320" y1="480" x2="320" y2="530"/>
+    <line x1="477" y1="480" x2="477" y2="530"/>
+    <line x1="707" y1="480" x2="707" y2="530"/>
+    <line x1="867" y1="480" x2="867" y2="530"/>
+    <line x1="339" y1="633" x2="456" y2="633"/>
+    <polyline points="320,570 288,604 288,800 402,800 402,836"/>
+    <polyline points="707,652 634,690 634,800 420,800 420,836"/>
+    <line x1="896" y1="272" x2="1056" y2="238"/>
+    <line x1="896" y1="270" x2="1056" y2="378"/>
   </g>
-  <g class="ln dash" fill="none">
-    <polyline points="604,99 868,99 868,349 826,349"/>
+  <g class="ln dash">
+    <polyline points="444,94 444,110 170,110 170,715 376,715"/>
+    <line x1="392" y1="696" x2="330" y2="654"/>
   </g>
 
-  <text class="fl" x="404" y="172">webhook /v1/webhooks/razorpay</text>
-  <text class="fl" x="514" y="140" text-anchor="middle">SSM port-forward</text>
-  <text class="fl" x="682" y="170" text-anchor="middle">egress to Razorpay, Firebase, SES</text>
-  <text class="fl" x="60" y="290">/v1</text>
+  <text class="fl" x="560" y="286">egress: Razorpay, Firebase, SES, Secrets Manager</text>
+  <text class="fl" x="176" y="420" transform="rotate(-90 176 420)">Session Manager port-forward</text>
+  <text class="fl" x="1044" y="120" text-anchor="end">webhook in, service calls out</text>
 
-  <!-- Legend and notes -->
+  <!-- Legend and gaps -->
   <g>
-    <line x1="40" y1="706" x2="76" y2="706" stroke="#94a3b8" stroke-width="1.2" marker-end="url(#arrow)"/>
-    <text class="s2" x="84" y="710">live request traffic</text>
-    <line x1="220" y1="706" x2="256" y2="706" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-    <text class="s2" x="264" y="710">administrative or one-off path</text>
-    <rect x="470" y="699" width="14" height="12" rx="3" fill="#ffffff" stroke="#2563eb"/>
-    <text class="s2" x="492" y="710">stateful or primary component</text>
+    <line x1="40" y1="1002" x2="76" y2="1002" stroke="#545B64" stroke-width="1.3" marker-end="url(#a)"/>
+    <text class="sub" x="84" y="1006">request or data path</text>
+    <line x1="230" y1="1002" x2="266" y2="1002" stroke="#545B64" stroke-width="1.3" stroke-dasharray="5 3" marker-end="url(#a)"/>
+    <text class="sub" x="274" y="1006">administrative path</text>
+    <rect x="420" y="995" width="14" height="13" rx="2" fill="#F1F8E9" stroke="#7AA116"/>
+    <text class="sub" x="442" y="1006">public subnet</text>
+    <rect x="530" y="995" width="14" height="13" rx="2" fill="#E8F6F7" stroke="#00A4A6"/>
+    <text class="sub" x="552" y="1006">private subnet</text>
+    <text class="sub" x="660" y="1006">Tile colours follow the AWS architecture icon categories: networking, compute, database, storage, security, management, developer tools.</text>
   </g>
-  <text class="s" x="40" y="738">Customers never choose a vendor: the delivery location resolves every approved, online store whose radius covers it, and the server assigns the order to the store that</text>
-  <text class="s" x="40" y="752">can supply the whole cart, preferring the nearest, then the cheapest. Prices, fees and stock are always computed server-side inside one locking transaction.</text>
+  <text class="fl" x="40" y="1026">Not yet deployed: no CloudFront distribution and no Route 53 hosted zone, so the Next.js tasks serve every static asset through the load balancer and the public endpoints are plain HTTP.</text>
 </svg>
