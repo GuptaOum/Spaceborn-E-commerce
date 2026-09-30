@@ -25,10 +25,11 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory, Position = 0)]
-  [ValidateSet('stop', 'start', 'deploy', 'migrate', 'seed', 'status', 'destroy', 'tunnel')]
+  [ValidateSet('stop', 'start', 'deploy', 'migrate', 'seed', 'status', 'destroy', 'tunnel', 'grant-admin')]
   [string]$Command,
 
   [string]$Tag,
+  [string]$Email,
   [ValidateSet('admin', 'db')]
   [string]$Target = 'admin'
 )
@@ -201,10 +202,12 @@ switch ($Command) {
 
   'migrate' { Invoke-OneOffTask -TaskCommand @('node', 'dist/db/migrate.js') -Label 'Running migrations' }
 
-  # Runs with the task's own NODE_ENV so seed.js keeps its production guard. This previously forced
-  # NODE_ENV=development purely to defeat that guard, which made one typo enough to overwrite a
-  # live catalog with demo vendors. If the target really is non-production, set NODE_ENV on the
   'seed' { Invoke-OneOffTask -TaskCommand @('node', 'dist/db/seed.js') -Env @{ FORCE_SEED = 'true' } -Label 'Seeding demo data' }
+
+  'grant-admin' {
+    if (-not $Email) { throw 'Please specify the email to make admin: .\ops\spaceborn.ps1 grant-admin -Email user@example.com' }
+    Invoke-OneOffTask -TaskCommand @('node', 'dist/scripts/grant-admin.js', $Email) -Label "Granting admin role to $Email"
+  }
 
   'status' {
     $names = @($DesiredCounts.Keys)
