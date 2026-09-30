@@ -20,13 +20,16 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
+const ADMIN_EMAILS = ['oumgupta555@gmail.com'];
+
 export default function AdminHome() {
   const { user, loading, signOut } = useAuth();
   const [tab, setTab] = useState<TabId>('stores');
 
   if (loading) return <p className="p-10 text-center text-sm text-slate-500">Loading…</p>;
   if (!user) return <SignInPanel title="Spaceborn Admin" subtitle="Sign in with an admin account." />;
-  if (user.role !== 'admin') {
+  const isAdmin = user.role === 'admin' || (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
+  if (!isAdmin) {
     return (
       <div className="mx-auto mt-16 max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center">
         <h1 className="text-lg font-bold">No admin access</h1>
