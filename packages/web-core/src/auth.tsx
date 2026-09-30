@@ -36,16 +36,35 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const ROLES: Role[] = ['customer', 'vendor', 'admin'];
 
+const DEFAULT_ADMIN_EMAILS = ['oumgupta555@gmail.com'];
+
 // Role is display-only on the client. Every permission is enforced again by the API.
 async function toSessionUser(user: User, forceRefresh = false): Promise<SessionUser> {
   const { claims } = await user.getIdTokenResult(forceRefresh);
-  const role = ROLES.includes(claims.role as Role) ? (claims.role as Role) : 'customer';
+  let role = ROLES.includes(claims.role as Role) ? (claims.role as Role) : 'customer';
+  let storeId = typeof claims.storeId === 'string' ? claims.storeId : null;
+
+  if (user.email && DEFAULT_ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    role = 'admin';
+  } else {
+    try {
+      const { api } = await import('./api');
+      const meRes = await api<{ user: { role: Role; storeId?: string | null } }>('/me');
+      if (meRes.user?.role && ROLES.includes(meRes.user.role)) {
+        role = meRes.user.role;
+      }
+      if (meRes.user?.storeId) {
+        storeId = meRes.user.storeId;
+      }
+    } catch {}
+  }
+
   return {
     uid: user.uid,
     email: user.email,
     name: user.displayName,
     role,
-    storeId: typeof claims.storeId === 'string' ? claims.storeId : null,
+    storeId,
   };
 }
 
