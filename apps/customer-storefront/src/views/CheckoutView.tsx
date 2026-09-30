@@ -78,7 +78,8 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   }, [cartKey, location.latitude, location.longitude, cart.length]);
 
   const unavailable = new Set(resolution?.unavailable ?? []);
-  const canOrder = Boolean(resolution?.store) && unavailable.size === 0;
+  const elsewhere = new Set(resolution?.elsewhere ?? []);
+  const canOrder = Boolean(resolution?.store) && unavailable.size === 0 && elsewhere.size === 0;
 
   const navigateTo = (view: AppView) => (onNavigate ? onNavigate(view) : router.push(`/${view}`));
   const update = (field: keyof AddressForm, value: string) => setAddress((a) => ({ ...a, [field]: value }));
@@ -106,8 +107,8 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       setErrorMessage('No store delivers to your selected location yet. Change the location from the header.');
       return;
     }
-    if (unavailable.size) {
-      setErrorMessage('Remove the items marked unavailable to continue.');
+    if (unavailable.size || elsewhere.size) {
+      setErrorMessage('Remove the marked items to continue.');
       return;
     }
     if (!/^[6-9]\d{9}$/.test(normalizePhone(address.phone))) {
@@ -156,9 +157,11 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         idempotencyKey.current = newIdempotencyKey();
-        const details = error.details as { items?: { productId: string }[] } | undefined;
+        const details = error.details as { items?: { productId: string; reason?: string }[] } | undefined;
         if (details?.items?.length) {
-          setResolution((r) => (r ? { ...r, unavailable: details.items!.map((i) => i.productId) } : r));
+          const split = details.items.filter((i) => i.reason === 'split_required').map((i) => i.productId);
+          const gone = details.items.filter((i) => i.reason !== 'split_required').map((i) => i.productId);
+          setResolution((r) => (r ? { ...r, unavailable: gone, elsewhere: split } : r));
         }
       }
       setErrorMessage(error instanceof Error ? error.message : 'Unable to complete checkout. Please retry.');
@@ -285,7 +288,8 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
               {cart.map((item) => {
                 const line = resolution?.lines.find((l) => l.productId === item.product.id);
                 const price = line?.unitPrice ?? item.unitPrice;
-                const missing = unavailable.has(item.product.id);
+                const splitOnly = elsewhere.has(item.product.id);
+                const missing = unavailable.has(item.product.id) || splitOnly;
                 return (
                   <div key={item.product.id} className="text-sm">
                     <div className="flex justify-between gap-3">
@@ -300,7 +304,9 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
                         onClick={() => removeFromCart(item.product.id)}
                         className="mt-0.5 text-xs font-semibold text-[#e2434b] underline cursor-pointer"
                       >
-                        Not available nearby right now · remove
+                        {splitOnly
+                          ? 'Sold nearby, but not by the store with the rest of your cart · remove to order separately'
+                          : 'Not available nearby right now · remove'}
                       </button>
                     )}
                   </div>

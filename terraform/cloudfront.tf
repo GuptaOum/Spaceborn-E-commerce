@@ -21,7 +21,8 @@ resource "aws_cloudfront_distribution" "main" {
 
   enabled         = true
   comment         = "${local.name} storefront and API"
-  price_class     = "PriceClass_100"
+  # PriceClass_100 has no Indian edge locations; 200 adds Mumbai/Chennai/Hyderabad.
+  price_class     = "PriceClass_200"
   http_version    = "http2and3"
   is_ipv6_enabled = true
 
@@ -32,7 +33,8 @@ resource "aws_cloudfront_distribution" "main" {
     custom_origin_config {
       http_port  = 80
       https_port = 443
-      # The ALB has no certificate yet, so the edge-to-origin hop is plain HTTP inside AWS.
+      # The ALB has no certificate yet, so this hop is plain HTTP across the public internet to an
+      # internet-facing ALB. Bearer tokens ride it in cleartext; replace once a domain is attached.
       origin_protocol_policy   = "http-only"
       origin_ssl_protocols     = ["TLSv1.2"]
       origin_read_timeout      = 30

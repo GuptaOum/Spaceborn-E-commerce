@@ -8,7 +8,7 @@ import { logger } from '../logger.js';
 import { enqueue } from '../outbox.js';
 import { markFabPaid } from '../fabrication/service.js';
 import { createProviderOrder } from '../payments/razorpay.js';
-import { rankStores } from './fulfilment.js';
+import { availabilityNearby, classifyShortfall, rankStores } from './fulfilment.js';
 import { etaMinutes, MAX_ITEMS_PER_LINE, priceOrder, RESERVATION_MINUTES, toPaise } from './pricing.js';
 import { canTransition, HOLDS_STOCK, PAID_STATUSES, type Actor, type OrderStatus } from './status.js';
 
@@ -175,56 +175,113 @@ export async function placeOrder(input: PlaceOrderInput) {
   let grandTotal: number;
   try {
     ({ orderId, grandTotal } = await withTransaction(async (c) => {
-      let storeId = input.storeId;
-      if (!storeId) {
+      // Locks the store and its inventory, then re-checks under those locks: `rankStores` reads
+      // without locks, so the winner can go offline or sell out before we get here.
+      //
+      // Each probe runs inside a savepoint so that rejecting a candidate also releases its row
+      // locks. Without that, a store that merely ranked well would stay locked until commit,
+      // serialising unrelated checkouts and letting two carts that rank the same pair of stores in
+      // opposite orders (ranking follows the customer's coordinates) cross-lock into a deadlock.
+      const attempt = async (candidateId: string) => {
+        await c.query('savepoint candidate');
+        const discard = async () => {
+          await c.query('rollback to savepoint candidate');
+          await c.query('release savepoint candidate');
+        };
+
+        const storeResult = await c.query(
+          `select id, latitude, longitude, delivery_radius_km, avg_prep_minutes
+             from stores where id = $1 and status = 'approved' and is_online for share`,
+          [candidateId],
+        );
+        const store = storeResult.rows[0];
+        if (!store) {
+          await discard();
+          return { ok: false as const, reason: 'store_unavailable' as const };
+        }
+
+        const distanceKm = haversineKm(store.latitude, store.longitude, input.address.latitude, input.address.longitude);
+        if (distanceKm > store.delivery_radius_km) {
+          await discard();
+          return { ok: false as const, reason: 'out_of_range' as const };
+        }
+
+        const inventory = await c.query(
+          `select i.product_id, i.price, i.stock, i.is_listed, p.is_active, p.name, p.sku, p.image_url
+             from inventory i join products p on p.id = i.product_id
+            where i.store_id = $1 and i.product_id = any($2::uuid[])
+            order by i.product_id
+            for update of i`,
+          [candidateId, productIds],
+        );
+        const byId = new Map(inventory.rows.map((row) => [row.product_id as string, row]));
+        const stock = new Map(
+          [...byId].map(([id, row]) => [id, row.is_listed && row.is_active ? (row.stock as number) : 0]),
+        );
+        for (const [productId, quantity] of quantities) {
+          if ((stock.get(productId) ?? 0) < quantity) {
+            await discard();
+            return { ok: false as const, reason: 'stock' as const, storeId: candidateId, stock };
+          }
+        }
+
+        await c.query('release savepoint candidate');
+        return { ok: true as const, storeId: candidateId, store, distanceKm, byId };
+      };
+
+      let won: Extract<Awaited<ReturnType<typeof attempt>>, { ok: true }> | undefined;
+      let shortfall: Map<string, number> | undefined;
+
+      if (input.storeId) {
+        const only = await attempt(input.storeId);
+        if (!only.ok) {
+          if (only.reason === 'store_unavailable') throw unprocessable('store_unavailable', 'This store is not taking orders right now');
+          if (only.reason === 'out_of_range') throw unprocessable('out_of_range', 'This store does not deliver to your location');
+          shortfall = only.stock;
+        }
+        if (only.ok) won = only;
+      } else {
         const ranked = await rankStores(c, input.address.latitude, input.address.longitude, quantities);
-        const best = ranked[0];
-        if (!best) throw unprocessable('unserviceable', 'No store delivers to your location yet');
-        if (best.coverable < quantities.size) {
+        if (!ranked.length) throw unprocessable('unserviceable', 'No store delivers to your location yet');
+
+        const complete = ranked.filter((r) => r.coverable === quantities.size);
+        if (!complete.length) {
+          const nearby = await availabilityNearby(c, input.address.latitude, input.address.longitude, productIds);
+          const best = ranked[0]!;
           const offered = await c.query<{ product_id: string; stock: number }>(
             `select i.product_id, i.stock from inventory i join products p on p.id = i.product_id
               where i.store_id = $1 and i.product_id = any($2::uuid[]) and i.is_listed and p.is_active`,
             [best.storeId, productIds],
           );
-          const stockById = new Map(offered.rows.map((r) => [r.product_id, r.stock]));
-          const items = productIds
-            .filter((id) => (stockById.get(id) ?? 0) < quantities.get(id)!)
-            .map((id) => ({ productId: id, reason: stockById.has(id) ? 'insufficient_stock' : 'unavailable', available: stockById.get(id) ?? 0 }));
-          throw conflict('No single store near you has everything in your cart', { code: 'partial_availability', storeId: best.storeId, items });
+          const items = classifyShortfall(quantities, new Map(offered.rows.map((r) => [r.product_id, r.stock])), nearby);
+          const splits = items.filter((i) => i.reason === 'split_required').length;
+          throw conflict(
+            splits
+              ? 'These items are nearby but no single store has all of them'
+              : 'Some items in your cart are not available near you',
+            { code: 'partial_availability', storeId: best.storeId, items },
+          );
         }
-        storeId = best.storeId;
+
+        // Walk the ranked candidates so one store selling out doesn't fail a serviceable cart.
+        for (const candidate of complete) {
+          const tried = await attempt(candidate.storeId);
+          if (tried.ok) {
+            won = tried;
+            break;
+          }
+          // Report against the best-ranked store that fell short, not whichever failed last.
+          if (tried.reason === 'stock') shortfall ??= tried.stock;
+        }
       }
 
-      const storeResult = await c.query(
-        `select id, latitude, longitude, delivery_radius_km, avg_prep_minutes
-           from stores where id = $1 and status = 'approved' and is_online for share`,
-        [storeId],
-      );
-      const store = storeResult.rows[0];
-      if (!store) throw unprocessable('store_unavailable', 'This store is not taking orders right now');
-
-      const distanceKm = haversineKm(store.latitude, store.longitude, input.address.latitude, input.address.longitude);
-      if (distanceKm > store.delivery_radius_km) {
-        throw unprocessable('out_of_range', 'This store does not deliver to your location');
+      if (!won) {
+        const nearby = await availabilityNearby(c, input.address.latitude, input.address.longitude, productIds);
+        const items = classifyShortfall(quantities, shortfall ?? new Map(), nearby);
+        throw conflict('Some items in your cart are no longer available', { items });
       }
 
-      const inventory = await c.query(
-        `select i.product_id, i.price, i.stock, i.is_listed, p.is_active, p.name, p.sku, p.image_url
-           from inventory i join products p on p.id = i.product_id
-          where i.store_id = $1 and i.product_id = any($2::uuid[])
-          order by i.product_id
-          for update of i`,
-        [storeId, productIds],
-      );
-      const byId = new Map(inventory.rows.map((row) => [row.product_id as string, row]));
-
-      const problems: { productId: string; reason: string; available?: number }[] = [];
-      for (const [productId, quantity] of quantities) {
-        const row = byId.get(productId);
-        if (!row || !row.is_listed || !row.is_active) problems.push({ productId, reason: 'unavailable' });
-        else if (row.stock < quantity) problems.push({ productId, reason: 'insufficient_stock', available: row.stock });
-      }
-      if (problems.length) throw conflict('Some items in your cart are no longer available', { items: problems });
+      const { storeId, store, distanceKm, byId } = won;
 
       const lines = productIds.map((productId) => ({ ...byId.get(productId)!, quantity: quantities.get(productId)! }));
       const pricing = priceOrder(lines.map((l) => ({ unitPrice: l.price, quantity: l.quantity })), distanceKm);

@@ -175,4 +175,48 @@ describe('checkout without choosing a vendor', () => {
     const { notifyOrderPlaced } = await import('../src/notifications.js');
     await expect(notifyOrderPlaced(placed.body.order.id)).resolves.toBeUndefined();
   });
+
+  it('falls back to the next nearby store when the nearest sells out mid-checkout', async () => {
+    await db.pool.query('update inventory set stock = 1 where store_id = $1 and product_id = $2', [secondKanpurStore, productA]);
+    await db.pool.query('update inventory set stock = 5 where store_id = $1 and product_id = $2', [kanpurStore, productA]);
+
+    const order = () =>
+      call('kp-cust:customer', 'POST', '/v1/orders', { items: [{ productId: productA, quantity: 1 }], address }, idem());
+    const [one, two] = await Promise.all([order(), order()]);
+
+    // One takes the closer store's last unit; the other must not 409 but roll on to the next store.
+    expect([one.status, two.status]).toEqual([201, 201]);
+    expect(new Set([one.body.order.storeId, two.body.order.storeId])).toEqual(new Set([secondKanpurStore, kanpurStore]));
+
+    await db.pool.query('update inventory set stock = 100 where store_id = $1 and product_id = $2', [secondKanpurStore, productA]);
+  });
+
+  it('separates "nobody nearby has it" from "nearby, but not from one store"', async () => {
+    // Closer store stocks only A, seeded store now stocks only B, so neither covers the pair.
+    await db.pool.query('update inventory set stock = 0 where store_id = $1 and product_id = $2', [kanpurStore, productA]);
+
+    const placed = await call('kp-cust:customer', 'POST', '/v1/orders', {
+      items: [{ productId: productA, quantity: 1 }, { productId: productB, quantity: 1 }],
+      address,
+    }, idem());
+
+    expect(placed.status).toBe(409);
+    expect(placed.body.error.details.code).toBe('partial_availability');
+    // B is genuinely on sale nearby, so it must not be reported as unavailable.
+    expect(placed.body.error.details.items).toEqual([
+      expect.objectContaining({ productId: productB, reason: 'split_required' }),
+    ]);
+    expect(placed.body.error.message).toMatch(/no single store/i);
+
+    await db.pool.query('update inventory set stock = 10 where store_id = $1 and product_id = $2', [kanpurStore, productA]);
+  });
+});
+
+describe('admin API surface', () => {
+  it('rejects case-variant admin paths that would dodge the load balancer rule', async () => {
+    expect((await call(null, 'GET', '/v1/ADMIN/overview')).status).toBe(403);
+    expect((await call(null, 'GET', '/v1/Admin/overview')).status).toBe(403);
+    // The canonical path is left to auth; in production the listener keeps it off the public endpoint.
+    expect((await call(null, 'GET', '/v1/admin/overview')).status).toBe(401);
+  });
 });

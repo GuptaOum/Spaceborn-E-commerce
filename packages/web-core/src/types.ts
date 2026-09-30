@@ -58,7 +58,10 @@ export interface CatalogOffer extends CatalogProduct {
 export interface CartResolution {
   store: { id: string; name: string; city: string; distanceKm: number; etaMinutes: number } | null;
   lines: { productId: string; quantity: number; unitPrice: number | null; available: number; ok: boolean }[];
+  /** Nothing near this location stocks these. */
   unavailable: string[];
+  /** Stocked nearby, just not by the store supplying the rest of the cart. */
+  elsewhere: string[];
   pricing: { itemsTotal: number; deliveryFee: number; platformFee: number; grandTotal: number } | null;
   nearbyStores: number;
 }

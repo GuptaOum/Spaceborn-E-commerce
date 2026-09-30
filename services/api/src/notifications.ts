@@ -1,6 +1,6 @@
 import { config } from './config.js';
 import { pool } from './db/pool.js';
-import { otpBlock, renderHtml, sendMail } from './lib/mail.js';
+import { escapeHtml, h, otpBlock, renderHtml, sendMail } from './lib/mail.js';
 import type { OrderStatus } from './orders/status.js';
 
 const inr = (n: number | string) => `₹${Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -40,6 +40,7 @@ async function loadOrder(orderId: string): Promise<OrderMailRow | null> {
 }
 
 const itemLines = (o: OrderMailRow) => o.items.map((i) => `${i.quantity} × ${i.name} — ${inr(i.lineTotal)}`);
+const itemLinesHtml = (o: OrderMailRow) => itemLines(o).map(escapeHtml).join('<br>');
 
 export async function notifyOrderPlaced(orderId: string) {
   const o = await loadOrder(orderId);
@@ -48,15 +49,17 @@ export async function notifyOrderPlaced(orderId: string) {
 
   if (o.customer_email) {
     const lines = [
-      `Hi ${o.customer_name ?? 'there'}, your order <b>#${o.order_number}</b> is confirmed and <b>${o.store_name}</b> is packing it now.`,
-      `Estimated delivery: <b>~${o.eta_minutes} minutes</b>. Total paid: <b>${inr(o.grand_total)}</b>.`,
-      `Share this handover code with the rider when your order arrives:`,
+      h`Hi ${o.customer_name ?? 'there'}, your order <b>#${o.order_number}</b> is confirmed and <b>${o.store_name}</b> is packing it now.`,
+      h`Estimated delivery: <b>~${o.eta_minutes} minutes</b>. Total paid: <b>${inr(o.grand_total)}</b>.`,
+      'Share this handover code with the rider when your order arrives:',
       otpBlock(o.handover_otp),
-      `Items:<br>${itemLines(o).join('<br>')}`,
+      `Items:<br>${itemLinesHtml(o)}`,
     ];
     await sendMail({
       to: o.customer_email,
-      subject: `Order #${o.order_number} confirmed · handover code ${o.handover_otp}`,
+      template: 'order_placed_customer',
+      // The handover code stays out of the subject: it shows in lock-screen previews.
+      subject: `Order #${o.order_number} confirmed`,
       text: [
         `Your Spaceborn order #${o.order_number} is confirmed. ${o.store_name} is packing it now.`,
         `ETA ~${o.eta_minutes} min. Total ${inr(o.grand_total)}.`,
@@ -73,12 +76,13 @@ export async function notifyOrderPlaced(orderId: string) {
   if (o.vendor_email) {
     const a = o.delivery_address;
     const lines = [
-      `New paid order <b>#${o.order_number}</b> worth <b>${inr(o.grand_total)}</b>. Accept it in the vendor hub to start packing.`,
-      `Deliver to: ${a.fullName ?? ''}, ${a.line1 ?? ''}, ${a.city ?? ''} ${a.pincode ?? ''}`,
-      `Items:<br>${itemLines(o).join('<br>')}`,
+      h`New paid order <b>#${o.order_number}</b> worth <b>${inr(o.grand_total)}</b>. Accept it in the vendor hub to start packing.`,
+      h`Deliver to: ${[a.fullName, a.line1, a.city, a.pincode].filter(Boolean).join(', ')}`,
+      `Items:<br>${itemLinesHtml(o)}`,
     ];
     await sendMail({
       to: o.vendor_email,
+      template: 'order_placed_vendor',
       subject: `New order #${o.order_number} · ${inr(o.grand_total)}`,
       text: [`New paid order #${o.order_number} (${inr(o.grand_total)}).`, ...itemLines(o), `Open: ${config.VENDOR_ORIGIN}`].join('\n'),
       html: renderHtml('New order to pack', lines, { label: 'Open vendor hub', href: config.VENDOR_ORIGIN }),
@@ -98,11 +102,12 @@ export async function notifyOrderStatus(orderId: string, to: OrderStatus) {
   if (!copy) return;
   const o = await loadOrder(orderId);
   if (!o?.customer_email) return;
-  const lines = [`Hi ${o.customer_name ?? 'there'}, order <b>#${o.order_number}</b> from ${o.store_name} ${copy.subject}.`, copy.body];
+  const lines = [h`Hi ${o.customer_name ?? 'there'}, order <b>#${o.order_number}</b> from ${o.store_name} ${copy.subject}.`, copy.body];
   if (to === 'out_for_delivery') lines.push('Handover code:', otpBlock(o.handover_otp));
-  if (to === 'cancelled' && o.cancel_reason) lines.push(`Reason: ${o.cancel_reason}`);
+  if (to === 'cancelled' && o.cancel_reason) lines.push(h`Reason: ${o.cancel_reason}`);
   await sendMail({
     to: o.customer_email,
+    template: `order_${to}`,
     subject: `Order #${o.order_number} ${copy.subject}`,
     text: `Order #${o.order_number} ${copy.subject}. ${copy.body}${to === 'out_for_delivery' ? ` Handover code: ${o.handover_otp}` : ''}`,
     html: renderHtml(`Order #${o.order_number} ${copy.subject}`, lines, { label: 'View order', href: `${config.PUBLIC_ORIGIN}/orders` }),
@@ -142,9 +147,10 @@ export async function notifyJobSubmitted(jobId: string) {
   if (!j?.vendor_email) return;
   await sendMail({
     to: j.vendor_email,
+    template: 'job_submitted',
     subject: `New ${kindLabel(j.kind)} request #${j.job_number}`,
     text: `A customer requested a ${kindLabel(j.kind)} quote (#${j.job_number}). Review the files and send a quote: ${config.VENDOR_ORIGIN}`,
-    html: renderHtml('New fabrication request', [`Job <b>#${j.job_number}</b> (${kindLabel(j.kind)}) is waiting for your quote.`], {
+    html: renderHtml('New fabrication request', [h`Job <b>#${j.job_number}</b> (${kindLabel(j.kind)}) is waiting for your quote.`], {
       label: 'Quote in vendor hub',
       href: config.VENDOR_ORIGIN,
     }),
@@ -167,9 +173,10 @@ export async function notifyJobStatus(jobId: string, to: string) {
   if (!body) return;
   await sendMail({
     to: j.customer_email,
+    template: `job_${to}`,
     subject: `Fabrication job #${j.job_number}: ${to.replace(/_/g, ' ')}`,
     text: `${body}\n${config.PUBLIC_ORIGIN}/fabrication`,
-    html: renderHtml(`Job #${j.job_number} update`, [`Hi ${j.customer_name ?? 'there'},`, body], {
+    html: renderHtml(`Job #${j.job_number} update`, [h`Hi ${j.customer_name ?? 'there'},`, escapeHtml(body)], {
       label: 'View job',
       href: `${config.PUBLIC_ORIGIN}/fabrication`,
     }),

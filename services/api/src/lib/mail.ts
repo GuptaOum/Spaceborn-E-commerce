@@ -7,12 +7,22 @@ export interface Mail {
   subject: string;
   text: string;
   html?: string;
+  /** Log-safe label for this message; never contains order secrets. */
+  template: string;
 }
 
 let client: SESv2Client | undefined;
 const ses = () => (client ??= new SESv2Client({ region: config.AWS_REGION }));
 
-const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+export const escapeHtml = (s: string) =>
+  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+/**
+ * Tagged template for mail body lines: interpolated values are escaped, the literal markup around
+ * them is not. Keeps customer- and vendor-supplied names out of the HTML we send from our identity.
+ */
+export const h = (strings: TemplateStringsArray, ...values: unknown[]) =>
+  strings.reduce((acc, s, i) => acc + s + (i < values.length ? escapeHtml(values[i] as string) : ''), '');
 
 export function renderHtml(title: string, lines: string[], cta?: { label: string; href: string }) {
   const body = lines.map((l) => `<p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#34222e">${l}</p>`).join('');
@@ -33,15 +43,16 @@ export const otpBlock = (otp: string) =>
 
 export async function sendMail(mail: Mail): Promise<void> {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.to)) {
-    logger.warn({ to: mail.to, subject: mail.subject }, 'mail skipped: invalid recipient');
+    logger.warn({ to: mail.to, template: mail.template }, 'mail skipped: invalid recipient');
     return;
   }
+  // Subjects and bodies carry handover OTPs, so only the recipient and a label are ever logged.
   if (config.MAIL_PROVIDER !== 'ses' || !config.MAIL_FROM) {
-    logger.info({ to: mail.to, subject: mail.subject, preview: mail.text.slice(0, 200) }, 'mail (log provider)');
+    logger.info({ to: mail.to, template: mail.template }, 'mail (log provider)');
     return;
   }
   try {
-    await ses().send(
+    const sent = await ses().send(
       new SendEmailCommand({
       FromEmailAddress: `Spaceborn <${config.MAIL_FROM}>`,
       Destination: { ToAddresses: [mail.to] },
@@ -57,12 +68,11 @@ export async function sendMail(mail: Mail): Promise<void> {
         },
       }),
     );
-    logger.info({ to: mail.to, subject: mail.subject }, 'mail sent');
+    logger.info({ to: mail.to, template: mail.template, messageId: sent.MessageId }, 'mail sent');
   } catch (err) {
-    // Sandbox rejections (unverified recipient) and bad addresses never succeed on retry.
     const name = (err as { name?: string }).name;
-    if (name === 'MessageRejected' || name === 'BadRequestException') {
-      logger.warn({ err, to: mail.to, subject: mail.subject }, 'mail rejected by SES');
+    if (name === 'MessageRejected') {
+      logger.warn({ err, to: mail.to, template: mail.template }, 'mail rejected by SES');
       return;
     }
     throw err;

@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import { pool } from './db/pool.js';
-import { errorHandler, notFound } from './errors.js';
+import { errorHandler, forbidden, notFound } from './errors.js';
 import { adminRouter } from './routes/admin.js';
 import { catalogRouter } from './routes/catalog.js';
 import { fabricationRouter } from './routes/fabrication.js';
@@ -20,6 +20,16 @@ export function createApp() {
   app.get('/health', async (_req, res) => {
     await pool.query('select 1');
     res.json({ ok: true });
+  });
+
+  const ADMIN_PREFIX = /^\/v1\/admin(\/|$)/;
+
+  // Load balancer path rules are case-sensitive but Express routing is not, so `/v1/ADMIN/...`
+  // would slip past the listener rule that keeps the admin API off the public endpoint. Only the
+  // canonical lowercase prefix is ever served; a case variant is nothing but a bypass attempt.
+  app.use((req, _res, next) => {
+    const path = req.path;
+    next(ADMIN_PREFIX.test(path.toLowerCase()) && !ADMIN_PREFIX.test(path) ? forbidden() : undefined);
   });
 
   const v1 = express.Router();
