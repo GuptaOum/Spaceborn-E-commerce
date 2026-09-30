@@ -49,8 +49,8 @@ $DesiredCounts = [ordered]@{ api = 2; worker = 1; storefront = 2; 'vendor-hub' =
 
 function Invoke-Aws {
   param([Parameter(ValueFromRemainingArguments)][string[]]$AwsArgs)
-  $output = & aws @AwsArgs --region $Region 2>&1
-  if ($LASTEXITCODE -ne 0) { throw "aws $($AwsArgs -join ' ') failed: $output" }
+  $output = & aws @AwsArgs --region $Region
+  if ($LASTEXITCODE -ne 0) { throw "aws $($AwsArgs -join ' ') failed with exit code $LASTEXITCODE" }
   return $output
 }
 
@@ -208,7 +208,7 @@ switch ($Command) {
 
   'status' {
     $names = @($DesiredCounts.Keys)
-    $json = Invoke-Aws ecs describe-services --cluster $Cluster --services $names `
+    $json = Invoke-Aws ecs describe-services --cluster $Cluster --services @names `
       --query 'services[].{name:serviceName,desired:desiredCount,running:runningCount,taskDef:taskDefinition}' --output json
     ($json | ConvertFrom-Json) |
       Select-Object name, desired, running, @{ n = 'revision'; e = { $_.taskDef.Split('/')[-1] } } |
