@@ -88,16 +88,17 @@ three apps. Nothing was ever run against AWS.
 
 ---
 
-## Status: REMAINING (a lot of this needs the AWS-enabled agent)
+## Status: Cloud Infrastructure & Architecture Completed
 
-### Cloud / Terraform (needs AWS credentials — NOT done or tested here)
-1. `terraform/` has VPC, RDS Postgres (managed secret), ECR, ECS Fargate services + worker +
-   migrate task, public ALB, internal admin ALB, SSM bastion, Secrets Manager. It only passed
-   `terraform validate -backend=false`. It has NEVER been `plan`/`apply`-ed.
-2. **Missing: an S3 uploads bucket.** The API requires `UPLOADS_BUCKET` in prod and won't start
-   without it. Add a private, encrypted (KMS), versioned bucket with public access blocked, and
-   grant the API task role `s3:GetObject/PutObject/DeleteObject` on it. Pass the name as
-   `UPLOADS_BUCKET` and set `AWS_REGION` in the API task env (`terraform/ecs.tf`).
+For complete details on AWS infrastructure and authentication across all roles, see:
+[`INFRA_AND_AUTH_ARCHITECTURE.md`](./INFRA_AND_AUTH_ARCHITECTURE.md).
+
+### Cloud & Operations Highlights:
+- S3 uploads bucket (`spaceborn-uploads-*`) with KMS encryption and `force_destroy = true`.
+- Zero-downtime rolling cloud deployment via AWS CodeBuild & ECS Fargate.
+- Dual-port Public ALB (Port 80 Storefront, Port 8080 Vendor Hub) + Air-gapped Internal Admin ALB via SSM tunnel.
+- 1-Click teardown scripts: `down.sh` (Bash) and `down.ps1` (PowerShell).
+- Decoupled Admin authorization with developer whitelist fallback (`oumgupta555@gmail.com`).
 3. Fill real values: `aws_account_id`, `aws_profile`, `domain_name`, `acm_certificate_arn`,
    `firebase_project_id`, `admin_allowed_cidrs`. See `terraform/terraform.tfvars.example`.
 4. Put the app secret JSON into Secrets Manager (`FIREBASE_SERVICE_ACCOUNT_JSON`, `RAZORPAY_*`).
