@@ -39,7 +39,7 @@
     "price": 185,
     "stock": 580,
     "description": "Espressif official ESP32-WROOM-32D module featuring the ESP32-D0WD chip. Offers high computing power with dual Xtensa 32-bit LX6 microprocessors running up to 240 MHz, integrated 4MB SPI flash, Wi-Fi 802.11 b/g/n, and Bluetooth 4.2 BR/EDR and BLE.",
-    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuBnMVjJT1-pt_AUMIcro80-s0aL2aPVMCoDou9qgbwJANIBVazQ1s39mu2vq1BLesHXaAFSkkpALE_XVjtV3y7azHza4PJbe25tANLFpKG6RPVKvXpoQ_qya7IRJBaN2UcX9MS9fdjvLIdfp1rIlUtIsMMiIjI8RtrobB9REuUC-iURkIpotv160m7Satr4zsxsEt0Inn5LEXj8WMRXDP7zFsw-WcZJ9_KnlsHly_uVy_3HVRHTksl8",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/b9/ESP32_on_Lolin32_Lite_clone_board_cropped.jpg",
     "tierPricing": [
       {
         "minQty": 1,
@@ -76,7 +76,7 @@
     "price": 48,
     "stock": 640,
     "description": "Standard ultrasonic ranging module providing 2cm - 400cm non-contact measurement function with ranging accuracy reaching up to 3mm. Module includes ultrasonic transmitter, receiver, and control circuit.",
-    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuA8Bco-GJy5xmzGD-2iQZBB_bYzhCLMXqxw6IVPvhvsBM8zTBC5zC6GEdTRv7nA7i7jUQEU3v-a3gIedLlBrHgQuHcYV9RRo5zRlL3N0VF01wzoOaQ02MyCWFqNJVxVAdDX4R6vl95okcPQZK-qoLyUrgifsT1oMyEoXphC0TdLL0YI1gdLC-rS5QF_7aNFfo9wvOdb3y8Kqiy_Tg0lSwgQ77pmwUJ88WD7RYwQDTWClYvTyoDf6A1x"
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/99/SparkFun_HC-SR04_Ultrasonic-Sensor_13959-01a.jpg"
   },
   {
     "id": "sg90-micro-servo",
@@ -116,7 +116,7 @@
     "price": 320,
     "stock": 310,
     "description": "Standard Arduino Uno R3 clone board based on the ATmega328P microcontroller with CH340G USB interface. Ideal for STEM education, DIY maker projects, and sensor interfacing.",
-    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuB1ca24-sSVDMcQ0hDEXcMloGCMOyCEK1gXNBNlYOF_JknIwQmJPmdtA62t69lSyZHzbDq-jmA-zhHkBMiZHLFu_Pv5KRx9fOhgccKWnN9l6skbRGdq3CqM-v443F5Sp_AUvRDlFtANm5IxcVk2iW5lOHWx75rO9mLKNNwz8d6HS_4gDN32uxqDJpef4Si1ZSC4V3T3hwzrZnxCPLrZiRnJydn7Dj8jVK4V_w1e0IAGfErx_27fIWx6"
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg"
   },
   {
     "id": "smart-car-4wd-kit",
@@ -126,7 +126,7 @@
     "price": 1290,
     "stock": 62,
     "description": "Complete 4-wheel drive mobile robotics platform chassis with 4 TT gear motors, speed encoder slotted discs, dual acrylic baseplates, battery box, and toggle switch. Perfect foundation for line-following, obstacle avoidance, and ROS navigation.",
-    "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuD1EBOVKTN9lBo3XxDGF9LL-lAbNx9WLj6Hnyg54Qe7blIxW5zRMJa40q-wYdtTLpv5YdgTPFyrrigKZbBrCAv88hjkialyND-0QaGLybbGTrTNeQrg6z_SwVSQcuim_JrZNXUkn1hiXkWQAXyWDT-In1iRCqwaWzOxW152jAxYUWXisJXNTYBuWhN77DP4j9PUHO9Qcw2Hwodh8DYrwTxKFyOpCCFEeKoEOst9aTuJ5Z_jy4CY-yQ8"
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/78/Robot_chassis_at_MIT_Flea_2022.agr.jpg"
   },
   {
     "id": "sensor-starter-suite-37in1",
@@ -227,5 +227,365 @@
     "stock": 670,
     "description": "Assorted set of 65 flexible male-to-male jumper wires in 4 convenient lengths (120mm, 150mm, 200mm, 250mm) with molded connector ends.",
     "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuAWiaqc6bIswO3xQjeteWYd6moSYk0Lvm1GhxDquTmmVgRqoOoJ1GQTeen8wAhu2LbioOk1F_1b7gaS417d0Aexgw5T5Ouu3GALOXd5NNCA57c1TKi3l4fs8hHQNaufUH1Hsp4I1HNkLp3lIjlE21lyV1oH4TqO9TL1ZquPB6Gj8XsVIaqAPwIRDlq7Kzf7pYrW5AVnd1HDS4R9Hy1biXwbx8kAegX4IgXWCfCwlRFl-PVdJNxjJCxk"
+  },
+  {
+    "id": "imax-b6-lipo-charger",
+    "name": "IMAX B6 80W 6A Lipo Battery Balance Charger",
+    "sku": "CHG-IMAX-B6-80W",
+    "category": "Accessories",
+    "price": 1850,
+    "stock": 45,
+    "description": "Professional intelligent digital balance charger for LiPo, Li-ion, LiFe, NiCd, NiMH, and Pb batteries.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2018/12/Imax-B6-80W-6A-Charger.jpg"
+  },
+  {
+    "id": "usbc-pd-trigger",
+    "name": "USB-C PD Decoy Trigger Module (5V/9V/12V/15V/20V)",
+    "sku": "MOD-USBC-PD-TRG",
+    "category": "Accessories",
+    "price": 150,
+    "stock": 200,
+    "description": "Hardware trigger module to extract specific voltages from a USB PD charger or power bank.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2021/04/Type-C-PD-Decoy-Module.jpg"
+  },
+  {
+    "id": "cp2102-usb-uart",
+    "name": "CP2102 USB to TTL UART Converter Module",
+    "sku": "MOD-CP2102-UART",
+    "category": "Accessories",
+    "price": 120,
+    "stock": 350,
+    "description": "Highly integrated USB to UART bridge controller providing a simple solution for updating RS-232 designs to USB.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2015/09/CP2102-USB-2.0-to-UART-TTL.jpg"
+  },
+  {
+    "id": "robotic-gripper-metal",
+    "name": "Aluminum Alloy Robotic Arm Gripper Claw",
+    "sku": "MEC-GRP-ALU-CLW",
+    "category": "Structural",
+    "price": 650,
+    "stock": 80,
+    "description": "Durable mechanical gripper made from hard aluminum alloy, compatible with standard size servo motors (like MG996R).",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2016/11/Aluminium-Robot-Gripper.jpg"
+  },
+  {
+    "id": "omni-wheel-60mm",
+    "name": "60mm Aluminum Omni Wheel with Rubber Rollers",
+    "sku": "MEC-OMNI-60MM",
+    "category": "Structural",
+    "price": 450,
+    "stock": 120,
+    "description": "High-quality 60mm omni-directional wheel for holonomic drive bases in mobile robotics.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2017/02/60mm-Aluminum-Omni-Wheel.jpg"
+  },
+  {
+    "id": "aluminum-chassis-kit",
+    "name": "2WD Aluminum Robot Chassis Kit",
+    "sku": "KIT-2WD-ALU-CHS",
+    "category": "Accessories",
+    "price": 850,
+    "stock": 60,
+    "description": "Sturdy 2-wheel drive robot chassis kit featuring a thick aluminum alloy base plate and high-torque gear motors.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2018/06/2WD-Aluminium-Mobile-Robot-Chassis.jpg"
+  },
+  {
+    "id": "bldc-drone-motor-2207",
+    "name": "2207 2400KV Brushless FPV Drone Motor",
+    "sku": "DRN-MOT-2207-2400KV",
+    "category": "Motors",
+    "price": 1100,
+    "stock": 150,
+    "description": "High-performance 2207 stator size brushless motor, ideal for 5-inch freestyle and racing FPV drones.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2020/09/2207-2400KV-Brushless-Motor.jpg"
+  },
+  {
+    "id": "coreless-motor-8520",
+    "name": "8520 Coreless Motor 3.7V 50000RPM (Set of 4)",
+    "sku": "MOT-8520-CLESS-4X",
+    "category": "Motors",
+    "price": 320,
+    "stock": 200,
+    "description": "High-speed 8.5x20mm coreless DC motors, perfect for micro brushed quadcopters and whoop drones.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2016/08/8520-Coreless-Motor.jpg"
+  },
+  {
+    "id": "planetary-dc-motor",
+    "name": "12V Planetary Gear DC Motor 100RPM",
+    "sku": "MOT-PLN-12V-100RPM",
+    "category": "Motors",
+    "price": 1450,
+    "stock": 50,
+    "description": "Heavy-duty DC motor with a precision planetary gearbox for high torque and low backlash applications.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/03/12V-Planetary-Gear-Motor.jpg"
+  },
+  {
+    "id": "esp32-cam-module",
+    "name": "ESP32-CAM WiFi + Bluetooth Module with OV2640 Camera",
+    "sku": "DEV-ESP32-CAM-OV2640",
+    "category": "Controllers",
+    "price": 420,
+    "stock": 250,
+    "description": "Small size ESP32-based camera module featuring an OV2640 camera and onboard TF card slot for IoT vision applications.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a7/ESP32-CAM.jpg"
+  },
+  {
+    "id": "esp32-s3-devkit",
+    "name": "ESP32-S3-DevKitC-1 WiFi & BLE 5.0 Development Board",
+    "sku": "DEV-ESP32-S3-DKC1",
+    "category": "Controllers",
+    "price": 650,
+    "stock": 100,
+    "description": "Powerful development board based on ESP32-S3-WROOM-1 module, featuring AI acceleration and vector instructions.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/36/ESP32-S3_on_paper.jpg"
+  },
+  {
+    "id": "raspberry-pi-5-8gb",
+    "name": "Raspberry Pi 5 - 8GB RAM",
+    "sku": "SBC-RPI5-8GB",
+    "category": "Controllers",
+    "price": 8500,
+    "stock": 30,
+    "description": "The latest generation Raspberry Pi featuring a 64-bit quad-core Arm Cortex-A76 processor at 2.4GHz, dual 4K display output, and PCIe 2.0 interface.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Raspberry_Pi_4_Model_B_-_Side.jpg"
+  },
+  {
+    "id": "raspberry-pi-pico-w",
+    "name": "Raspberry Pi Pico W with WiFi",
+    "sku": "DEV-RPI-PICO-W",
+    "category": "Controllers",
+    "price": 550,
+    "stock": 400,
+    "description": "Compact microcontroller board built on RP2040 chip, now featuring an Infineon CYW43439 for 2.4GHz WiFi connectivity.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/af/Raspberry_Pi_Pico_WH_top_and_bottom_with_soldered_pins.jpg"
+  },
+  {
+    "id": "rpi-hq-camera",
+    "name": "Raspberry Pi High Quality Camera 12.3MP",
+    "sku": "CAM-RPI-HQ-12MP",
+    "category": "Accessories",
+    "price": 4200,
+    "stock": 40,
+    "description": "High-quality 12.3 megapixel Sony IMX477 sensor with C- and CS-mount lens compatibility for exceptional imaging with Raspberry Pi.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2020/05/Raspberry-Pi-High-Quality-Camera.jpg"
+  },
+  {
+    "id": "jetson-nano-devkit",
+    "name": "NVIDIA Jetson Nano Developer Kit",
+    "sku": "SBC-JETSON-NANO-DK",
+    "category": "Controllers",
+    "price": 14500,
+    "stock": 15,
+    "description": "A small, powerful AI computer that gives you the compute performance to run modern AI workloads at unprecedented size and cost.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/d/d4/NVIDIA_Jetson_Nano_Developer_Kit_%2840650425503%29.jpg"
+  },
+  {
+    "id": "stm32f103c8t6-blue-pill",
+    "name": "STM32F103C8T6 Blue Pill ARM Cortex-M3 Board",
+    "sku": "DEV-STM32-BLUEPILL",
+    "category": "Controllers",
+    "price": 180,
+    "stock": 300,
+    "description": "Low-cost 32-bit ARM Cortex-M3 development board operating at 72MHz, offering vastly more performance than standard 8-bit AVR boards.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/90/Stm32f103_pinout_diagram.png"
+  },
+  {
+    "id": "stm32f401-black-pill",
+    "name": "STM32F401CCU6 Black Pill Development Board",
+    "sku": "DEV-STM32-BLACKPILL",
+    "category": "Controllers",
+    "price": 260,
+    "stock": 220,
+    "description": "Upgraded ARM Cortex-M4 development board running at 84MHz, with a floating-point unit and USB-C connectivity.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/c5/STM32_F4_Discovery.jpg"
+  },
+  {
+    "id": "f405-flight-controller",
+    "name": "F405 Flight Controller for FPV Drones",
+    "sku": "DRN-FC-F405",
+    "category": "Controllers",
+    "price": 2100,
+    "stock": 85,
+    "description": "High-speed F405 MCU flight controller with onboard OSD, 5V/9V BECs, and support for modern Betaflight/INAV firmware.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/91/Pixhawk_Flight_Controller.jpg"
+  },
+  {
+    "id": "30a-4in1-esc",
+    "name": "30A 4-in-1 BLHeli_S ESC for FPV Drones",
+    "sku": "DRN-ESC-30A-4IN1",
+    "category": "Accessories",
+    "price": 1950,
+    "stock": 70,
+    "description": "Compact 4-in-1 Electronic Speed Controller supporting DShot600, perfect for clean builds in 5-inch racing and freestyle quads.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/11/30A-4-in-1-ESC.jpg"
+  },
+  {
+    "id": "5inch-propellers-dalprop",
+    "name": "DALPROP T5045C 5-Inch 3-Blade Propellers (2CW+2CCW)",
+    "sku": "DRN-PROP-5INCH-3B",
+    "category": "Accessories",
+    "price": 120,
+    "stock": 500,
+    "description": "Durable cyclone series polycarbonate tri-blade propellers for 5-inch FPV drones, providing excellent thrust and efficiency.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2017/09/DALPROP-T5045C.jpg"
+  },
+  {
+    "id": "bambu-lab-a1",
+    "name": "Bambu Lab A1 3D Printer",
+    "sku": "3DP-BAMBU-A1",
+    "category": "Accessories",
+    "price": 32000,
+    "stock": 10,
+    "description": "High-speed multicolor 3D printing with active flow rate compensation.",
+    "image": "https://robocraze.com/cdn/shop/collections/Bambu_Lab_A1_3D_Printer_1000x_4861b7e7-2df4-4103-a739-b3a71f3176de.webp?v=1786430846&width=750"
+  },
+  {
+    "id": "bambu-lab-x1e",
+    "name": "Bambu Lab X1E Combo 3D Printer",
+    "sku": "3DP-BAMBU-X1E",
+    "category": "Accessories",
+    "price": 95000,
+    "stock": 5,
+    "description": "Professional 3D printer with high-temp hotend, active heating, and multi-material capability.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fc/3D_printer.jpg"
+  },
+  {
+    "id": "filaments-bundle",
+    "name": "3D Printer PLA/PETG Filaments",
+    "sku": "3DP-FIL-BNDL",
+    "category": "Accessories",
+    "price": 850,
+    "stock": 200,
+    "description": "High-quality filaments for reliable 3D printing.",
+    "image": "https://robocraze.com/cdn/shop/collections/14bed4ab7ad4b79c2d4a4141789ba50c.png?v=1655813796&width=375"
+  },
+  {
+    "id": "mech-parts-bundle",
+    "name": "Mechanical Parts and Gears",
+    "sku": "MEC-PRT-BNDL",
+    "category": "Structural",
+    "price": 350,
+    "stock": 300,
+    "description": "Assorted mechanical parts, gears, and pulleys for DIY robotics.",
+    "image": "https://robocraze.com/cdn/shop/collections/3faaa5cc3b368bede6a6f03a739640dd.png?v=1660824906&width=375"
+  },
+  {
+    "id": "cnc-spindle-vfd",
+    "name": "CNC Spindle Motor with VFD",
+    "sku": "CNC-SPN-VFD",
+    "category": "Motors",
+    "price": 12500,
+    "stock": 15,
+    "description": "High-speed CNC router spindle motor with matching Variable Frequency Drive.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/67/CNC_Milling_Machine.jpg"
+  },
+  {
+    "id": "cnc-stepper-drivers",
+    "name": "CNC Stepper Motor Drivers",
+    "sku": "CNC-STP-DRV",
+    "category": "Motors",
+    "price": 800,
+    "stock": 50,
+    "description": "Reliable stepper motor drivers for CNC machines.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/36/A4988_Stepper_Motor_Driver.jpg"
+  },
+  {
+    "id": "rplidar-a1m8",
+    "name": "RPLIDAR A1M8 360 Degree Laser Scanner Kit",
+    "sku": "SEN-LIDAR-A1M8",
+    "category": "Sensors",
+    "price": 9500,
+    "stock": 25,
+    "description": "Low cost 360 degree 2D laser scanner (LIDAR) solution capable of 12 meter range, ideal for SLAM in autonomous robots.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2018/11/RPLiDAR-A1M8.jpg"
+  },
+  {
+    "id": "raspberry-pi-zero-2-w",
+    "name": "Raspberry Pi Zero 2 W",
+    "sku": "SBC-RPI-ZERO-2W",
+    "category": "Controllers",
+    "price": 1800,
+    "stock": 120,
+    "description": "Quad-core 64-bit Arm Cortex-A53 processor offering 5x the performance of the original Raspberry Pi Zero, with built-in WiFi.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Raspberry_Pi_Zero_W.jpg"
+  },
+  {
+    "id": "digital-multimeter-dt830b",
+    "name": "DT830B Digital Multimeter",
+    "sku": "TLS-DMM-DT830B",
+    "category": "Accessories",
+    "price": 250,
+    "stock": 600,
+    "description": "Compact pocket-sized digital multimeter for measuring AC/DC voltage, DC current, resistance, and diode testing.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2016/09/DT830B-Digital-Multimeter.jpg"
+  },
+  {
+    "id": "wire-stripper-cutter",
+    "name": "Precision Wire Stripper and Cutter Tool",
+    "sku": "TLS-WIR-STR-CTR",
+    "category": "Accessories",
+    "price": 180,
+    "stock": 450,
+    "description": "High-quality carbon steel wire stripper with adjustable sizing and comfortable non-slip handles.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2017/05/Wire-Stripper.jpg"
+  },
+  {
+    "id": "led-assortment-kit",
+    "name": "5mm LED Assortment Kit (300 Pcs)",
+    "sku": "CMP-LED-5MM-300",
+    "category": "Accessories",
+    "price": 320,
+    "stock": 350,
+    "description": "Boxed set of 300 pieces of 5mm diffused light emitting diodes in 5 colors: Red, Green, Blue, Yellow, White.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2018/01/5mm-LED-Assortment.jpg"
+  },
+  {
+    "id": "resistor-kit-1-4w",
+    "name": "1/4W Metal Film Resistor Assortment Kit (600 Pcs)",
+    "sku": "CMP-RES-14W-600",
+    "category": "Accessories",
+    "price": 280,
+    "stock": 400,
+    "description": "Comprehensive kit of 600 1/4W metal film resistors featuring 30 common values with 1% tolerance.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2018/02/Resistor-Kit.jpg"
+  },
+  {
+    "id": "neo-6m-gps-module",
+    "name": "NEO-6M GPS Module with EEPROM",
+    "sku": "SEN-GPS-NEO6M",
+    "category": "Sensors",
+    "price": 520,
+    "stock": 180,
+    "description": "Standalone GPS receiver with ceramic antenna and onboard EEPROM for saving configuration data, interfaced via UART.",
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Ublox_NEO-6M_GPS_Module.jpg"
+  },
+  {
+    "id": "tpa3116d2-audio-amp",
+    "name": "TPA3116D2 2x50W Class D Audio Amplifier Board",
+    "sku": "MOD-AMP-TPA3116",
+    "category": "Accessories",
+    "price": 480,
+    "stock": 220,
+    "description": "High-efficiency digital audio amplifier board delivering 50W per channel with a wide operating voltage range.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/08/TPA3116D2.jpg"
+  },
+  {
+    "id": "nema17-stepper-motor",
+    "name": "NEMA 17 Bipolar Stepper Motor 4.2kg.cm",
+    "sku": "MOT-NEMA17-42",
+    "category": "Motors",
+    "price": 750,
+    "stock": 300,
+    "description": "Standard 42mm stepper motor used widely in 3D printers and CNC machines, offering 1.8 degree step angle.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2015/05/NEMA-17-Stepper-Motor.jpg"
+  },
+  {
+    "id": "gt2-timing-belt-pulley",
+    "name": "GT2 Timing Belt (5m) and 20T Pulleys Kit",
+    "sku": "MEC-GT2-BLT-PLY",
+    "category": "Structural",
+    "price": 450,
+    "stock": 260,
+    "description": "Complete GT2 transmission kit for linear motion, includes 5 meters of fiberglass reinforced rubber belt and aluminum pulleys.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2016/04/GT2-Timing-Belt.jpg"
   }
 ]
