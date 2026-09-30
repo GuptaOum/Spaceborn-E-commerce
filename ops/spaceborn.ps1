@@ -36,6 +36,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+if ($env:PATH -notlike '*SessionManagerPlugin*') {
+  $ssmBin = 'C:\Program Files\Amazon\SessionManagerPlugin\bin'
+  if (Test-Path $ssmBin) { $env:PATH = "$ssmBin;$env:PATH" }
+}
+
 $Region      = 'ap-south-1'
 $AccountId   = '758530010955'
 $Cluster     = 'spaceborn-dev'
@@ -235,6 +240,15 @@ switch ($Command) {
   'tunnel' {
     $bastion = Get-BastionId
     if (-not $bastion) { throw 'No bastion instance found.' }
+
+    $state = Invoke-Aws ec2 describe-instances --instance-ids $bastion --query 'Reservations[0].Instances[0].State.Name' --output text
+    if ($state -ne 'running') {
+      Write-Host "Bastion instance $bastion is in state '$state'. Starting it now..." -ForegroundColor Yellow
+      Invoke-Aws ec2 start-instances --instance-ids $bastion | Out-Null
+      Invoke-Aws ec2 wait instance-running --instance-ids $bastion | Out-Null
+      Write-Host "Waiting for SSM Agent to establish connection..." -ForegroundColor Cyan
+      Start-Sleep -Seconds 25
+    }
 
     if ($Target -eq 'admin') {
       $host_ = Get-TerraformOutput 'admin_internal_url'; $remotePort = 80; $localPort = 8080
