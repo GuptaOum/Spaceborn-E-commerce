@@ -53,8 +53,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <h2 className="text-sm font-bold tracking-tight text-[#34222e]">
                   My Cart ({cart.reduce((s, i) => s + i.quantity, 0)} items)
                 </h2>
-                <p className="text-[11px] text-[#0c831f] font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0c831f] animate-pulse"></span>
+                <p className="text-[11px] text-[#059669] font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#059669] animate-pulse"></span>
                   Delivery in 10-15 minutes
                 </p>
               </div>
@@ -68,21 +68,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </div>
 
           {/* Free Shipping Progress Meter */}
-          <div className="p-3.5 bg-[#f2fcf4] border-b border-[#0c831f]/20">
+          <div className="p-3.5 bg-[#ecfdf5] border-b border-[#10b981]/20">
             <div className="flex items-center justify-between text-xs mb-1.5 font-medium">
               <span className="text-[#34222e] flex items-center space-x-1.5">
-                <Zap className="w-4 h-4 text-[#0c831f] fill-[#0c831f]" />
+                <Zap className="w-4 h-4 text-[#059669] fill-[#059669]" />
                 {amountNeededForFreeShipping === 0 ? (
-                  <span className="text-[#0c831f] font-bold">🎉 You've unlocked FREE 10-Min Delivery!</span>
+                  <span className="text-[#059669] font-bold">🎉 You've unlocked FREE 10-Min Delivery!</span>
                 ) : (
-                  <span>Add <strong className="text-[#0c831f] font-bold">₹{amountNeededForFreeShipping.toFixed(0)}</strong> more for FREE Delivery</span>
+                  <span>Add <strong className="text-[#059669] font-bold">₹{amountNeededForFreeShipping.toFixed(0)}</strong> more for FREE Delivery</span>
                 )}
               </span>
-              <span className="text-[11px] font-bold text-[#0c831f]">{progressPercent}%</span>
+              <span className="text-[11px] font-bold text-[#059669]">{progressPercent}%</span>
             </div>
-            <div className="w-full bg-[#e0f5e5] rounded-full h-2 overflow-hidden border border-[#0c831f]/20">
+            <div className="w-full bg-[#d1fae5] rounded-full h-2 overflow-hidden border border-[#10b981]/20">
               <div 
-                className="bg-[#0c831f] h-full rounded-full transition-all duration-300"
+                className="bg-[#10b981] h-full rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
@@ -101,7 +101,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </p>
                 <button
                   onClick={onClose}
-                  className="mt-2 inline-flex items-center px-4 py-2 bg-[#0c831f] hover:bg-[#0a6e1a] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md shadow-[#0c831f]/20"
+                  className="mt-2 inline-flex items-center px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md shadow-[#059669]/20"
                 >
                   Browse Hardware Catalog
                 </button>
@@ -186,7 +186,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span>Express Runner Dispatch:</span>
-                  <span className="font-semibold text-[#0c831f]">
+                  <span className="font-semibold text-[#059669]">
                     {amountNeededForFreeShipping === 0 ? 'FREE' : '₹49.00'}
                   </span>
                 </div>
@@ -205,15 +205,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     onClose();
                     onProceedToCheckout();
                   }}
-                  className="w-full bg-[#0c831f] hover:bg-[#0a6e1a] text-white py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-md shadow-[#0c831f]/25 cursor-pointer active:scale-[0.98]"
+                  className="w-full bg-[#059669] hover:bg-[#047857] text-white py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all shadow-md shadow-[#059669]/20 cursor-pointer active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-2">
                     <Lock className="w-4 h-4" />
                     <span>Proceed to Pay</span>
                   </div>
-                  <span className="text-white/90 font-medium">
-                    ₹{(totalAmount + (amountNeededForFreeShipping === 0 ? 0 : 49)).toLocaleString('en-IN')} â†’
-                  </span>
+                  <div className="flex items-center gap-1.5 text-white/95 font-semibold">
+                    <span>₹{(totalAmount + (amountNeededForFreeShipping === 0 ? 0 : 49)).toLocaleString('en-IN')}</span>
+                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  </div>
                 </button>
 
                 <button
@@ -230,7 +231,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <div className="flex items-center justify-center space-x-3 text-[10px] text-[#7a6274] pt-1">
                 <span className="flex items-center space-x-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0c831f]" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
                   <span>256-Bit SSL Encrypted</span>
                 </span>
                 <span>•</span>

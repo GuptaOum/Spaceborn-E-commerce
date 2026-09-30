@@ -17,9 +17,9 @@ export interface DeliveryLocation {
 export const LOCATION_PRESETS: DeliveryLocation[] = [
   { label: 'Kanpur', area: 'Mall Road, Kanpur', pincode: '208001', latitude: 26.4499, longitude: 80.3319 },
   { label: 'Bengaluru', area: 'Koramangala 4th Block', pincode: '560034', latitude: 12.9352, longitude: 77.6245 },
+  { label: 'Chennai', area: 'Parrys Corner, Chennai', pincode: '600001', latitude: 13.0827, longitude: 80.2707 },
   { label: 'Pune', area: 'Shivajinagar, Pune', pincode: '411005', latitude: 18.5308, longitude: 73.8475 },
   { label: 'Delhi', area: 'Connaught Place', pincode: '110001', latitude: 28.6315, longitude: 77.2167 },
-  { label: 'Chennai', area: 'Taramani', pincode: '600113', latitude: 12.9863, longitude: 80.2432 },
 ];
 
 export type CatalogStatus = 'loading' | 'ready' | 'unserviceable' | 'error';

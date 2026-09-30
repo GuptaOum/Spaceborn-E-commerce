@@ -133,14 +133,40 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         if (p.subCategory !== selectedSubCategory) return false;
       }
 
-      // Search match
+      // Advanced Semantic Search match
       if (initialSearchQuery.trim()) {
-        const q = initialSearchQuery.toLowerCase();
-        const matches = p.name.toLowerCase().includes(q) ||
-          p.sku.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q);
-        if (!matches) return false;
+        const q = initialSearchQuery.toLowerCase().trim();
+        const tokens = q.split(/\s+/).filter(Boolean);
+
+        // Domain-specific robotics & electronics synonyms
+        const synonyms: Record<string, string[]> = {
+          '3d': ['3d', 'printer', 'filament', 'creality', 'ender', 'resin', 'nozzle', 'pla', 'fdm', 'sla'],
+          'cnc': ['cnc', 'laser', 'engraver', 'cutting', 'milling', 'atomstack', 'heatsink', 'drill', 'spindle'],
+          'laser': ['laser', 'engraver', 'cutter', 'cnc', 'atomstack'],
+          'drone': ['drone', 'motor', 'bldc', 'propeller', 'esc', 'flysky', 'quadcopter', 'hobbywing'],
+          'motor': ['motor', 'bldc', 'stepper', 'servo', 'rpm', 'driver', 'torque'],
+          'battery': ['battery', 'lipo', 'lithium', 'bms', 'charger', 'mah', 'cell', 'power'],
+          'board': ['board', 'mcu', 'arduino', 'esp32', 'raspberry', 'pi', 'microcontroller', 'uno'],
+          'sensor': ['sensor', 'module', 'ultrasonic', 'gyro', 'camera', 'lidar', 'distance'],
+        };
+
+        const terms = new Set<string>(tokens);
+        for (const t of tokens) {
+          if (synonyms[t]) {
+            synonyms[t].forEach(s => terms.add(s));
+          }
+        }
+
+        const corpus = `${p.name} ${p.sku} ${p.category} ${p.subCategory || ''} ${p.brand || ''} ${p.description || ''} ${p.voltage || ''} ${p.rpm || ''}`.toLowerCase();
+
+        // Exact substring match
+        if (corpus.includes(q)) {
+          // match
+        } else {
+          // Token or synonym match
+          const hasMatch = Array.from(terms).some(term => corpus.includes(term));
+          if (!hasMatch) return false;
+        }
       }
 
       // In stock
@@ -246,7 +272,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   <LayoutGrid className="w-3.5 h-3.5 text-[#e2434b]" />
                   <span>Categories</span>
                 </span>
-                <span className="text-[10px] font-bold text-[#0c831f] bg-[#f2fcf4] px-2 py-0.5 rounded-full border border-[#0c831f]/20">
+                <span className="text-[10px] font-bold text-[#059669] bg-[#ecfdf5] px-2 py-0.5 rounded-full border border-[#059669]/20">
                   {products.length} Items
                 </span>
               </div>
@@ -265,7 +291,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs transition-all duration-150 cursor-pointer ${
                         isActive
-                          ? 'bg-[#0c831f] text-white shadow-xs font-bold'
+                          ? 'bg-[#059669] text-white shadow-xs font-bold'
                           : 'text-[#34222e] hover:bg-[#fee9d7]/70 font-semibold'
                       }`}
                     >
@@ -397,6 +423,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           {/* Right Product Grid Column */}
           <main className="lg:col-span-9 space-y-4">
             
+            {/* Semantic Search Result Callout Banner */}
+            {initialSearchQuery.trim() && (
+              <div className="bg-[#ecfdf5] border border-[#10b981]/30 rounded-2xl p-3 sm:p-4 flex items-center justify-between text-xs animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#d1fae5] text-[#059669] flex items-center justify-center shrink-0">
+                    <Search className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[#34222e] font-medium">Search Results for </span>
+                    <strong className="text-[#059669] font-bold">"{initialSearchQuery}"</strong>
+                    <span className="ml-2 text-[#7a6274]">({filteredProducts.length} hardware items found)</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => onSelectCategory('All Categories')}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-[#10b981]/30 text-[#e2434b] hover:bg-[#fee9d7]/50 text-[11px] font-bold transition cursor-pointer"
+                >
+                  Clear Search
+                </button>
+              </div>
+            )}
+
             {/* Controls Bar */}
             <div className="bg-[#fffbf7] rounded-2xl border border-[#f9bf8f]/60 p-3.5 flex items-center justify-between shadow-xs">
               

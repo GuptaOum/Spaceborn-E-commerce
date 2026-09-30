@@ -587,5 +587,1248 @@
     "stock": 260,
     "description": "Complete GT2 transmission kit for linear motion, includes 5 meters of fiberglass reinforced rubber belt and aluminum pulleys.",
     "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2016/04/GT2-Timing-Belt.jpg"
+  },
+  {
+    "id": "creality-sermoon-v1-3d-printer",
+    "name": "Creality Sermoon V1 Fully Assembled Direct Drive 3D Printer",
+    "sku": "3DP-CRE-SERM-V1",
+    "category": "Structural",
+    "price": 28599,
+    "stock": 45,
+    "description": "Creality Sermoon V1 is a factory fully assembled, enclosed 3D printer featuring the Sprite direct-drive dual-gear extruder. Equipped with ultra-silent TMC2208 stepper drivers, intelligent filament runout sensor, and remote Wi-Fi cloud printing via Creality Cloud App. Build volume: 175 x 175 x 165 mm with a maximum nozzle temperature of 250°C and heated bed up to 80°C. Perfect for engineering prototyping, architectural models, and STEM education.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2021/12/Creality-Sermoon-V1-Fully-Assembled-with-Sprite-Direct-Drive-3D-Printer-2.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 28599
+      },
+      {
+        "minQty": 3,
+        "maxQty": 5,
+        "price": 27499
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 26200
+      }
+    ],
+    "specs": {
+      "Build Volume": "175 x 175 x 165 mm",
+      "Extruder": "Sprite Direct Drive Dual Gear",
+      "Nozzle Temp": "Up to 250°C",
+      "Bed Temp": "Up to 80°C",
+      "Layer Resolution": "0.1 - 0.4 mm",
+      "Connectivity": "Wi-Fi, SD Card"
+    }
+  },
+  {
+    "id": "creality-cr-m4-industrial-3d-printer",
+    "name": "Creality CR-M4 Industrial Large Format 3D Printer (450x450x470mm)",
+    "sku": "3DP-CRE-CRM4-IND",
+    "category": "Structural",
+    "price": 79699,
+    "stock": 22,
+    "description": "Massive build volume industrial workhorse 3D printer (450 x 450 x 470 mm) engineered for automotive, aerospace, and rapid batch fabrication. Features dual Y-axis linear rails powered by high-precision stepper motors, all-metal Sprite dual-gear direct extruder, 300°C high-temp hardened steel nozzle, and 25-point CR-Touch automatic bed leveling. Supports multi-printer control arrays over RJ45 Ethernet and USB.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/05/381.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 79699
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 75999
+      }
+    ],
+    "specs": {
+      "Build Volume": "450 x 450 x 470 mm",
+      "Max Nozzle Temp": "300°C",
+      "Max Bed Temp": "100°C",
+      "Leveling Mode": "CR Touch Auto-Leveling (25 points)",
+      "Print Speed": "Up to 120 mm/s",
+      "Supported Filament": "PLA, ABS, PETG, TPU, PLA-Wood, PA"
+    }
+  },
+  {
+    "id": "creality-sermoon-d3-enclosed-3d-printer",
+    "name": "Creality Sermoon D3 High-Temp Industrial Enclosed 3D Printer",
+    "sku": "3DP-CRE-SERM-D3",
+    "category": "Structural",
+    "price": 145239,
+    "stock": 15,
+    "description": "Industrial-grade enclosed 3D printer engineered with aerospace-grade aluminum gantry and 300°C all-metal hotend. Build volume: 300 x 250 x 300 mm. Dual-gear direct drive extruder with 80W high-power ceramic heating block enables printing with engineering plastics including Carbon Fiber PLA, Nylon (PA), Polycarbonate (PC), and ASA. Active chamber filtration and HEPA filter ensure safe indoor operation.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/08/391.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 145239
+      }
+    ],
+    "specs": {
+      "Build Volume": "300 x 250 x 300 mm",
+      "Hotend Temp": "300°C",
+      "Chamber Filtration": "HEPA Air Filter Built-in",
+      "Positioning Precision": "X/Y: 0.012mm, Z: 0.004mm"
+    }
+  },
+  {
+    "id": "creality-cr-10-se-high-speed-printer",
+    "name": "Creality CR-10 SE 600mm/s High Speed Smart 3D Printer",
+    "sku": "3DP-CRE-CR10-SE",
+    "category": "Structural",
+    "price": 29399,
+    "stock": 58,
+    "description": "Next-generation high-speed 3D printer achieving 600 mm/s speed and 8000 mm/s² acceleration. Features hands-free CR-Touch and strain gauge auto-calibration for flawless first layers without manual adjustment. Linear rails on X and Y axes provide smooth motion. Equipped with 60W ceramic heating block and 5015 high-speed cooling fan for high-flow extrusion.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/10/371.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 29399
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 27999
+      }
+    ],
+    "specs": {
+      "Build Volume": "220 x 220 x 265 mm",
+      "Max Print Speed": "600 mm/s",
+      "Acceleration": "8000 mm/s²",
+      "Hotend": "60W Ceramic Heater 300°C"
+    }
+  },
+  {
+    "id": "creality-ender-3-v3-se-printer",
+    "name": "Creality Ender 3 V3 SE Auto-Leveling 250mm/s 3D Printer",
+    "sku": "3DP-CRE-E3-V3SE",
+    "category": "Structural",
+    "price": 18399,
+    "stock": 95,
+    "description": "The benchmark entry-to-intermediate 3D printer with 250 mm/s printing speed. Equipped with CR-Touch auto leveling, automatic Z-offset strain gauge, Sprite direct drive extruder, dual Z-axis lead screws, and rigid Y-axis 8mm linear shafts. Capable of printing PLA, PETG, and flexible TPU out of the box with zero setup hassle.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/10/359.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 4,
+        "price": 18399
+      },
+      {
+        "minQty": 5,
+        "maxQty": null,
+        "price": 17499
+      }
+    ],
+    "specs": {
+      "Build Volume": "220 x 220 x 250 mm",
+      "Speed": "250 mm/s",
+      "Extruder": "Sprite Direct Extruder",
+      "Leveling": "CR Touch + Strain Sensor"
+    }
+  },
+  {
+    "id": "creality-ender-3-v3-ke-klipper-printer",
+    "name": "Creality Ender 3 V3 KE High-Speed 500mm/s Klipper 3D Printer",
+    "sku": "3DP-CRE-E3-V3KE",
+    "category": "Structural",
+    "price": 26999,
+    "stock": 62,
+    "description": "Powered by Creality OS with Klipper firmware, the Ender 3 V3 KE delivers 500 mm/s max print speed and 12,000 mm/s² acceleration. Comes with 4.3-inch color touchscreen, Wi-Fi LAN printing, input shaping to eliminate ghosting, and 300°C high-temperature bimetallic hotend for printing Hyper PLA, PETG, ABS, and Nylon.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/01/392.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 26999
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 25600
+      }
+    ],
+    "specs": {
+      "Firmware": "Klipper / Creality OS",
+      "Max Speed": "500 mm/s",
+      "Acceleration": "12000 mm/s²",
+      "Nozzle": "Bimetal Copper-Titanium 300°C"
+    }
+  },
+  {
+    "id": "creality-k1c-carbon-fiber-3d-printer",
+    "name": "Creality K1C High-Speed 600mm/s Carbon Fiber 3D Printer with AI Camera",
+    "sku": "3DP-CRE-K1C-CARB",
+    "category": "Structural",
+    "price": 46799,
+    "stock": 38,
+    "description": "Enclosed CoreXY high-speed 3D printer specifically optimized for carbon fiber composites (PLA-CF, PETG-CF, PA-CF). Features a wear-resistant hardened steel 'Unicorn' quick-swap nozzle, integrated AI HD camera for real-time monitoring and failure detection, active carbon air filter, and silent mode operating under 48dB.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/02/367.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 46799
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 44999
+      }
+    ],
+    "specs": {
+      "Build Volume": "220 x 220 x 250 mm",
+      "Motion System": "CoreXY Gantry",
+      "Max Speed": "600 mm/s",
+      "Camera": "Integrated AI HD Camera with Spagetti Detection",
+      "Air Filter": "Active Carbon Filtration"
+    }
+  },
+  {
+    "id": "creality-uw-03-washing-curing-machine",
+    "name": "Creality UW-03 All-in-One 10.1L Large UV Washing and Curing Station",
+    "sku": "3DP-CRE-UW03-WASH",
+    "category": "Accessories",
+    "price": 17999,
+    "stock": 40,
+    "description": "Professional post-processing station for resin 3D prints with a 10.1-liter super large washing container. Features 405nm UV LED bead matrix with rotating reflective turntable ensuring 360-degree uniform curing. Multiple washing modes with adjustable speed and timer controls for IPA and water-washable photopolymer resin models.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/04/339-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 17999
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 16999
+      }
+    ],
+    "specs": {
+      "Capacity": "10.1 Liters",
+      "UV Wavelength": "405nm High-Power Matrix",
+      "Control": "Digital Touch Timer & Speed Dial",
+      "Functions": "Wash, Cure, Deep UV Solidification"
+    }
+  },
+  {
+    "id": "creality-ender-3-v3-corexz-printer",
+    "name": "Creality Ender 3 V3 CoreXZ 600mm/s 3D Printer",
+    "sku": "3DP-CRE-E3-COREXZ",
+    "category": "Structural",
+    "price": 29499,
+    "stock": 52,
+    "description": "Revolutionary CoreXZ motion system brings bed-slinger 3D printing to 600 mm/s speeds with 20000 mm/s² acceleration. By coordinating X and Z axes with tensioned belts, Z-wobble is eliminated for pristine surface quality. Features tri-metal 'Unicorn' hotend, die-cast aerospace aluminum base, and automatic input shaping calibration.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/04/370-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 29499
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 27999
+      }
+    ],
+    "specs": {
+      "Architecture": "CoreXZ Precision Belt Drive",
+      "Print Speed": "600 mm/s",
+      "Acceleration": "20000 mm/s²",
+      "Build Size": "220 x 220 x 250 mm"
+    }
+  },
+  {
+    "id": "creality-ender-3-v3-plus-large-printer",
+    "name": "Creality Ender 3 V3 Plus Large Build 300x300x330mm 3D Printer",
+    "sku": "3DP-CRE-E3-V3PLUS",
+    "category": "Structural",
+    "price": 41999,
+    "stock": 35,
+    "description": "Expanded 300 x 300 x 330 mm build volume edition of the CoreXZ Ender 3 V3. Features dual diagonal support rods creating a rigid triangular frame, dual Y-axis motors delivering 1000mN.m torque, and 60W ceramic heating hotend capable of melting 32mm³/s high-flow filament. Ideal for full-scale helmets, mechanical housings, and drone frames.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/08/385-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 41999
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 39999
+      }
+    ],
+    "specs": {
+      "Build Volume": "300 x 300 x 330 mm",
+      "Speed": "600 mm/s",
+      "Support Frame": "Dual Metal Diagonal Rods",
+      "Max Flow Rate": "32 mm³/s"
+    }
+  },
+  {
+    "id": "creality-halot-mage-s-14k-resin-printer",
+    "name": "Creality Halot Mage S 14K High Precision Resin 3D Printer (150mm/h)",
+    "sku": "3DP-CRE-HALOT-14K",
+    "category": "Structural",
+    "price": 52299,
+    "stock": 28,
+    "description": "State-of-the-art 10.1-inch 14K (13320 x 5120) mono LCD SLA resin 3D printer with an astonishing 16.8 x 24.8 μm XY resolution. Capable of blazing print speeds up to 150 mm/h using high-speed 'Pictor' film. Integrated smart resin pump automates resin refilling and recovery. Built-in activated carbon air purifier neutralizes resin odors.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/08/388.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 52299
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 49999
+      }
+    ],
+    "specs": {
+      "LCD Screen": "10.1-inch 14K Monochrome (13320 x 5120)",
+      "XY Resolution": "16.8 x 24.8 μm",
+      "Print Speed": "Up to 150 mm/h",
+      "Build Volume": "223 x 126 x 225 mm",
+      "Light Source": "Integral Light Source 3.0 (90%+ Uniformity)"
+    }
+  },
+  {
+    "id": "creality-k2-plus-industrial-3d-printer",
+    "name": "Creality K2 Plus Industrial Large Volume 350x350x350mm 3D Printer",
+    "sku": "3DP-CRE-K2PLUS-IND",
+    "category": "Structural",
+    "price": 134999,
+    "stock": 12,
+    "description": "Flagship industrial CoreXY 3D printer boasting a large 350 x 350 x 350 mm build volume and actively heated build chamber (up to 60°C). Driven by FOC closed-loop servo motors delivering 32,000 steps per revolution. APUS direct-drive extruder with integrated filament cutter and 350°C hardened steel hotend easily prints PEEK, PEI, and Carbon Fiber composites.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/11/image-13.png",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 134999
+      }
+    ],
+    "specs": {
+      "Build Volume": "350 x 350 x 350 mm",
+      "Chamber Heating": "Active Chamber up to 60°C",
+      "Extruder Temp": "350°C All-Metal Hardened Nozzle",
+      "Motors": "Closed-Loop FOC Stepper Servos"
+    }
+  },
+  {
+    "id": "creality-halot-r6-resin-printer",
+    "name": "Creality HALOT R6 Precision Desktop Resin 3D Printer",
+    "sku": "3DP-CRE-HALOT-R6",
+    "category": "Structural",
+    "price": 15799,
+    "stock": 48,
+    "description": "Compact high-precision resin 3D printer designed for dental study models, anime figurines, and jewelry casting. Features a 6.08-inch 2K monochrome screen, self-developed Integral Light Source delivering over 85% light uniformity, and reinforced dual linear Z-axis rails to guarantee smooth surfaces without layer lines.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/12/28-5.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 15799
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 14999
+      }
+    ],
+    "specs": {
+      "Screen": "6.08-inch 2K Monochrome",
+      "XY Precision": "0.05 mm",
+      "Build Volume": "130 x 82 x 160 mm",
+      "Light Uniformity": ">85%"
+    }
+  },
+  {
+    "id": "creality-k2-plus-combo-cfs-printer",
+    "name": "Creality K2 Plus Combo 3D Printer with CFS 4-Color Feeder",
+    "sku": "3DP-CRE-K2PLUS-CFS",
+    "category": "Structural",
+    "price": 154999,
+    "stock": 10,
+    "description": "The complete multi-color printing package: K2 Plus CoreXY 3D printer bundled with the CFS (Creality Filament System) 4-spool automated material feeder. Supports up to 16 colors when chaining 4 CFS units. RFID spool detection, automated desiccant humidity monitoring, active chamber heating (60°C), and dual AI cameras for live monitoring and defect auto-pause.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/10/1-19.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 154999
+      }
+    ],
+    "specs": {
+      "Multi-Color": "CFS 4-Spool System (Expandable to 16 Colors)",
+      "Build Volume": "350 x 350 x 350 mm",
+      "Chamber Heat": "Active 60°C",
+      "AI Sensors": "Dual AI HD Cameras & RFID Material Sync"
+    }
+  },
+  {
+    "id": "atomstack-m4-infrared-laser-marking-machine",
+    "name": "ATOMSTACK M4 Dual-Light 1064nm Infrared Fiber & Diode Laser Marking Machine",
+    "sku": "CNC-ATOM-M4-INFRA",
+    "category": "Accessories",
+    "price": 132605,
+    "stock": 8,
+    "description": "Industrial dual-light source laser marking machine combining a 1064nm pulsed infrared fiber laser with ultra-fast optical galvanometer scanning (up to 12,000 mm/s). Specifically designed for high-contrast permanent engraving on all metals (Gold, Silver, Titanium, Stainless Steel, Aluminum, Brass) and non-metallic plastics, leather, and circuit boards with 0.001mm repetition precision.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/05/ATOMSTACK-M4-Infrared-Laser-Marking-Machine-2-in-1-Laser-Engraver-Machine-2.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 132605
+      }
+    ],
+    "specs": {
+      "Laser Type": "1064nm Pulsed Infrared Laser + Optical Galvo",
+      "Marking Speed": "Up to 12,000 mm/s",
+      "Engraving Accuracy": "0.001 mm",
+      "Marking Area": "70 x 70 mm (Standard) / Handheld Mode",
+      "Applicable Materials": "All Metals, Hard Plastics, Circuit Boards, Acrylic"
+    }
+  },
+  {
+    "id": "atomstack-p7-m40-laser-engraver",
+    "name": "ATOMSTACK P7 M40 40W Portable Desktop Laser Engraver & Cutter",
+    "sku": "CNC-ATOM-P7-M40",
+    "category": "Accessories",
+    "price": 37249,
+    "stock": 35,
+    "description": "Portable desktop laser engraver with 40W electrical power and 4.5W compressed optical laser beam. Features a compact 200 x 200 mm engraving area, anodized aluminum alloy frame, and fixed-focus laser head with panoramic filter glass cover protecting 97% of UV rays. Cuts up to 6mm basswood and 3mm black acrylic with precise 0.02mm detail.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2025/04/ATOMSTACK-P7-2.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 37249
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 35500
+      }
+    ],
+    "specs": {
+      "Optical Power": "4.5W - 5.5W Compressed Spot",
+      "Working Area": "200 x 200 mm",
+      "Laser Focus": "0.02 x 0.02 mm Ultra-Fine",
+      "Safety": "Panoramic Eye-Protection Acrylic Filter"
+    }
+  },
+  {
+    "id": "atomstack-p9-m50-pro-laser-engraver",
+    "name": "ATOMSTACK P9 M50 Pro 50W CNC Laser Cutter for Metal & Acrylic",
+    "sku": "CNC-ATOM-P9-M50",
+    "category": "Accessories",
+    "price": 56451,
+    "stock": 25,
+    "description": "Heavy-duty CNC laser cutter with 10W pure optical output powered by dual-diode laser beam compression. Includes offline 3.5-inch color touch control terminal, emergency stop switch, and horizontal tilt protection gyro. Slices through 15mm wood and 10mm acrylic in single passes and directly engraves mirrored stainless steel.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2025/04/ATOMSTACK-P9-M50.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 56451
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 53999
+      }
+    ],
+    "specs": {
+      "Optical Power": "10W Dual-Laser Beam Compression",
+      "Working Area": "220 x 250 mm",
+      "Engraving Speed": "Up to 11,000 mm/min",
+      "Offline Controller": "3.5-inch Color Touch Screen with SD Slot"
+    }
+  },
+  {
+    "id": "atomstack-a5-pro-plus-laser-cutter",
+    "name": "Atomstack A5 PRO+ 40W CNC Laser Engraver & Cutting Machine",
+    "sku": "CNC-ATOM-A5-PRO",
+    "category": "Accessories",
+    "price": 33295,
+    "stock": 45,
+    "description": "Upgraded version of the acclaimed A5 Pro with integrated lead screw Z-axis adjustment and 410 x 400 mm full-size working bed. Employs ultra-fine 0.08 x 0.08 mm laser focus spot for crisp engraving on wood, bamboo, leather, PCB, acrylic, and stainless steel. Compatible with LightBurn and LaserGRBL.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/05/Atomstack-A5-PRO-40W-Laser-Engraver-Cutting-Machine-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 33295
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 31900
+      }
+    ],
+    "specs": {
+      "Working Bed": "410 x 400 mm Large Format",
+      "Focus Spot": "0.08 x 0.08 mm",
+      "Software Compatibility": "LightBurn, LaserGRBL, Win/Mac/Linux"
+    }
+  },
+  {
+    "id": "atomstack-x20-pro-quad-laser-cutter",
+    "name": "Atomstack X20 Pro 130W Quad-Laser 20W Optical Cutter with Air Assist",
+    "sku": "CNC-ATOM-X20-PRO",
+    "category": "Accessories",
+    "price": 82421,
+    "stock": 18,
+    "description": "Industry-leading quad-core laser technology combining 4 x 6W diodes into a single 20W optical power cutting beam. Equipped with intelligent F30 air assist system delivering 10-30L/min clean airflow to eliminate smoke scorching. Effortlessly cuts 12mm solid pinewood in one pass and cuts 0.05mm thin stainless steel sheet.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/05/Atomstack-X20-Pro-130W-Quad-Laser-Engraving-and-Cutting-Machine-Built-in-Air-Assist-System-3.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 82421
+      }
+    ],
+    "specs": {
+      "Optical Laser Power": "20W (4 x 6W Quad Diode Coupled)",
+      "Air Assist": "Integrated Dual-Cylinder 30L/min Pump",
+      "Working Area": "400 x 400 mm",
+      "One-Pass Cut Depth": "12mm Solid Wood, 8mm Black Acrylic"
+    }
+  },
+  {
+    "id": "atomstack-x30-pro-160w-laser-cutter",
+    "name": "Atomstack X30 Pro 160W 6-Core Laser Engraver & Cutter (33W Optical)",
+    "sku": "CNC-ATOM-X30-PRO",
+    "category": "Accessories",
+    "price": 106092,
+    "stock": 14,
+    "description": "Flagship 33W pure optical power laser cutter harnessing 6 combined laser diodes. Cuts 18-20mm basswood, 10mm black acrylic, and 0.1mm sheet metal in a single pass. Features 32-bit dual-core mainboard, upgraded high-rigidity linear guide rails, and internal automatic air pump for continuous production batch manufacturing.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/05/Atomstack-X30-Pro-160W-6-core-Laser-Engraving-and-Cutting-Machine-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 106092
+      }
+    ],
+    "specs": {
+      "Optical Output Power": "33W True Optical Power (6-Core Coupling)",
+      "Max Engraving Speed": "30,000 mm/min",
+      "Cutting Capacity": "20mm Basswood, 15mm Acrylic, 0.1mm Stainless Steel",
+      "Working Area": "400 x 400 mm"
+    }
+  },
+  {
+    "id": "atomstack-s10-pro-laser-engraver",
+    "name": "Atomstack S10 Pro 50W Offline CNC Laser Engraver (10W Optical)",
+    "sku": "CNC-ATOM-S10-PRO",
+    "category": "Accessories",
+    "price": 45125,
+    "stock": 30,
+    "description": "High-performance 10W optical diode laser engraver with dual-compression spot technology (0.08 x 0.06 mm). Features an all-metal unibody frame, terminal touch screen for standalone offline engraving without a PC, limit switches on both X and Y axes, and horizontal tilt safety protection.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2025/04/Atomstack-S10-Pro-50W-Laser-Engraver-and.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 45125
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 42999
+      }
+    ],
+    "specs": {
+      "Optical Power": "10W",
+      "Bed Dimensions": "410 x 400 mm",
+      "Control": "Offline 3.5\" Touchscreen + USB/Wi-Fi",
+      "Safety Sensors": "Flame Sensor, Tilt Gyroscope, Limit Switches"
+    }
+  },
+  {
+    "id": "atomstack-r3-pro-rotary-roller",
+    "name": "AtomStack R3 Pro Laser Engraver Y-axis Rotary Roller Module for Cylinders",
+    "sku": "CNC-ATOM-R3-PRO",
+    "category": "Accessories",
+    "price": 10509,
+    "stock": 65,
+    "description": "Precision CNC rotary roller attachment enabling 360-degree cylindrical engraving on drinking glasses, tumblers, stainless steel bottles, wooden bats, and pipes. Features 8-level adjustable roller spacing (4mm - 100mm diameter), support column towers for irregular cones, and rubber high-friction rollers preventing slippage.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2023/09/AtomStack-R3-Pro-Laser-Engraver-2.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 4,
+        "price": 10509
+      },
+      {
+        "minQty": 5,
+        "maxQty": null,
+        "price": 9800
+      }
+    ],
+    "specs": {
+      "Diameter Range": "4 mm to 100 mm",
+      "Motor": "NEMA 17 Stepper Motor Included",
+      "Material": "All Aluminum Alloy Frame & Silicone Rollers",
+      "Compatibility": "AtomStack, Creality, TwoTrees, Ortur"
+    }
+  },
+  {
+    "id": "atomstack-x20-x30-motherboard",
+    "name": "AtomStack X20PRO/X30PRO 32-bit High-Speed Dual-Core CNC Motherboard",
+    "sku": "CNC-ATOM-32B-MB",
+    "category": "Controllers",
+    "price": 4009,
+    "stock": 80,
+    "description": "Genuine OEM 32-bit dual-core mainboard for AtomStack X20 Pro and X30 Pro laser machines. Delivers silky-smooth microstepping up to 30,000 mm/min motion speeds with ultra-fast vector calculation. Integrates air pump auto-switching relay, emergency stop input, flame sensor trigger, and Bluetooth/Wi-Fi expansion port.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2024/01/368.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 4009
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 3699
+      }
+    ],
+    "specs": {
+      "MCU": "32-bit Dual-Core ESP32 Processor",
+      "Driver Chipset": "Silent TMC Stepper Drivers Integrated",
+      "Input Voltage": "12V - 24V DC",
+      "Relay Support": "Built-in Air Assist Auto Relay"
+    }
+  },
+  {
+    "id": "atomstack-f3-matrix-cutting-bed",
+    "name": "Atomstack F3 Matrix Cutting Bed Working Table 460x425mm with Metal Pegs",
+    "sku": "CNC-ATOM-F3-BED",
+    "category": "Accessories",
+    "price": 7479,
+    "stock": 50,
+    "description": "Next-gen laser cutting table replacing traditional honeycomb beds. Uses movable aluminum alloy matrix ribs with zero contact line reflections, eliminating backside laser scorch marks on wood and acrylic. Comes with 8 fixing clamps to securely hold warped thin plywood sheets flat during high-speed laser passes.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2025/04/Atomstack-F3-Matrix-Cutting-Panel-Laser-Engraver-Protective-Plate-Working-Table-460X425mm-1-462x462-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 4,
+        "price": 7479
+      },
+      {
+        "minQty": 5,
+        "maxQty": null,
+        "price": 6999
+      }
+    ],
+    "specs": {
+      "Dimensions": "460 x 425 x 22 mm",
+      "Structure": "Segmented Aluminum Matrix Ribs",
+      "Protection": "Heavy Duty Desktop Aluminum Base Plate Included"
+    }
+  },
+  {
+    "id": "arduino-uno-q-local-vision-bundle",
+    "name": "Official Arduino Uno Q Local Vision Edge AI Developer Bundle",
+    "sku": "DEV-ARD-UNOQ-VIS",
+    "category": "Controllers",
+    "price": 16599,
+    "stock": 45,
+    "description": "Comprehensive Edge AI developer kit built around the groundbreaking Arduino Uno Q Single Board Computer. Includes a high-framerate MIPI CSI global shutter camera module, heatsink assembly, official 65W GaN USB-C power supply, and preloaded Linux image with OpenCV and TensorFlow Lite Edge TPU acceleration for local on-device computer vision without cloud latency.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3449418/DuVDCBJVEPmWr4IQduYDihdrdLnut0dTuLhkWfIP.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 16599
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 15799
+      }
+    ],
+    "specs": {
+      "Processor": "Quad-Core ARM Cortex-A55 + 2 TOPS NPU",
+      "RAM": "4GB LPDDR4x",
+      "Camera Sensor": "MIPI CSI 1080p Global Shutter",
+      "Wireless": "Dual-Band Wi-Fi 5 & Bluetooth 5.2"
+    }
+  },
+  {
+    "id": "arduino-uno-q-local-llm-bundle",
+    "name": "Official Arduino Uno Q Local LLM & Voice Agent Developer Bundle",
+    "sku": "DEV-ARD-UNOQ-LLM",
+    "category": "Controllers",
+    "price": 11299,
+    "stock": 55,
+    "description": "Designed for running quantized TinyLlama, Phi-2, and local speech recognition models directly at the edge. Bundle includes Arduino Uno Q 2GB board, dual-microphone array expansion shield with noise cancellation, active PWM heatsink fan, and high-speed Class 10 A2 64GB MicroSD card with pre-installed edge AI software environment.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3449417/BWZlsyVUQtzp1B9f0Qwk3RICqul1jKVFjLWWQSpk.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 11299
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 10799
+      }
+    ],
+    "specs": {
+      "Compute": "Quad-Core ARM 1.8GHz with NPU",
+      "RAM": "2GB LPDDR4x",
+      "Audio": "Dual MEMS Microphone Array Shield",
+      "Storage": "64GB SanDisk Ultra A2 MicroSD Included"
+    }
+  },
+  {
+    "id": "arduino-uno-q-ai-robotics-bundle",
+    "name": "Official Arduino Uno Q AI & Autonomous Robotics Kit with Motor Shield",
+    "sku": "DEV-ARD-UNOQ-ROB",
+    "category": "Controllers",
+    "price": 14699,
+    "stock": 36,
+    "description": "Complete embedded robotics brain bundle merging Linux ROS 2 computing with real-time Arduino GPIO deterministic control. Includes Arduino Uno Q board, dual H-bridge 5A motor driver shield, 16-channel servo controller, and 9-DOF IMU sensor for autonomous mobile robots (AMRs), self-balancing bots, and robotic manipulators.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3449416/uEeaJAO800gNO8kjVkUItgzf80coEWq0a2LAeFF5.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 14699
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 13999
+      }
+    ],
+    "specs": {
+      "Compatibility": "ROS 2 Humble / Iron & Arduino IDE 2.x",
+      "Motor Shield": "Dual 5A Continuous H-Bridge",
+      "IMU": "9-Axis Gyro/Accel/Mag Sensor Onboard",
+      "PWM Channels": "16-Channel 12-bit PCA9685 Expansion"
+    }
+  },
+  {
+    "id": "arduino-usbc-power-supply-65w",
+    "name": "Official Arduino USB-C GaN Fast Power Supply 65W PD 3.0",
+    "sku": "PWR-ARD-USBC-65W",
+    "category": "Batteries",
+    "price": 2999,
+    "stock": 120,
+    "description": "Official Arduino certified 65W Gallium Nitride (GaN) USB Power Delivery 3.0 power adapter. Delivers dynamic variable voltages: 5V/3A, 9V/3A, 12V/3A, 15V/3A, 20V/3.25A with low ripple voltage (<30mV). Specifically engineered to maintain continuous full power under heavy CPU/NPU throttles for Arduino Uno Q and single board computers.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3449345/WVqX0GcqcLu90pcG5kCJhD9eHjUniGC3FOpWFnK7.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 2999
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 2799
+      }
+    ],
+    "specs": {
+      "Max Power": "65W USB-PD 3.0",
+      "Technology": "GaNFast High Efficiency",
+      "Ripple Voltage": "<30 mV Peak-to-Peak",
+      "Cable": "Braided 1.5m 100W E-Marked USB-C Cable Included"
+    }
+  },
+  {
+    "id": "arduino-uno-q-4gb-base-kit",
+    "name": "Arduino UNO Q Single Board Computer 4GB RAM + Gigabit LAN",
+    "sku": "DEV-ARD-UNOQ-4GB",
+    "category": "Controllers",
+    "price": 9039,
+    "stock": 75,
+    "description": "The groundbreaking flagship Single Board Computer by Arduino combining Debian Linux power with classic Arduino Uno shield pinout compatibility. Featuring a Quad-Core 64-bit ARM processor @ 1.8GHz, 4GB LPDDR4x RAM, Gigabit Ethernet, 4K HDMI video output, Wi-Fi 5, Bluetooth 5.2, and dual USB 3.0 host ports.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2026/01/0.1-5.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 9039
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 8699
+      }
+    ],
+    "specs": {
+      "CPU": "Quad-Core ARM Cortex-A55 @ 1.8 GHz",
+      "RAM": "4GB LPDDR4x",
+      "Networking": "Gigabit Ethernet (1000BASE-T) + Wi-Fi 5",
+      "Video": "Micro-HDMI up to 4K @ 60fps",
+      "GPIO": "Classic Arduino Uno R3 Header Layout + 40-Pin Expansion"
+    }
+  },
+  {
+    "id": "arduino-plc-starter-kit-akx00051",
+    "name": "Official Arduino PLC Industrial Automation Starter Kit (AKX00051)",
+    "sku": "DEV-ARD-PLC-STARTER",
+    "category": "Controllers",
+    "price": 43609,
+    "stock": 14,
+    "description": "Industry 4.0 automation training kit containing the Arduino Opta Micro PLC. Supports standard IEC 61131-3 languages (Ladder Diagram, Function Block Diagram, Structured Text, Sequential Function Chart, Instruction List). Equipped with 8 digital/analog inputs, 4 electromechanical relays (250V/10A), RS485 Modbus, and secure cryptographic element.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3446087/HRy1pEoTpnKdBFwQgVd851uxzFSxE2hrenUgSPpT.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 43609
+      }
+    ],
+    "specs": {
+      "Controller": "Arduino Opta WiFi Micro PLC (Dual-Core STM32H747XI)",
+      "Standard": "IEC 61131-3 Compliant",
+      "Relay Outputs": "4x 250V AC / 10A Relays",
+      "Industrial Bus": "RS485 Modbus RTU / TCP"
+    }
+  },
+  {
+    "id": "arduino-uno-ek-r4-minima",
+    "name": "Arduino UNO EK (एक) R4 Minima with Bharat Explorer Shield",
+    "sku": "DEV-ARD-EK-R4MIN",
+    "category": "Controllers",
+    "price": 1799,
+    "stock": 180,
+    "description": "Special Edition Arduino UNO R4 Minima board celebrating India's engineering community. Powered by the 32-bit Renesas RA4M1 ARM Cortex-M4 microcontroller running at 48MHz with 256KB Flash and 32KB SRAM. Features 5V operating logic, 12-bit analog DAC, USB-C programming port, CAN bus support, and enhanced 24V tolerant power input stage.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3434140/eU2E3c2zwEVPcKr5aMMlQlq5GkWrQUOhuYz8gKe9.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 1799
+      },
+      {
+        "minQty": 6,
+        "maxQty": 19,
+        "price": 1699
+      },
+      {
+        "minQty": 20,
+        "maxQty": null,
+        "price": 1599
+      }
+    ],
+    "specs": {
+      "Microcontroller": "Renesas RA4M1 (ARM Cortex-M4 @ 48 MHz)",
+      "Memory": "256 KB Flash, 32 KB SRAM",
+      "Operating Voltage": "5V DC Logic (Up to 24V Input Vin)",
+      "Connector": "USB-C"
+    }
+  },
+  {
+    "id": "arduino-ventuno-q-single-board-computer",
+    "name": "Official Arduino VENTUNO Q High-Performance AI Edge Computer ABX00181",
+    "sku": "DEV-ARD-VENTUNO-Q",
+    "category": "Controllers",
+    "price": 34119,
+    "stock": 16,
+    "description": "High-end industrial edge computing powerhouse by Arduino. Combines an Octa-Core ARM processor with a dedicated 6 TOPS Neural Processing Unit (NPU) and 8GB LPDDR5 memory. Capable of executing real-time multi-stream object detection, SLAM navigation, and local speech understanding for industrial robotics and smart factory installations.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3350998/r1OrvbAq2VGgm1j6sWpo6mMR1nfKUdVWhPJwgLnr.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": null,
+        "price": 34119
+      }
+    ],
+    "specs": {
+      "Processor": "Octa-Core ARM 64-bit Architecture",
+      "AI Accelerator": "6 TOPS NPU",
+      "RAM": "8GB LPDDR5",
+      "Interfaces": "PCIe Gen 3, Dual Gigabit Ethernet, Dual MIPI CSI/DSI, CAN-FD"
+    }
+  },
+  {
+    "id": "hobbywing-x11-plus-drone-motor",
+    "name": "Hobbywing X11 Plus Agricultural & Heavy-Lift Drone Motor with 4314 Carbon Propeller",
+    "sku": "MOT-HW-X11-PLUS",
+    "category": "Motors",
+    "price": 14999,
+    "stock": 28,
+    "description": "Integrated power propulsion system combining high-torque brushless motor, FOC intelligent ESC, and foldable 4314 ultra-light high-strength carbon fiber propeller. Delivers up to 15 kg max thrust per axis with IPX7 waterproof industrial sealing for agricultural spraying drones, heavy cargo logistics UAVs, and search-and-rescue quadcopters.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3373062/1q4eifZG28ISdtgvmXM5LLwSeqXUfbSFb02ynddy.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 14999
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 14200
+      }
+    ],
+    "specs": {
+      "Max Thrust": "15 kg / Axis @ 12S LiPo",
+      "Recommended Battery": "12S - 14S LiPo",
+      "Protection Rating": "IPX7 Waterproof & Dustproof",
+      "Propeller": "4314 High-Strength Carbon Fiber Foldable",
+      "ESC Technology": "Field Oriented Control (FOC)"
+    }
+  },
+  {
+    "id": "hobbywing-x6-se-280kv-motor",
+    "name": "Hobbywing X6-SE 280KV Brushless Motor & 2270 Propeller Combo System",
+    "sku": "MOT-HW-X6-SE-280",
+    "category": "Motors",
+    "price": 10669,
+    "stock": 35,
+    "description": "Compact heavy-payload propulsion combo designed for 3-5 kg per rotor multirotors. Includes 280KV brushless motor, 80A continuous FOC ESC with CAN-bus telemetry reporting, and 2270 high-efficiency composite carbon folding propeller. Delivers rapid dynamic throttle response and high electrical efficiency under extended hovering.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/product/3373066/pmpUO65UBCpfMcMZ0TScCc2YNfTYBiLQR74iJ4by.webp",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 10669
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 9999
+      }
+    ],
+    "specs": {
+      "KV Rating": "280 KV",
+      "Max Thrust": "7.5 kg / Rotor",
+      "Operating Voltage": "6S - 12S LiPo",
+      "Propeller": "2270 High-Efficiency Folding Blades"
+    }
+  },
+  {
+    "id": "multi-functional-4wd-robot-car-chassis",
+    "name": "Multi-Functional 4WD Autonomous Robot Car Chassis Kit with UNO R3 & Sensor Shield",
+    "sku": "ROB-4WD-UNO-KIT",
+    "category": "Structural",
+    "price": 3879,
+    "stock": 70,
+    "description": "Educational and research robotics platform featuring dual-layer acrylic chassis, 4 independent TT gear motors with optical encoder velocity discs, L298N motor driver, HC-SR04 ultrasonic distance sensor with pan-tilt SG90 servo, line tracking module array, IR remote control, and Arduino UNO R3 compatible mainboard with rechargeable 18650 battery holder.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2017/06/Multi-Functional-4WD-Robot-Car-Chassis-Kit-with-ARDUINO-UNO-R3robu-6.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 3879
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 3599
+      }
+    ],
+    "specs": {
+      "Drive System": "4WD Independent Geared TT Motors",
+      "Control Board": "Arduino UNO R3 + Sensor Shield V5",
+      "Sensors Included": "Ultrasonic HC-SR04, 3-Channel Line Tracking, IR Receiver",
+      "Power Source": "Dual 18650 Li-ion Battery Slot (Batteries optional)"
+    }
+  },
+  {
+    "id": "18dof-aluminum-hexapod-spider-robot",
+    "name": "DIY 18DOF Aluminum Hexapod Spider Robot Kit with 32CH Servo Controller",
+    "sku": "ROB-18DOF-HEX-SPID",
+    "category": "Structural",
+    "price": 18959,
+    "stock": 20,
+    "description": "Advanced bio-inspired 6-legged walking robot constructed from hard 2mm anodized aluminum alloy brackets. Powered by 18 high-torque metal gear standard servos (MG996R) providing 3 degrees of freedom per leg for lifelike crawling, climbing, turning, and dynamic gaits. Includes 32-channel dedicated USB/UART servo controller with graphical inverse kinematics software.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2017/07/robu-1-1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 18959
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 17999
+      }
+    ],
+    "specs": {
+      "Degrees of Freedom": "18 DOF (3 Servos per Leg x 6 Legs)",
+      "Servos": "18x MG996R Metal Gear Servos (13 kg.cm torque)",
+      "Chassis Material": "Anodized 2mm Aircraft Aluminum Alloy",
+      "Controller": "32-Channel High-Precision Servo Controller"
+    }
+  },
+  {
+    "id": "easymech-warrior-robot-chassis-kit",
+    "name": "EasyMech Warrior Heavy Duty Robot Chassis Combo Kit with Planetary Motors",
+    "sku": "ROB-EZM-WARRIOR",
+    "category": "Structural",
+    "price": 5141,
+    "stock": 40,
+    "description": "Rugged laser-cut aluminum combat robotics chassis designed for RoboWars, university competitions, and rough terrain exploration. Includes heavy-duty aluminum base plate, 4 high-torque planetary geared DC motors, 80mm high-traction rubber wheels with brass hex adapters, and reinforced steel motor mounting brackets.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2018/04/17.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 4,
+        "price": 5141
+      },
+      {
+        "minQty": 5,
+        "maxQty": null,
+        "price": 4799
+      }
+    ],
+    "specs": {
+      "Chassis Metal": "3mm Heavy Gauge Aluminum",
+      "Motors": "4x Planetary Geared DC Motors (300 RPM @ 12V)",
+      "Payload Capacity": "Up to 15 kg Ground Payload",
+      "Wheel Diameter": "80mm Rubber with Studded Tread"
+    }
+  },
+  {
+    "id": "seeed-grove-creator-kit-gamma-40-in-1",
+    "name": "SeeedStudio Grove Creator Kit Gamma 40-in-1 Ultimate Sensor & Actuator Kit",
+    "sku": "SEN-SEEED-GRV-40",
+    "category": "Sensors",
+    "price": 12679,
+    "stock": 32,
+    "description": "The ultimate standardized sensor and electronic component ecosystem by SeeedStudio. Includes 40 solderless Grove modules spanning Environmental Sensors (BME280 temperature/humidity/pressure, gas, dust, air quality), Motion & Gestures (3-axis accelerometer, ultrasonic, PIR), Displays (OLED, 16x2 LCD), Relays, and Communication modules. Perfect for rapid IoT proof-of-concepts.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/10/seeed-grove-kit.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 12679
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 11999
+      }
+    ],
+    "specs": {
+      "Module Count": "40 Modular Grove Plug-and-Play Units",
+      "Connectors": "Universal 4-Pin Grove Cables Included",
+      "Documentation": "Comprehensive 100+ Page Project Guidebook & Code Samples",
+      "Compatibility": "Arduino, Raspberry Pi, ESP32, STM32"
+    }
+  },
+  {
+    "id": "seeed-grove-inventor-kit-microbit",
+    "name": "SeeedStudio Grove Inventor Kit for BBC micro:bit STEM Education",
+    "sku": "SEN-SEEED-MBIT-INV",
+    "category": "Sensors",
+    "price": 5139,
+    "stock": 55,
+    "description": "Specially designed for educators and young coders to explore physical computing with the micro:bit. Contains a Grove Shield for micro:bit, gesture sensor, rotary potentiometer, light sensor, speaker, ultrasonic ranger, RGB LED ring, and waterproof temperature sensor with step-by-step graphical MakeCode block tutorials.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/10/Grove-Inventor-Kit-for-microbit-10.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 5139
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 4799
+      }
+    ],
+    "specs": {
+      "Target Board": "BBC micro:bit V1 & V2",
+      "Modules": "8 Core Grove Sensors + Expansion Shield",
+      "Coding Environment": "Microsoft MakeCode & MicroPython"
+    }
+  },
+  {
+    "id": "poly-bluetooth-controlled-omni-robot",
+    "name": "Poly Bluetooth Controlled 3-Wheel Omni Directional Robot Platform",
+    "sku": "ROB-POLY-OMNI-3W",
+    "category": "Structural",
+    "price": 4439,
+    "stock": 30,
+    "description": "Holonomic mobile robotics platform capable of instantaneous translation in any direction and simultaneous rotation without changing heading. Features a triangular aluminum chassis, 3 high-precision 58mm omni wheels with dual rubber rollers, 3 metal gear DC encoder motors, and Bluetooth 4.0 BLE mobile app control.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/12/Poly-Bluetooth-Controlled-Omni-Wheel-Robot-Kit-3.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 3,
+        "price": 4439
+      },
+      {
+        "minQty": 4,
+        "maxQty": null,
+        "price": 4150
+      }
+    ],
+    "specs": {
+      "Kinematics": "3-Wheel 120-Degree Holonomic Omni Drive",
+      "Wheels": "58mm Aluminum Omni Wheels with Rubber Rollers",
+      "Motors": "3x Geared DC Motors with Feedback Encoders",
+      "Connectivity": "Bluetooth BLE Mobile Application"
+    }
+  },
+  {
+    "id": "4wd-suspension-offroad-chassis",
+    "name": "4WD Suspension Off-Road Robot Car Chassis with Independent Spring Shock Absorbers",
+    "sku": "ROB-4WD-SUSP-OFF",
+    "category": "Structural",
+    "price": 1722,
+    "stock": 85,
+    "description": "All-terrain robotics platform featuring 4 independent spring suspension arms that absorb shocks and vibrations over rocks, gravel, and uneven surfaces. Includes 4 x 125 RPM geared motors, 65mm rubber off-road tires, and pre-drilled mounting holes for Arduino, Raspberry Pi, LiDAR, and battery packs.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2020/07/4WD-Suspension-Smart-Car-Chassis-with-125-RPM-BO-Motors-Kit.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 1722
+      },
+      {
+        "minQty": 6,
+        "maxQty": null,
+        "price": 1580
+      }
+    ],
+    "specs": {
+      "Suspension": "4-Wheel Independent Spring Dampeners",
+      "Motors": "4x 125 RPM High-Torque Geared Motors",
+      "Ground Clearance": "32 mm",
+      "Chassis Material": "Reinforced High-Impact Acrylic Plate"
+    }
+  },
+  {
+    "id": "solid-state-lipo-battery-6s-22ah",
+    "name": "Industrial 6S 22.2V 22000mAh 25C High Energy Density Semi-Solid State LiPo Battery",
+    "sku": "BAT-LIPO-6S-22AH",
+    "category": "Batteries",
+    "price": 22899,
+    "stock": 24,
+    "description": "Next-generation semi-solid state lithium polymer battery pack engineered for agricultural UAVs, surveillance drones, and heavy autonomous rovers. Offers 30% higher gravimetric energy density (265 Wh/kg) than traditional lithium packs, with enhanced thermal puncture safety and extended 800+ cycle lifespan. Fitted with AS150 anti-spark connectors.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/12/Poly-Bluetooth-Controlled-Omni-Wheel-Robot-Kit-3.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 22899
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 21500
+      }
+    ],
+    "specs": {
+      "Configuration": "6S1P (22.2V Nominal, 25.2V Peak)",
+      "Capacity": "22,000 mAh (488.4 Wh)",
+      "Discharge Rate": "25C Continuous (50C Burst)",
+      "Weight": "1850 grams",
+      "Discharge Connector": "Amass AS150 Anti-Spark"
+    }
+  },
+  {
+    "id": "industrial-smps-power-supply-24v-15a",
+    "name": "Professional 24V 15A 360W Metal Enclosed Switching Power Supply (SMPS)",
+    "sku": "PWR-SMPS-24V-15A",
+    "category": "Batteries",
+    "price": 2450,
+    "stock": 90,
+    "description": "Industrial-grade regulated constant-voltage switching power supply with 24V DC / 15A 360W output. Encased in a ventilated aluminum chassis with temperature-controlled silent cooling fan. Protects connected 3D printers, CNC stepper motors, and high-power LED arrays with over-voltage, short-circuit, and over-current auto-recovery circuitry.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2020/09/1.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 5,
+        "price": 2450
+      },
+      {
+        "minQty": 6,
+        "maxQty": 19,
+        "price": 2280
+      },
+      {
+        "minQty": 20,
+        "maxQty": null,
+        "price": 2100
+      }
+    ],
+    "specs": {
+      "Output Voltage": "24V DC (Adjustable ±10% via Trim Pot)",
+      "Rated Current": "15A (360W Maximum Continuous)",
+      "Input Voltage": "110V / 220V AC Selectable Switch",
+      "Efficiency": ">86%",
+      "Cooling": "Automatic Thermally Controlled Fan"
+    }
+  },
+  {
+    "id": "creality-ender-5-max-3d-printer",
+    "name": "Creality Ender 5 Max Cube Frame Large-Format 3D Printer (350x350x400mm)",
+    "sku": "3DP-CRE-E5-MAX",
+    "category": "Structural",
+    "price": 74999,
+    "stock": 25,
+    "description": "Rigid box-frame industrial gantry 3D printer featuring a massive 350 x 350 x 400 mm volume. Equipped with dual Z-axis motors, reinforced aluminum corner struts, auto-bed leveling, and high-temp all-metal hotend for large architectural mockups, engineering prototypes, and custom cosplay assemblies.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2025/05/601.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 74999
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 71999
+      }
+    ],
+    "specs": {
+      "Frame": "Cube Structure Dual Z-Axis",
+      "Build Volume": "350 x 350 x 400 mm",
+      "Hotend Temp": "Up to 300°C",
+      "Precision": "±0.1 mm"
+    }
+  },
+  {
+    "id": "creality-k2-corexy-3d-printer",
+    "name": "Creality K2 CoreXY High-Speed 600mm/s 3D Printer",
+    "sku": "3DP-CRE-K2-BASE",
+    "category": "Structural",
+    "price": 52499,
+    "stock": 32,
+    "description": "Next-generation enclosed CoreXY 3D printer featuring active chamber pre-heating, 600 mm/s high-speed motion with FOC closed-loop stepper motors, dynamic vibration compensation, and hardened bimetal nozzle. Ready for abrasive carbon-fiber filaments and high-temperature polymers.",
+    "image": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2025/10/0.3-4.jpg",
+    "tierPricing": [
+      {
+        "minQty": 1,
+        "maxQty": 2,
+        "price": 52499
+      },
+      {
+        "minQty": 3,
+        "maxQty": null,
+        "price": 49999
+      }
+    ],
+    "specs": {
+      "Max Speed": "600 mm/s",
+      "Kinematics": "CoreXY Precision Gantry",
+      "Enclosure": "Fully Enclosed Thermal Chamber",
+      "Nozzle": "Hardened Bimetallic 300°C"
+    }
   }
 ]

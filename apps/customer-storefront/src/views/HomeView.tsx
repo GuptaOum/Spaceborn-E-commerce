@@ -3,6 +3,7 @@
 import React from 'react';
 import { Product, AppView } from '../types';
 import { ProductCard } from '../components/ProductCard';
+import { HeroSlider } from '../components/HeroSlider';
 import { 
   ArrowRight, 
   ChevronRight,
@@ -56,37 +57,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
       
       <main className="max-w-7xl mx-auto px-4 pt-6 space-y-6">
 
-        {/* Clean, Welcoming Hero Banner */}
-        <div className="bg-[#fffbf7] rounded-3xl p-6 sm:p-8 border border-[#f9bf8f]/60 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="max-w-xl space-y-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f2fcf4] text-[#0c831f] text-xs font-bold border border-[#0c831f]/20">
-              <Zap className="w-3.5 h-3.5 fill-[#0c831f]" />
-              Delivery in 10-15 minutes
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#34222e] tracking-tight leading-tight">
-              Electronics & hardware components delivered to your door.
-            </h1>
-            <p className="text-xs sm:text-sm text-[#7a6274] leading-relaxed">
-              Genuine microcontrollers, sensors, motors, and workbench essentials ready for instant dispatch.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="bg-[#0c831f] hover:bg-[#0a6e1a] text-white px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
-            >
-              <span>Explore Catalog</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onNavigate('fabrication')}
-              className="bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-sm cursor-pointer active:scale-95"
-            >
-              3D Print & CNC near you
-            </button>
-          </div>
-        </div>
+        {/* Robu-Style Sliding Advertisement & Services Hero Banner */}
+        <HeroSlider onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
 
         {/* Categories Grid */}
         <section className="bg-[#fffbf7] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">

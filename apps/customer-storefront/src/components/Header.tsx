@@ -132,19 +132,61 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-50 bg-[#fffbf7] border-b border-[#f9bf8f]/60 shadow-xs transition-all">
-      {/* Main Clean Blinkit-Style Header */}
-      <div className="max-w-7xl mx-auto px-4 py-3">
+      {/* Robu-Style Services & Quick Access Top Bar */}
+      <div className="bg-[#34222e] text-[#fee9d7] text-[11px] font-medium border-b border-black/10">
+        <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
+          <div className="flex items-center space-x-3 sm:space-x-4 overflow-x-auto scrollbar-none py-0.5">
+            <button
+              onClick={() => onNavigate('fabrication')}
+              className="inline-flex items-center gap-1.5 text-[#f9bf8f] hover:text-white transition-colors cursor-pointer font-bold tracking-tight shrink-0"
+              title="3D Printing on demand"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse"></span>
+              <span>⚡ 3D Printing Service</span>
+            </button>
+            <span className="text-white/20 select-none">|</span>
+            <button
+              onClick={() => onNavigate('fabrication')}
+              className="inline-flex items-center gap-1.5 hover:text-[#fee9d7] transition-colors cursor-pointer shrink-0 text-white/90"
+              title="CNC Machining & Laser Cutting"
+            >
+              <span>🛠️ CNC & Laser Cutting</span>
+            </button>
+            <span className="text-white/20 select-none">|</span>
+            <button
+              onClick={() => onNavigate('catalog')}
+              className="inline-flex items-center gap-1.5 hover:text-[#fee9d7] transition-colors cursor-pointer shrink-0 text-white/90"
+              title="PCB Prototyping"
+            >
+              <span>🔬 PCB Prototyping</span>
+            </button>
+          </div>
+          <div className="hidden md:flex items-center space-x-4 text-white/80 shrink-0">
+            <span className="flex items-center gap-1">
+              <span>📞 Support:</span>
+              <a href="tel:18002660199" className="text-[#fee9d7] hover:underline font-bold">1800 266 0199</a>
+            </span>
+            <span className="text-white/20 select-none">|</span>
+            <button onClick={() => onNavigate('orders')} className="hover:text-white transition cursor-pointer">
+              📦 Track Orders
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Clean Header */}
+      <div className="max-w-7xl mx-auto px-4 py-2.5">
         <div className="flex items-center justify-between gap-3 md:gap-6">
           
           {/* Brand Logo & Location Switcher */}
           <div className="flex items-center space-x-3 sm:space-x-5 shrink-0">
-            {/* Spaceborn Brand Logo */}
+            {/* Spaceborn Brand Logo (reduced size) */}
             <div 
               onClick={() => onNavigate('home')} 
               className="cursor-pointer shrink-0 mr-1 sm:mr-2 hover:opacity-90 active:scale-98 transition-all"
               title="Spaceborn"
             >
-              <SpacebornLogo size="md" subtitle={false} />
+              <SpacebornLogo size="sm" subtitle={false} />
             </div>
 
             {/* Delivery Location Selector */}
@@ -152,7 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setShowLocationModal(true)}
               className="hidden sm:flex flex-col text-left cursor-pointer group pl-2 sm:pl-3 border-l border-[#f9bf8f]/60"
             >
-              <div className="flex items-center space-x-1 text-[#0c831f] font-bold text-xs">
+              <div className="flex items-center space-x-1 text-[#059669] font-bold text-xs">
                 <span>{deliveryLabel}</span>
               </div>
               <div className="flex items-center space-x-1 text-xs text-[#34222e]/80 font-medium">
@@ -163,9 +205,9 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Minimalist Search Bar */}
+          {/* Minimalist Search Bar with Semantic Enter Key Navigation */}
           <div className="relative flex-1 max-w-xl hidden md:block">
-            <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 hover:bg-[#fffbf7] focus-within:bg-white focus-within:border-[#0c831f] focus-within:ring-2 focus-within:ring-[#0c831f]/10 transition-all overflow-hidden px-3.5 py-2">
+            <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 hover:bg-[#fffbf7] focus-within:bg-white focus-within:border-[#059669] focus-within:ring-2 focus-within:ring-[#059669]/10 transition-all overflow-hidden px-3.5 py-2">
               <Search className="w-4 h-4 text-[#7a6274] mr-2.5 shrink-0" />
               <input
                 ref={searchInputRef}
@@ -175,6 +217,12 @@ export const Header: React.FC<HeaderProps> = ({
                   onSearchChange(e.target.value);
                   setShowSearchDropdown(true);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setShowSearchDropdown(false);
+                    onNavigate('catalog');
+                  }
+                }}
                 onFocus={() => setShowSearchDropdown(true)}
                 placeholder={placeholders[placeholderIndex]}
                 className="w-full bg-transparent text-xs sm:text-sm text-[#34222e] placeholder:text-[#7a6274]/70 outline-none font-medium"
@@ -182,15 +230,22 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="flex items-center gap-1.5 shrink-0">
                 {searchQuery ? (
                   <button 
-                    onClick={() => onSearchChange('')} 
+                    onClick={() => {
+                      onSearchChange('');
+                    }} 
                     className="p-1 text-[#7a6274] hover:text-[#34222e] rounded-full cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 ) : (
-                  <kbd className="px-1.5 py-0.5 rounded bg-white border border-[#f9bf8f]/60 text-[#7a6274] font-mono text-[10px]">
-                    ⌘K
-                  </kbd>
+                  <button
+                    onClick={() => onNavigate('catalog')}
+                    title="Search catalog"
+                    className="px-2 py-0.5 rounded bg-white hover:bg-[#fee9d7]/50 border border-[#f9bf8f]/60 text-[#7a6274] text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition"
+                  >
+                    <span>Search</span>
+                    <kbd className="font-mono text-[9px] text-[#7a6274]/70">↵</kbd>
+                  </button>
                 )}
               </div>
             </div>

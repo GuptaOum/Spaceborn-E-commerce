@@ -56,10 +56,17 @@ const FRIENDLY_ERRORS: Record<string, string> = {
   'auth/popup-closed-by-user': 'Google sign-in was closed before it finished.',
   'auth/too-many-requests': 'Too many attempts. Wait a minute and try again.',
   'auth/network-request-failed': 'Network error. Check your connection.',
+  'auth/configuration-not-found': 'Firebase Authentication is not activated yet. In Firebase Console, go to Authentication and click "Get started".',
+  'auth/operation-not-allowed': 'Google Sign-in is not enabled yet in Firebase Console under Authentication > Sign-in method.',
+  'auth/unauthorized-domain': 'This domain is not authorized. Please add d2w4nxdybzrkls.cloudfront.net to Authorized domains in Firebase Console.',
 };
 
 export function authErrorMessage(err: unknown): string {
   const code = (err as { code?: string })?.code;
+  const rawMessage = (err as Error)?.message || '';
+  if (rawMessage.includes('CONFIGURATION_NOT_FOUND')) {
+    return 'Firebase Authentication is not activated yet in Firebase Console (Authentication > Get started).';
+  }
   return (code && FRIENDLY_ERRORS[code]) || (err as Error)?.message || 'Sign-in failed. Please try again.';
 }
 

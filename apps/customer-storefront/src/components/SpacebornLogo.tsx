@@ -15,11 +15,11 @@ export const SpacebornLogo: React.FC<SpacebornLogoProps> = ({
   theme = 'light',
 }) => {
   const heightMap = {
-    xs: 'h-5',
-    sm: 'h-6 sm:h-7',
-    md: 'h-7 sm:h-8',
-    lg: 'h-9 sm:h-10',
-    xl: 'h-12 sm:h-14',
+    xs: 'h-4',
+    sm: 'h-5 sm:h-6',
+    md: 'h-6 sm:h-7',
+    lg: 'h-8 sm:h-9',
+    xl: 'h-10 sm:h-12',
   };
 
   // The official Spaceborn transparent logo contains white artwork.

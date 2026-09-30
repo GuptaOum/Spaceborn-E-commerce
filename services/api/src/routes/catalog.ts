@@ -61,17 +61,22 @@ catalogRouter.get('/catalog/products', async (req, res) => {
     }),
     req.query,
   );
-  const search = q.q ? `%${escapeLike(q.q)}%` : null;
+  const rawQuery = q.q?.trim() || null;
+  const searchLike = rawQuery ? `%${escapeLike(rawQuery)}%` : null;
   const { rows } = await pool.query(
     `with ${NEARBY_CTE},
      best as (
        ${BEST_OFFER_SELECT}
          and ($3::text is null or p.category_id = $3)
-         and ($4::text is null or p.name ilike $4 or p.sku ilike $4 or p.brand ilike $4)
+         and (
+           $4::text is null
+           or (p.search_tsv @@ plainto_tsquery('english', $4))
+           or p.name ilike $5 or p.sku ilike $5 or p.brand ilike $5 or p.description ilike $5
+         )
        order by p.id, (i.stock > 0) desc, n.km asc, i.price asc
      )
-     select * from best order by (stock > 0) desc, name limit $5 offset $6`,
-    [q.lat, q.lng, q.category ?? null, search, q.limit, q.offset],
+     select * from best order by (stock > 0) desc, name limit $6 offset $7`,
+    [q.lat, q.lng, q.category ?? null, rawQuery, searchLike, q.limit, q.offset],
   );
   const stores = await pool.query(`with ${NEARBY_CTE} select count(*)::int as n from nearby`, [q.lat, q.lng]);
   res.json({ products: rows.map(withEta), nearbyStores: stores.rows[0]?.n ?? 0, serviceable: (stores.rows[0]?.n ?? 0) > 0 });
