@@ -183,8 +183,12 @@ describe('order lifecycle across roles', () => {
   });
 
   it('cancelling a paid order restocks and queues a refund', async () => {
+    // Earlier cases in this file draw the seeded stock down, and this one only cares that whatever
+    // was reserved comes back, so give it a known quantity to work with.
+    await db.pool.query('update inventory set stock = 12 where store_id = $1 and product_id = $2', [bengaluruStore, productId]);
     const before = await db.pool.query('select stock from inventory where store_id = $1 and product_id = $2', [bengaluruStore, productId]);
     const placed = await placeOrder('cust-d', 3);
+    expect(placed.status, JSON.stringify(placed.body)).toBe(201);
     const orderId = placed.body.order.id;
     await call('cust-d:customer', 'POST', '/v1/payments/mock/confirm', { orderId });
 
