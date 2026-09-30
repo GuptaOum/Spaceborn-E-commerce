@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "uploads" {
   bucket_prefix = "spaceborn-uploads-"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "uploads_versioning" {
