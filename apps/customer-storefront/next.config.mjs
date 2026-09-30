@@ -15,6 +15,10 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'upload.wikimedia.org' },
+      { protocol: 'https', hostname: 'robu-prod-media.s3.ap-south-1.amazonaws.com' },
+      { protocol: 'https', hostname: 'robu.in' },
+      { protocol: 'https', hostname: 'robocraze.com' },
     ],
   },
   async rewrites() {
