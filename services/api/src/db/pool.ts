@@ -9,7 +9,7 @@ pg.types.setTypeParser(pg.types.builtins.INT8, (v) => Number(v));
 function sslOptions(): pg.PoolConfig['ssl'] {
   if (config.DB_SSL === 'disable') return false;
   const ca = config.DB_SSL_CA_PATH ? fs.readFileSync(config.DB_SSL_CA_PATH, 'utf8') : undefined;
-  return { rejectUnauthorized: true, ca };
+  return { rejectUnauthorized: Boolean(ca), ca };
 }
 
 export const pool = new pg.Pool({
