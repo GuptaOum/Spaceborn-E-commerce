@@ -40,19 +40,31 @@ const OUT_OF_RANGE_MAX = 5;
  * say "X is 8 km away but delivers within 5 km" instead of a bare "nothing here").
  */
 fabricationRouter.get('/services/nearby', async (req, res) => {
-  const q = parse(z.object({ lat: latitude, lng: longitude, kind: z.enum(SERVICE_KINDS).optional() }), req.query);
+  const q = parse(
+    z.object({
+      lat: latitude,
+      lng: longitude,
+      kind: z.enum(SERVICE_KINDS).optional(),
+      city: z.string().trim().optional(),
+    }),
+    req.query,
+  );
   const { rows } = await pool.query(
     `select ${LISTING_COLUMNS}, s.name as "storeName", s.city, d.km as "distanceKm",
-            s.delivery_radius_km::float as "deliveryRadiusKm", (d.km <= s.delivery_radius_km) as "inRange"
+            s.delivery_radius_km::float as "deliveryRadiusKm",
+            (d.km <= s.delivery_radius_km or ($4::text is not null and lower(btrim(s.city)) = lower(btrim($4)))) as "inRange"
        from service_listings l
        join stores s on s.id = l.store_id
        cross join lateral (select ${distanceSql('$1', '$2')} as km) d
       where l.status = 'approved' and l.is_active and s.status = 'approved'
         and ($3::service_kind is null or l.kind = $3)
-        and s.latitude between $1 - ${LAT_WINDOW} and $1 + ${LAT_WINDOW}
-      order by (d.km <= s.delivery_radius_km) desc, d.km
+        and (
+          s.latitude between $1 - ${LAT_WINDOW} and $1 + ${LAT_WINDOW}
+          or ($4::text is not null and lower(btrim(s.city)) = lower(btrim($4)))
+        )
+      order by (d.km <= s.delivery_radius_km or ($4::text is not null and lower(btrim(s.city)) = lower(btrim($4)))) desc, d.km
       limit ${20 + OUT_OF_RANGE_MAX}`,
-    [q.lat, q.lng, q.kind ?? null],
+    [q.lat, q.lng, q.kind ?? null, q.city ?? null],
   );
   const present = ({ inRange: _inRange, ...r }: (typeof rows)[number]) => ({ ...r, distanceKm: Math.round(r.distanceKm * 10) / 10 });
   res.json({

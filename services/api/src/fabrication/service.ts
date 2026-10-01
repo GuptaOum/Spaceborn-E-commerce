@@ -20,8 +20,13 @@ export const ALLOWED_EXTENSIONS = ['.stl', '.obj', '.3mf', '.step', '.stp', '.ig
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const JOB_SELECT = `
-  select j.id, j.job_number as "jobNumber", j.customer_id as "customerId", j.listing_id as "listingId",
-         j.store_id as "storeId", s.name as "storeName", s.phone as "storePhone", j.kind, j.material, j.quantity,
+  select j.id, j.job_number as "jobNumber", j.customer_id as "customerId",
+         coalesce(nullif(btrim(u.full_name), ''), j.delivery_address->>'fullName', 'Customer') as "customerName",
+         coalesce(nullif(btrim(u.email), ''), '—') as "customerEmail",
+         coalesce(nullif(btrim(u.phone), ''), j.delivery_address->>'phone', '—') as "customerPhone",
+         j.listing_id as "listingId",
+         j.store_id as "storeId", s.name as "storeName", s.phone as "storePhone", s.city as "storeCity",
+         j.kind, j.material, j.quantity,
          j.notes, j.status, j.quote_amount as "quoteAmount", j.quote_note as "quoteNote",
          j.ready_in_hours as "readyInHours", j.quote_expires_at as "quoteExpiresAt", j.delivery_fee as "deliveryFee",
          j.platform_fee as "platformFee", j.grand_total as "grandTotal", j.delivery_address as "deliveryAddress",
@@ -34,13 +39,18 @@ const JOB_SELECT = `
          ), '[]'::json) as files
     from fab_jobs j
     join stores s on s.id = j.store_id
+    left join users u on u.id = j.customer_id
     left join payments p on p.fab_job_id = j.id`;
 
 export type JobView = Record<string, unknown> & {
   id: string;
   status: FabStatus;
   customerId: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   storeId: string;
+  storeCity?: string;
   handoverOtp?: string;
   deliveryAddress: DeliveryAddress;
 };
@@ -173,7 +183,7 @@ export interface CreateJobInput {
 export async function createJob(input: CreateJobInput) {
   const jobId = await withTransaction(async (c) => {
     const { rows } = await c.query(
-      `select l.id, l.store_id, l.kind, l.materials, s.latitude, s.longitude, s.delivery_radius_km
+      `select l.id, l.store_id, l.kind, l.materials, s.latitude, s.longitude, s.delivery_radius_km, s.city
          from service_listings l join stores s on s.id = l.store_id
         where l.id = $1 and l.status = 'approved' and l.is_active and s.status = 'approved'
         for share of l, s`,
@@ -185,7 +195,12 @@ export async function createJob(input: CreateJobInput) {
       throw unprocessable('material_unavailable', 'This material is not offered by the service');
     }
     const distanceKm = haversineKm(input.address.latitude, input.address.longitude, listing.latitude, listing.longitude);
-    if (distanceKm > Number(listing.delivery_radius_km)) {
+    const sameCity = Boolean(
+      listing.city &&
+      input.address.city &&
+      listing.city.trim().toLowerCase() === input.address.city.trim().toLowerCase()
+    );
+    if (distanceKm > Number(listing.delivery_radius_km) && !sameCity) {
       throw unprocessable('out_of_range', 'This service does not deliver to your address');
     }
 

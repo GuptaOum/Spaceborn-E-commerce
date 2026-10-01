@@ -152,19 +152,61 @@ export function FabJobsPanel() {
                   #{job.jobNumber} · {SERVICE_KIND_LABEL[job.kind]} · {FAB_STATUS_LABEL[job.status]}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {job.quantity} × {job.material} · {formatDateTime(job.createdAt)} · {job.distanceKm} km ·{' '}
-                  {addr.line1 ? `${addr.fullName}, ${addr.line1}, ${addr.phone}` : `${addr.city} ${addr.pincode}`}
+                  {job.quantity} × {job.material} · {formatDateTime(job.createdAt)} · {job.distanceKm} km away
                 </p>
               </div>
               {job.quoteAmount != null && <p className="font-bold">{formatInr(job.quoteAmount)}</p>}
             </div>
+
+            {/* Customer identification & delivery details */}
+            <div className="mt-2.5 rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-700">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span className="font-bold text-slate-900">Customer: </span>
+                  <span className="font-semibold text-slate-800">{job.customerName || 'Customer'}</span>
+                  {job.customerEmail && job.customerEmail !== '—' && (
+                    <span className="ml-2 text-slate-500 font-mono">({job.customerEmail})</span>
+                  )}
+                  {job.customerPhone && job.customerPhone !== '—' && (
+                    <span className="ml-2 text-slate-600">📞 {job.customerPhone}</span>
+                  )}
+                </div>
+                <div className="text-slate-500">
+                  📍 {addr.city || 'Local Area'} {addr.pincode ? `(${addr.pincode})` : ''}
+                </div>
+              </div>
+              {addr.line1 && (
+                <p className="mt-1 text-slate-500">
+                  Deliver to: {addr.fullName ? `${addr.fullName}, ` : ''}{addr.line1}, {addr.city} - {addr.pincode}
+                </p>
+              )}
+            </div>
+
             {job.notes && <p className="mt-2 rounded bg-slate-50 p-2 text-sm text-slate-700">“{job.notes}”</p>}
-            <div className="mt-2 flex flex-wrap gap-2">
-              {job.files.map((f) => (
-                <button key={f.id} onClick={() => void download(job.id, f.id, f.fileName)} className="rounded border border-slate-200 px-2 py-1 text-xs underline">
-                  {f.fileName} ({formatBytes(f.sizeBytes)})
-                </button>
-              ))}
+
+            {/* Submitted design files */}
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-slate-600 mb-1.5">Submitted CAD/Design Files ({job.files.length}):</p>
+              <div className="flex flex-wrap gap-2">
+                {job.files.map((f) => {
+                  const ext = f.fileName.split('.').pop()?.toUpperCase() || 'FILE';
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => void download(job.id, f.id, f.fileName)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors shadow-sm"
+                      title={`Download ${f.fileName}`}
+                    >
+                      <span className="rounded bg-indigo-200 px-1 py-0.5 text-[10px] font-bold text-indigo-900">
+                        {ext}
+                      </span>
+                      <span>⬇️ Download</span>
+                      <span className="font-mono">{f.fileName}</span>
+                      <span className="text-indigo-400 font-normal">({formatBytes(f.sizeBytes)})</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             {job.closeReason && <p className="mt-2 text-xs text-red-600">{job.closeReason}</p>}
 

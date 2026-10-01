@@ -185,10 +185,15 @@ export interface FabFile {
 export interface FabJob {
   id: string;
   jobNumber: number;
+  customerId: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   listingId: string;
   storeId: string;
   storeName: string;
   storePhone: string;
+  storeCity?: string;
   kind: ServiceKind;
   material: string;
   quantity: number;

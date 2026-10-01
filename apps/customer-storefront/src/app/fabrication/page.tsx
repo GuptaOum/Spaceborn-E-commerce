@@ -10,7 +10,21 @@ import { useLoad } from '@spaceborn/web-core/use-load';
 import { useStore } from '../../context/StoreContext';
 import { payWithRazorpay } from '../../lib/razorpay';
 
-const ACCEPT = '.stl,.obj,.3mf,.step,.stp,.iges,.igs,.dxf,.svg,.gcode,.nc,.pdf';
+const FORMAT_SPECS: Record<ServiceKind, { extensions: string[]; accept: string; description: string; formats: string[] }> = {
+  '3d_printing': {
+    extensions: ['.stl', '.3mf', '.step', '.stp', '.obj'],
+    accept: '.stl,.3mf,.step,.stp,.obj',
+    description: 'STL, 3MF, STEP, STP, OBJ',
+    formats: ['STL (.stl) - 3D Mesh', '3MF (.3mf) - 3D Print Package', 'STEP / STP (.step) - CAD Solid', 'OBJ (.obj) - 3D Geometry'],
+  },
+  cnc: {
+    extensions: ['.step', '.stp', '.dxf', '.dwg', '.iges', '.igs', '.svg', '.nc', '.gcode', '.pdf'],
+    accept: '.step,.stp,.dxf,.dwg,.iges,.igs,.svg,.nc,.gcode,.pdf',
+    description: 'STEP, STP, DXF, IGES, SVG, G-Code, NC, PDF',
+    formats: ['STEP (.step/.stp) - 3D CAD Solid', 'DXF (.dxf) - 2D Vector CAD', 'IGES (.iges/.igs) - CAD Surface', 'SVG (.svg) - 2D Vector Profile', 'G-Code / NC (.nc) - Toolpath', 'PDF (.pdf) - Technical Drawing'],
+  },
+};
+
 const ACTIVE: FabStatus[] = ['submitted', 'quoted', 'pending_payment', 'in_production', 'ready', 'out_for_delivery'];
 const card = 'rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-5 shadow-sm';
 const input = 'mt-1 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2 text-sm text-[#34222e] outline-none focus:border-[#0c831f]';
@@ -18,7 +32,9 @@ const normalizePhone = (v: string) => v.replace(/\D/g, '').slice(-10);
 
 function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDone: () => void; onCancel: () => void }) {
   const { location, currentUser } = useStore();
+  const spec = FORMAT_SPECS[service.kind];
   const [files, setFiles] = useState<FabFile[]>([]);
+  const [specifiedFormat, setSpecifiedFormat] = useState(spec.formats[0]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +56,10 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
     setError(null);
     try {
       for (const file of Array.from(list).slice(0, 10 - files.length)) {
+        const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
+        if (!spec.extensions.includes(ext)) {
+          throw new Error(`File "${file.name}" has an unsupported format (${ext}). Supported formats for ${SERVICE_KIND_LABEL[service.kind]}: ${spec.description}.`);
+        }
         const res = await uploadFile<{ file: FabFile }>('/fabrication/uploads', file);
         setFiles((prev) => [...prev, res.file]);
       }
@@ -57,13 +77,17 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
     setSubmitting(true);
     setError(null);
     try {
+      const notesWithFormat = form.notes.trim()
+        ? `[Format: ${specifiedFormat}] ${form.notes.trim()}`
+        : `[Format: ${specifiedFormat}]`;
+
       await api('/fabrication/jobs', {
         method: 'POST',
         body: {
           listingId: service.id,
           material: form.material,
           quantity: Number(form.quantity),
-          notes: form.notes,
+          notes: notesWithFormat,
           fileIds: files.map((f) => f.id),
           address: {
             fullName: form.fullName.trim(),
@@ -90,7 +114,7 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
         <div>
           <p className="text-xs font-bold text-[#0c831f]">{SERVICE_KIND_LABEL[service.kind]}</p>
           <h2 className="font-bold text-[#34222e]">{service.title}</h2>
-          <p className="text-xs text-[#7a6274]">{service.storeName}</p>
+          <p className="text-xs text-[#7a6274]">{service.storeName} {service.city ? `· 📍 ${service.city}` : ''}</p>
         </div>
         <button type="button" onClick={onCancel} className="text-xs font-semibold text-[#7a6274] underline">
           Back
@@ -98,21 +122,50 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
       </div>
       {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">{error}</p>}
 
-      <label className="block rounded-2xl border-2 border-dashed border-[#f9bf8f] bg-white p-4 text-center text-sm text-[#7a6274]">
-        {uploading ? 'Uploading…' : 'Tap to upload design files (STL, STEP, DXF, 3MF…)'}
-        <input type="file" multiple accept={ACCEPT} className="hidden" disabled={uploading} onChange={(e) => onFiles(e.target.files)} />
-      </label>
-      {files.map((f) => (
-        <div key={f.id} className="flex justify-between text-xs text-[#34222e]">
-          <span className="truncate">{f.fileName}</span>
-          <span className="flex gap-2">
-            {formatBytes(f.sizeBytes)}
-            <button type="button" onClick={() => setFiles(files.filter((x) => x.id !== f.id))} className="text-[#e2434b]">
-              Remove
-            </button>
-          </span>
+      {/* Format specification section */}
+      <div className="rounded-2xl border border-[#f9bf8f]/60 bg-white p-3 space-y-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
+          <label htmlFor="cad-format-select" className="font-semibold text-[#34222e]">
+            Select CAD / Design File Format:
+          </label>
+          <span className="text-[11px] text-[#0c831f] font-semibold">Accepted: {spec.description}</span>
         </div>
-      ))}
+        <select
+          id="cad-format-select"
+          value={specifiedFormat}
+          onChange={(e) => setSpecifiedFormat(e.target.value)}
+          className={input}
+        >
+          {spec.formats.map((f) => (
+            <option key={f} value={f}>{f}</option>
+          ))}
+        </select>
+        <p className="text-[11px] text-[#7a6274]">
+          Ensure your uploaded design files match the selected format. The vendor will download and inspect this file before providing your quote.
+        </p>
+      </div>
+
+      <label className="block rounded-2xl border-2 border-dashed border-[#f9bf8f] bg-white p-4 text-center text-sm text-[#7a6274] cursor-pointer hover:border-[#0c831f] transition-colors">
+        {uploading ? 'Uploading…' : `Tap to upload design files (${spec.description})`}
+        <input type="file" multiple accept={spec.accept} className="hidden" disabled={uploading} onChange={(e) => onFiles(e.target.files)} />
+      </label>
+      {files.map((f) => {
+        const ext = f.fileName.split('.').pop()?.toUpperCase() || 'FILE';
+        return (
+          <div key={f.id} className="flex items-center justify-between rounded-xl border border-[#f9bf8f]/40 bg-white px-3 py-2 text-xs text-[#34222e]">
+            <span className="flex items-center gap-2 truncate">
+              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">{ext}</span>
+              <span className="truncate font-medium">{f.fileName}</span>
+            </span>
+            <span className="flex items-center gap-2.5 ml-2">
+              <span className="text-[#7a6274]">{formatBytes(f.sizeBytes)}</span>
+              <button type="button" onClick={() => setFiles(files.filter((x) => x.id !== f.id))} className="text-[#e2434b] font-semibold">
+                Remove
+              </button>
+            </span>
+          </div>
+        );
+      })}
 
       <div className="grid grid-cols-2 gap-3">
         <label className="text-xs font-semibold text-[#7a6274]">
@@ -217,15 +270,21 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        {job.files.map((f) => (
-          <button
-            key={f.id}
-            onClick={() => downloadFile(`/fabrication/jobs/${job.id}/files/${f.id}`, f.fileName).catch((e: Error) => alert(e.message))}
-            className="rounded-lg bg-white px-2 py-1 text-[11px] text-[#34222e] underline"
-          >
-            {f.fileName}
-          </button>
-        ))}
+        {job.files.map((f) => {
+          const ext = f.fileName.split('.').pop()?.toUpperCase() || 'FILE';
+          return (
+            <button
+              key={f.id}
+              onClick={() => downloadFile(`/fabrication/jobs/${job.id}/files/${f.id}`, f.fileName).catch((e: Error) => alert(e.message))}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-[#f9bf8f]/60 px-2.5 py-1 text-[11px] text-[#34222e] hover:bg-emerald-50 transition-colors"
+            >
+              <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-800">
+                {ext}
+              </span>
+              <span className="underline">{f.fileName}</span>
+            </button>
+          );
+        })}
       </div>
 
       {job.quoteAmount != null && (
@@ -276,11 +335,13 @@ export default function FabricationPage() {
   const jobsRef = useRef<HTMLDivElement>(null);
 
   const nearby = useLoad(
-    () =>
-      api<{ services: ServiceListing[]; outOfRange: ServiceListing[] }>(
-        `/services/nearby?lat=${location.latitude}&lng=${location.longitude}&kind=${kind}`,
-      ),
-    [location.latitude, location.longitude, kind],
+    () => {
+      const cityParam = location.label && location.label !== 'Current location' ? `&city=${encodeURIComponent(location.label)}` : '';
+      return api<{ services: ServiceListing[]; outOfRange: ServiceListing[] }>(
+        `/services/nearby?lat=${location.latitude}&lng=${location.longitude}&kind=${kind}${cityParam}`,
+      );
+    },
+    [location.latitude, location.longitude, location.label, kind],
   );
   const services = { ...nearby, data: nearby.data?.services ?? null };
   const outOfRange = nearby.data?.outOfRange ?? [];
@@ -380,12 +441,19 @@ export default function FabricationPage() {
             </div>
           )}
           {services.data?.map((s) => (
-            <button key={s.id} onClick={() => choose(s)} className={`${card} block w-full text-left hover:border-[#0c831f]`}>
+            <button key={s.id} onClick={() => choose(s)} className={`${card} block w-full text-left hover:border-[#0c831f] transition-all`}>
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-bold text-[#34222e]">{s.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-[#34222e]">{s.title}</p>
+                    {s.city && (
+                      <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                        📍 {s.city}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-[#7a6274]">
-                    {s.storeName} · {s.distanceKm} km · ready in ~{s.turnaroundHours}h
+                    {s.storeName} · {s.city ? `${s.city} · ` : ''}{s.distanceKm} km · ready in ~{s.turnaroundHours}h
                   </p>
                 </div>
                 <span className="text-sm font-bold text-[#34222e]">from {formatInr(s.startingPrice)}</span>

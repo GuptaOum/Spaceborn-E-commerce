@@ -71,6 +71,16 @@ export async function seed() {
           [storeId, product.id, price, stock],
         );
       }
+
+      // Seed approved 3D Printing and CNC services for local makers
+      await c.query(
+        `insert into service_listings (store_id, kind, title, description, materials, max_x_mm, max_y_mm, max_z_mm, starting_price, turnaround_hours, status, is_active)
+         values
+           ($1, '3d_printing', $2, 'High precision FDM 3D printing for prototypes, enclosures, and custom brackets.', array['PLA', 'PETG', 'ABS', 'TPU'], 250, 250, 300, 149, 12, 'approved', true),
+           ($1, 'cnc', $3, 'Precision 3-axis CNC routing and milling for metal plates and custom panels.', array['Aluminium 6061', 'Acrylic', 'Delrin', 'MDF'], 600, 400, 80, 499, 24, 'approved', true)
+         on conflict (store_id, kind) do nothing`,
+        [storeId, `${store.city} Precision 3D Printing`, `${store.city} Rapid CNC Machining`],
+      );
     }
   });
   // Customer search ranks by meaning, so a fresh stack needs product vectors before the first search.

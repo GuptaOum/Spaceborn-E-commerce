@@ -69,7 +69,12 @@ export function FabJobsTab() {
                     #{job.jobNumber} · {SERVICE_KIND_LABEL[job.kind]} · {FAB_STATUS_LABEL[job.status]}
                   </p>
                   <p className="text-sm text-slate-600">
-                    {job.storeName} · {job.quantity} × {job.material} · {formatDateTime(job.createdAt)}
+                    {job.storeName} {job.storeCity ? `(${job.storeCity})` : ''} · {job.quantity} × {job.material} · {formatDateTime(job.createdAt)}
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    Customer: <span className="font-semibold text-slate-800">{job.customerName || 'Customer'}</span>
+                    {job.customerEmail && job.customerEmail !== '—' ? ` (${job.customerEmail})` : ''}
+                    {job.deliveryAddress?.city ? ` · 📍 ${job.deliveryAddress.city}` : ''}
                   </p>
                   <p className="text-xs text-slate-500">
                     Quote {job.quoteAmount != null ? formatInr(job.quoteAmount) : '—'} · Total {job.grandTotal != null ? formatInr(job.grandTotal) : '—'} · Payment {job.paymentStatus ?? '—'}
