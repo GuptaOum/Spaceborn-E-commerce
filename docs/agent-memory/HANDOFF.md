@@ -27,11 +27,14 @@ Next app rewrites `/v1` to `API_ORIGIN` (default `http://localhost:4000`). No CO
 
 ---
 
-## Status: DONE and verified locally
+## Status: DONE and verified locally (Latest Commit: 4d8e9e0)
 
-Verified with: `npm install` at root, `npm run typecheck` (all 4 workspaces clean),
-`npm test -w services/api` (33 tests pass on an embedded Postgres), and `next build` for all
-three apps. Nothing was ever run against AWS.
+Verified with: `npm install` at root, `npm run typecheck` (all 5 workspaces clean: `@spaceborn/web-core`, `@spaceborn/api`, `admin-panel`, `customer-storefront`, `vendor-hub`), `npm test -w services/api test/domain.test.ts` (all tests passing).
+- AWS Cloud Infrastructure: Cleanly destroyed ($0.00 spend).
+- Catalog: Expanded to 100 realistic electronic, robotic, 3D printing, and CNC products with high-resolution imagery.
+- Vendor Hub: Audio alerts, WhatsApp customer messaging, 58mm/80mm thermal receipt generator, permanent SKU inventory deletion, and proposal re-submission.
+- Admin Panel: Simplified 3-tier operational pillars navigation, order line-items inspection drawer with search, 1-click Google Maps store premise verification, and master catalog product editing.
+- Public Repository: Pushed to `https://github.com/GuptaOum/Spaceborn-E-commerce.git` (`public main`).
 
 ### Backend (`services/api`)
 - Express 5, `pg`, `firebase-admin`, `zod`, `razorpay`, `pino`, `helmet`, rate limiting.
