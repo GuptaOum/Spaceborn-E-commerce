@@ -1,3 +1,4 @@
+import { backfillProductEmbeddings } from './catalog/search.js';
 import { config } from './config.js';
 import { pool, withTransaction } from './db/pool.js';
 import { logger } from './logger.js';
@@ -90,6 +91,9 @@ async function drainOutbox(batchSize = 20): Promise<number> {
 let running = true;
 const ORPHAN_SWEEP_MS = 60 * 60_000;
 let lastOrphanSweep = 0;
+// New or edited catalog products get their search vector within about a minute.
+const EMBED_SWEEP_MS = 60_000;
+let lastEmbedSweep = 0;
 
 async function loop() {
   logger.info({ payments: config.paymentsMode, mail: config.MAIL_PROVIDER }, 'worker started');
@@ -103,6 +107,11 @@ async function loop() {
         lastOrphanSweep = Date.now();
         const removed = await removeOrphanFiles();
         if (removed) logger.info({ removed }, 'removed unattached uploads');
+      }
+      if (Date.now() - lastEmbedSweep > EMBED_SWEEP_MS) {
+        lastEmbedSweep = Date.now();
+        const embedded = await backfillProductEmbeddings();
+        if (embedded) logger.info({ embedded }, 'embedded catalog products for search');
       }
       const processed = await drainOutbox();
       if (processed === 0 && expired === 0 && expiredQuotes === 0) await new Promise((r) => setTimeout(r, POLL_MS));

@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { CATEGORIES } from '../data/products';
+import { useStore } from '../context/StoreContext';
 import { 
   SlidersHorizontal, 
   ChevronRight, 
@@ -56,6 +57,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   onSelectCategory,
   searchQuery: initialSearchQuery,
 }) => {
+  const { searchResults, searchStatus } = useStore();
+  // Server results are already ranked by relevance; the local token filter is only a fallback.
+  const serverRanked = initialSearchQuery.trim().length > 1 && searchResults !== null;
+
   // Filter state
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
   const [inStockOnly, setInStockOnly] = useState(false);
@@ -121,7 +126,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
+    const source = serverRanked ? searchResults! : products;
+    return source.filter(p => {
       // Category match
       if (selectedCategory !== 'All Categories' && selectedCategory !== 'all') {
         const norm = (c: string) => c === 'Components' ? 'Components & Hardware' : c;
@@ -133,8 +139,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         if (p.subCategory !== selectedSubCategory) return false;
       }
 
-      // Advanced Semantic Search match
-      if (initialSearchQuery.trim()) {
+      // Local fallback when the server search is unavailable
+      if (!serverRanked && initialSearchQuery.trim()) {
         const q = initialSearchQuery.toLowerCase().trim();
         const tokens = q.split(/\s+/).filter(Boolean);
 
@@ -201,6 +207,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     });
   }, [
     products, 
+    serverRanked,
+    searchResults,
     selectedCategory, 
     initialSearchQuery, 
     selectedSubCategory, 
@@ -433,7 +441,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   <div>
                     <span className="text-[#34222e] font-medium">Search Results for </span>
                     <strong className="text-[#059669] font-bold">"{initialSearchQuery}"</strong>
-                    <span className="ml-2 text-[#7a6274]">({filteredProducts.length} hardware items found)</span>
+                    <span className="ml-2 text-[#7a6274]">
+                      {searchStatus === 'loading' ? '(searching…)' : `(${filteredProducts.length} hardware items found)`}
+                    </span>
                   </div>
                 </div>
                 <button

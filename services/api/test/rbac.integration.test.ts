@@ -1,5 +1,6 @@
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
+import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startTestDb } from './testdb.js';
 
@@ -53,7 +54,8 @@ beforeAll(async () => {
   );
   productId = product.rows[0]!.product_id;
 
-  await db.pool.query(`insert into users (id, email, role) values ('root-admin', 'root@test.local', 'admin')`);
+  // Admin access comes from the team table, keyed by email. Dev-bypass users are `${uid}@dev.local`.
+  await db.pool.query(`insert into admin_members (email, is_owner, note) values ('root-admin@dev.local', true, 'test owner')`);
 
   const { createApp } = await import('../src/app.js');
   server = createApp().listen(0);
@@ -148,6 +150,33 @@ describe('vendor onboarding and suspension', () => {
     const { rows } = await db.pool.query('select mrp from products where id = $1', [productId]);
     const res = await call(vendorBlr(), 'PUT', `/v1/vendor/inventory/${productId}`, { price: rows[0].mrp + 1 });
     expect(res.status).toBe(422);
+  });
+
+  it('unlisting, relisting and stock adjustments work without resending the price', async () => {
+    const before = await db.pool.query<{ price: string; stock: number }>(
+      'select price, stock from inventory where store_id = $1 and product_id = $2',
+      [bengaluruStore, productId],
+    );
+    const price = Number(before.rows[0]!.price);
+
+    const unlisted = await call(vendorBlr(), 'PUT', `/v1/vendor/inventory/${productId}`, { isListed: false });
+    expect(unlisted.status).toBe(200);
+    expect(unlisted.body.item).toMatchObject({ isListed: false, price });
+
+    const bumped = await call(vendorBlr(), 'PUT', `/v1/vendor/inventory/${productId}`, { stockDelta: 3, isListed: true });
+    expect(bumped.status).toBe(200);
+    expect(bumped.body.item).toMatchObject({ isListed: true, price, stock: before.rows[0]!.stock + 3 });
+
+    // A product the store has never stocked still needs both price and stock.
+    const { rows: other } = await db.pool.query<{ id: string }>(
+      'select id from products where is_active and id not in (select product_id from inventory where store_id = $1) limit 1',
+      [bengaluruStore],
+    );
+    if (other[0]) {
+      const partial = await call(vendorBlr(), 'PUT', `/v1/vendor/inventory/${other[0].id}`, { isListed: true });
+      expect(partial.status).toBe(422);
+      expect(partial.body.error.code).toBe('price_and_stock_required');
+    }
   });
 });
 
@@ -289,7 +318,28 @@ describe('fabrication services', () => {
 
     expect((await call('root-admin:admin', 'POST', `/v1/admin/services/${listingId}/approve`)).status).toBe(200);
     expect((await nearby()).body.services.some((s: { id: string }) => s.id === listingId)).toBe(true);
+    const kanpur = await call(null, 'GET', '/v1/services/nearby?lat=26.4499&lng=80.3319&kind=3d_printing');
+    expect(kanpur.body.services.some((s: { id: string }) => s.id === listingId)).toBe(false);
     expect((await call(vendorPune(), 'GET', '/v1/vendor/services')).body.services).toHaveLength(0);
+  });
+
+  it('an approved service stays visible inside the delivery radius when the store is offline for instant orders', async () => {
+    await db.pool.query('update stores set is_online = false where id = $1', [bengaluruStore]);
+    try {
+      expect((await nearby()).body.services.some((s: { id: string }) => s.id === listingId)).toBe(true);
+    } finally {
+      await db.pool.query('update stores set is_online = true where id = $1', [bengaluruStore]);
+    }
+  });
+
+  it('a customer just outside the radius is told which maker is nearby and how far it reaches', async () => {
+    // Whitefield: ~12 km from Koramangala, outside the seeded 5 km radius but inside the search window.
+    const res = await call(null, 'GET', '/v1/services/nearby?lat=12.9698&lng=77.7500&kind=3d_printing');
+    expect(res.status).toBe(200);
+    expect(res.body.services.some((s: { id: string }) => s.id === listingId)).toBe(false);
+    const near = res.body.outOfRange.find((s: { id: string }) => s.id === listingId);
+    expect(near).toBeTruthy();
+    expect(near.distanceKm).toBeGreaterThan(near.deliveryRadiusKm);
   });
 
   it('uploads require sign-in and an allowed design file type', async () => {
@@ -391,5 +441,223 @@ describe('fabrication services', () => {
     const edited = await call(vendorBlr(), 'POST', '/v1/vendor/services', { ...listing, materials: ['PLA', 'TPU'] });
     expect(edited.body.service.status).toBe('pending');
     expect((await nearby()).body.services.some((s: { id: string }) => s.id === listingId)).toBe(false);
+  });
+});
+
+describe('vendor product submissions', () => {
+  const KANPUR = { latitude: 26.4499, longitude: 80.3319 };
+
+  const photo = (width: number, height: number) =>
+    sharp({ create: { width, height, channels: 3, background: { r: 200, g: 40, b: 60 } } }).png().toBuffer();
+
+  async function uploadImage(as: As, body?: Buffer, fileName = 'photo.png') {
+    const res = await fetch(`${base}/v1/vendor/product-images`, {
+      method: 'POST',
+      headers: {
+        ...(as ? { Authorization: `Dev ${as}` } : {}),
+        'Content-Type': 'application/octet-stream',
+        'X-File-Name': encodeURIComponent(fileName),
+      },
+      body: new Uint8Array(body ?? (await photo(240, 180))),
+    });
+    const text = await res.text();
+    return { status: res.status, body: text ? JSON.parse(text) : null };
+  }
+
+  it('phone-sized photos are downscaled and junk files are rejected', async () => {
+    // 12 MP photo, larger than Bedrock's pixel limit.
+    const big = await uploadImage(vendorBlr(), await photo(4000, 3000), 'IMG_2041.PNG');
+    expect(big.status).toBe(201);
+    const created = await call(vendorBlr(), 'POST', '/v1/vendor/product-submissions', submission(big.body.imageKey, 'Large Photo Regression Item'));
+    expect(created.status).toBe(201);
+    const stored = await fetch(`${base}/v1/vendor/product-submissions/${created.body.submission.id}/image`, {
+      headers: { Authorization: `Dev ${vendorBlr()}` },
+    });
+    expect(stored.status).toBe(200);
+    const meta = await sharp(Buffer.from(await stored.arrayBuffer())).metadata();
+    expect(meta.format).toBe('jpeg');
+    expect(Math.max(meta.width ?? 0, meta.height ?? 0)).toBeLessThanOrEqual(1280);
+
+    const junk = await uploadImage(vendorBlr(), Buffer.alloc(64, 7));
+    expect(junk.status).toBe(422);
+    expect(junk.body.error.code).toBe('image_unreadable');
+  });
+
+  function submission(imageKey: string, name: string) {
+    return {
+      name,
+      description: 'Sold by this shop only. 30V bench supply for local makers.',
+      categoryId: 'dev-boards',
+      mrp: 999,
+      price: 800,
+      stock: 4,
+      imageKey,
+    };
+  }
+
+  it('a new product stays invisible until an admin approves it, and then only near that store', async () => {
+    expect((await uploadImage('cust-a:customer')).status).toBe(403);
+    const image = await uploadImage(vendorBlr());
+    expect(image.status).toBe(201);
+    const created = await call(vendorBlr(), 'POST', '/v1/vendor/product-submissions', submission(image.body.imageKey, 'Bengaluru Bench Supply 30V'));
+    expect(created.status).toBe(201);
+    expect(created.body.submission.status).toBe('pending');
+    const id = created.body.submission.id;
+
+    expect((await call(vendorPune(), 'GET', '/v1/vendor/product-submissions')).body.submissions.some((s: { id: string }) => s.id === id)).toBe(false);
+    expect((await call(vendorPune(), 'DELETE', `/v1/vendor/product-submissions/${id}`)).status).toBe(404);
+    expect((await call('cust-a:customer', 'POST', `/v1/admin/product-submissions/${id}/approve`, {})).status).toBe(403);
+
+    const hidden = await call(null, 'GET', `/v1/catalog/products?lat=${KORAMANGALA.latitude}&lng=${KORAMANGALA.longitude}&q=${encodeURIComponent('Bengaluru Bench Supply')}&limit=50`);
+    expect(hidden.body.products.some((p: { name: string }) => p.name.includes('Bench Supply'))).toBe(false);
+
+    const review = await call('root-admin:admin', 'GET', `/v1/admin/product-submissions/${id}`);
+    expect(review.status).toBe(200);
+    expect(Array.isArray(review.body.similar)).toBe(true);
+
+    const approved = await call('root-admin:admin', 'POST', `/v1/admin/product-submissions/${id}/approve`, {});
+    expect(approved.status).toBe(200);
+
+    const near = await call(null, 'GET', `/v1/catalog/products?lat=${KORAMANGALA.latitude}&lng=${KORAMANGALA.longitude}&q=${encodeURIComponent('Bengaluru Bench Supply')}&limit=50`);
+    const found = near.body.products.find((p: { name: string }) => p.name.includes('Bench Supply'));
+    expect(found?.imageUrl).toContain('/image');
+    const img = await fetch(`${base}${found.imageUrl}`);
+    expect(img.status).toBe(200);
+    expect(img.headers.get('content-type')).toContain('image/jpeg');
+
+    const far = await call(null, 'GET', `/v1/catalog/products?lat=${KANPUR.latitude}&lng=${KANPUR.longitude}&q=${encodeURIComponent('Bengaluru Bench Supply')}&limit=50`);
+    expect(far.body.products.some((p: { name: string }) => p.name.includes('Bench Supply'))).toBe(false);
+  });
+
+  it('flags a copied title and can attach the vendor stock to the existing product', async () => {
+    const product = await call('root-admin:admin', 'POST', '/v1/admin/products', {
+      sku: 'SB-DUP-TEST', name: 'Duplicate Detector Widget 9000', categoryId: 'dev-boards', mrp: 500, description: 'Reference item',
+    });
+    expect(product.status).toBe(201);
+    const image = await uploadImage(vendorBlr());
+    const created = await call(vendorBlr(), 'POST', '/v1/vendor/product-submissions', submission(image.body.imageKey, 'Duplicate Detector Widget 9000'));
+    expect(created.status).toBe(201);
+    const review = await call('root-admin:admin', 'GET', `/v1/admin/product-submissions/${created.body.submission.id}`);
+    const hit = review.body.similar.find((s: { id: string; likelyDuplicate: boolean }) => s.id === product.body.product.id);
+    expect(hit?.likelyDuplicate).toBe(true);
+
+    const merged = await call('root-admin:admin', 'POST', `/v1/admin/product-submissions/${created.body.submission.id}/approve`, {
+      mergeIntoProductId: product.body.product.id,
+    });
+    expect(merged.status).toBe(200);
+    expect(merged.body.submission.productId).toBe(product.body.product.id);
+  });
+
+  it('refuses a photo uploaded by a different store', async () => {
+    const image = await uploadImage(vendorBlr());
+    const stolen = await call(vendorPune(), 'POST', '/v1/vendor/product-submissions', submission(image.body.imageKey, 'Stolen Photo Listing Item'));
+    expect(stolen.status).toBe(422);
+  });
+});
+
+describe('customer search', () => {
+  const near = `lat=${KORAMANGALA.latitude}&lng=${KORAMANGALA.longitude}`;
+
+  it('ranks the exact product first, finds nothing for nonsense, and stays inside the delivery area', async () => {
+    const { rows } = await db.pool.query<{ name: string }>('select name from products where id = $1', [productId]);
+    const name = rows[0]!.name;
+
+    const hit = await call(null, 'GET', `/v1/catalog/products?${near}&q=${encodeURIComponent(name)}`);
+    expect(hit.status).toBe(200);
+    expect(hit.body.searchMode).toBe('hybrid');
+    expect(hit.body.products[0].id).toBe(productId);
+    expect(hit.body.products.every((p: { storeCity: string }) => p.storeCity === 'Bengaluru')).toBe(true);
+
+    const miss = await call(null, 'GET', `/v1/catalog/products?${near}&q=zzqxvwk`);
+    expect(miss.status).toBe(200);
+    expect(miss.body.products).toEqual([]);
+
+    const browse = await call(null, 'GET', `/v1/catalog/products?${near}`);
+    expect(browse.body.searchMode).toBeNull();
+    expect(browse.body.products.length).toBeGreaterThan(0);
+  });
+
+  it('every seeded product has a search vector', async () => {
+    const { rows } = await db.pool.query<{ n: number }>(
+      'select count(*)::int as n from products where is_active and text_embedding is null',
+    );
+    expect(rows[0]!.n).toBe(0);
+  });
+});
+
+describe('admin team and regions', () => {
+  const kanpurAdmin = 'kanpur-admin:customer'; // the token says customer; membership alone grants admin access
+
+  it('only owners manage the team, and a new member is recognised before ever signing in', async () => {
+    expect((await call('cust-a:customer', 'POST', '/v1/admin/team', { email: 'x@dev.local' })).status).toBe(403);
+    expect((await call(kanpurAdmin, 'GET', '/v1/admin/overview')).status).toBe(403);
+
+    const added = await call('root-admin:admin', 'POST', '/v1/admin/team', {
+      email: 'Kanpur-Admin@dev.local', displayName: 'Kanpur Ops', regions: ['Kanpur'],
+    });
+    expect(added.status).toBe(201);
+    expect(added.body.member.email).toBe('kanpur-admin@dev.local');
+    expect(added.body.member.regions).toEqual(['kanpur']);
+
+    const who = await call(kanpurAdmin, 'GET', '/v1/admin/whoami');
+    expect(who.status).toBe(200);
+    expect(who.body.admin).toMatchObject({ regions: ['kanpur'], isOwner: false, isGlobal: false });
+
+    expect((await call(kanpurAdmin, 'POST', '/v1/admin/team', { email: 'y@dev.local' })).status).toBe(403);
+    expect((await call('root-admin:admin', 'POST', '/v1/admin/team', { email: 'kanpur-admin@dev.local' })).status).toBe(409);
+  });
+
+  it('a regional admin only sees and decides for their own cities', async () => {
+    const stores = await call(kanpurAdmin, 'GET', '/v1/admin/stores?status=approved');
+    expect(stores.status).toBe(200);
+    expect(stores.body.stores.length).toBeGreaterThan(0);
+    expect(stores.body.stores.every((s: { city: string }) => s.city === 'Kanpur')).toBe(true);
+
+    // Bengaluru is out of scope: it looks like it does not exist, and stays approved.
+    expect((await call(kanpurAdmin, 'POST', `/v1/admin/stores/${bengaluruStore}/suspend`, { reason: 'Out of my region' })).status).toBe(404);
+    const { rows } = await db.pool.query('select status from stores where id = $1', [bengaluruStore]);
+    expect(rows[0].status).toBe('approved');
+
+    const orders = await call(kanpurAdmin, 'GET', '/v1/admin/orders');
+    expect(orders.status).toBe(200);
+    expect(orders.body.orders.every((o: { storeId: string }) => o.storeId !== bengaluruStore)).toBe(true);
+
+    const overview = await call('root-admin:admin', 'GET', '/v1/admin/overview');
+    const regional = await call(kanpurAdmin, 'GET', '/v1/admin/overview');
+    expect(regional.body.overview.approvedStores).toBeLessThan(overview.body.overview.approvedStores);
+
+    // Queue counts drive the panel's filter labels and badges, and follow the same scoping.
+    const queueAll = await call('root-admin:admin', 'GET', '/v1/admin/queue');
+    const queueRegional = await call(kanpurAdmin, 'GET', '/v1/admin/queue');
+    expect(queueAll.status).toBe(200);
+    expect(queueAll.body.queue.stores.approved).toBe(overview.body.overview.approvedStores);
+    expect(queueRegional.body.queue.stores.approved).toBe(regional.body.overview.approvedStores);
+    expect(queueAll.body.queue).toHaveProperty('services');
+    expect(queueAll.body.queue).toHaveProperty('submissions');
+
+    // The master catalog is company-wide.
+    expect((await call(kanpurAdmin, 'POST', '/v1/admin/products', {
+      sku: 'SB-REGIONAL', name: 'Regional Admin Widget', categoryId: 'dev-boards', mrp: 100,
+    })).status).toBe(403);
+
+    // Regional admins only see audit entries for their cities.
+    const auditAll = await call('root-admin:admin', 'GET', '/v1/admin/audit');
+    expect(auditAll.body.entries.some((e: { action: string }) => e.action === 'team.add')).toBe(true);
+    const auditRegional = await call(kanpurAdmin, 'GET', '/v1/admin/audit');
+    expect(auditRegional.body.entries.every((e: { city: string | null }) => e.city === 'kanpur' || e.city === 'Kanpur')).toBe(true);
+  });
+
+  it('owners cannot remove themselves, and a removed admin is locked out immediately', async () => {
+    expect((await call('root-admin:admin', 'DELETE', '/v1/admin/team/root-admin@dev.local')).status).toBe(409);
+
+    const widened = await call('root-admin:admin', 'PATCH', '/v1/admin/team/kanpur-admin@dev.local', { regions: ['Kanpur', 'Pune'] });
+    expect(widened.status).toBe(200);
+    expect(widened.body.member.regions).toEqual(['kanpur', 'pune']);
+    const stores = await call(kanpurAdmin, 'GET', '/v1/admin/stores?status=approved');
+    expect(stores.body.stores.some((s: { id: string }) => s.id === puneStore)).toBe(true);
+
+    expect((await call('root-admin:admin', 'DELETE', '/v1/admin/team/kanpur-admin@dev.local')).status).toBe(200);
+    expect((await call(kanpurAdmin, 'GET', '/v1/admin/overview')).status).toBe(403);
+    expect((await call('root-admin:admin', 'DELETE', '/v1/admin/team/kanpur-admin@dev.local')).status).toBe(404);
   });
 });

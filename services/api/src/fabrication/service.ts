@@ -91,12 +91,25 @@ export async function listStoreJobs(storeId: string, statuses: FabStatus[] | nul
   return rows.map((j) => forViewer(j, { role: 'vendor', uid: null, storeId }));
 }
 
-export async function listAllJobs(statuses: FabStatus[] | null, limit: number) {
+/** `cities` is an admin's lower-cased region list; null means every city. */
+export async function listAllJobs(statuses: FabStatus[] | null, limit: number, cities: string[] | null = null) {
   const { rows } = await pool.query<JobView>(
-    `${JOB_SELECT} where ($1::fab_job_status[] is null or j.status = any($1)) order by j.created_at desc limit $2`,
-    [statuses, limit],
+    `${JOB_SELECT}
+      where ($1::fab_job_status[] is null or j.status = any($1))
+        and ($3::text[] is null or lower(btrim(s.city)) = any($3))
+      order by j.created_at desc limit $2`,
+    [statuses, limit, cities],
   );
   return rows.map((j) => forViewer(j, { role: 'admin', uid: null }));
+}
+
+/** The city a job's store sits in, or null when the job does not exist. */
+export async function jobCity(jobId: string): Promise<string | null> {
+  const { rows } = await pool.query<{ city: string }>(
+    'select s.city from fab_jobs j join stores s on s.id = j.store_id where j.id = $1',
+    [jobId],
+  );
+  return rows[0]?.city ?? null;
 }
 
 async function recordStatus(db: Db, jobId: string, from: FabStatus | null, to: FabStatus, actor: ActorContext, note?: string) {
@@ -162,7 +175,7 @@ export async function createJob(input: CreateJobInput) {
     const { rows } = await c.query(
       `select l.id, l.store_id, l.kind, l.materials, s.latitude, s.longitude, s.delivery_radius_km
          from service_listings l join stores s on s.id = l.store_id
-        where l.id = $1 and l.status = 'approved' and l.is_active and s.status = 'approved' and s.is_online
+        where l.id = $1 and l.status = 'approved' and l.is_active and s.status = 'approved'
         for share of l, s`,
       [input.listingId],
     );

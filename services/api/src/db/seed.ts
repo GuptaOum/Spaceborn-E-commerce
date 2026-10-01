@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { backfillProductEmbeddings } from '../catalog/search.js';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import catalog from './seed-catalog.json' with { type: 'json' };
@@ -43,7 +44,11 @@ export async function seed() {
       );
     }
 
-    const { rows: products } = await c.query<{ id: string; sku: string; mrp: number }>('select id, sku, mrp from products');
+    // Only the curated catalog. Vendor-approved products must stay stocked at the store that submitted them.
+    const { rows: products } = await c.query<{ id: string; sku: string; mrp: number }>(
+      'select id, sku, mrp from products where sku = any($1::text[])',
+      [catalog.map((item) => item.sku)],
+    );
     for (const [storeIndex, store] of DEMO_STORES.entries()) {
       await c.query(
         `insert into users (id, email, full_name, role) values ($1, $2, $3, 'vendor') on conflict (id) do nothing`,
@@ -68,7 +73,9 @@ export async function seed() {
       }
     }
   });
-  logger.info({ products: catalog.length, stores: DEMO_STORES.length }, 'seed complete');
+  // Customer search ranks by meaning, so a fresh stack needs product vectors before the first search.
+  const embedded = await backfillProductEmbeddings(pool, catalog.length + 50);
+  logger.info({ products: catalog.length, stores: DEMO_STORES.length, embedded }, 'seed complete');
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

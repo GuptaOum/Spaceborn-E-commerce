@@ -16,10 +16,18 @@ export interface AuthUser {
   storeId: string | null;
 }
 
+/** Which cities an admin may act on. `regions` are lower-cased store cities; null means all of them. */
+export interface AdminScope {
+  email: string;
+  regions: string[] | null;
+  isOwner: boolean;
+}
+
 declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      admin?: AdminScope;
     }
   }
 }
@@ -38,7 +46,27 @@ export const firebaseAuth: Auth = getAuth(initFirebase());
 
 const ROLES: Role[] = ['customer', 'vendor', 'admin'];
 const toRole = (value: unknown): Role => (ROLES.includes(value as Role) ? (value as Role) : 'customer');
-const DEFAULT_ADMIN_EMAILS = new Set(['oumgupta555@gmail.com']);
+// Break-glass owners. They are also seeded into admin_members, so the team can never lock itself out.
+export const DEFAULT_ADMIN_EMAILS = new Set(['oumgupta555@gmail.com']);
+
+export const normalizeEmail = (email: string | null | undefined) => (email ?? '').trim().toLowerCase();
+
+/**
+ * Admin access is decided by the admin_members table, never by a token claim, so adding or
+ * removing a teammate takes effect on their next request.
+ */
+export async function loadAdminScope(email: string | null | undefined, db: Db = pool): Promise<AdminScope | null> {
+  const lower = normalizeEmail(email);
+  if (!lower) return null;
+  const { rows } = await db.query<{ regions: string[] | null; is_owner: boolean }>(
+    'select regions, is_owner from admin_members where email = $1',
+    [lower],
+  );
+  const breakGlass = DEFAULT_ADMIN_EMAILS.has(lower);
+  if (rows[0]) return { email: lower, regions: rows[0].regions, isOwner: rows[0].is_owner || breakGlass };
+  if (breakGlass) return { email: lower, regions: null, isOwner: true };
+  return null;
+}
 
 const knownUsers = new Map<string, number>();
 const USER_SYNC_TTL_MS = 10 * 60 * 1000;
@@ -47,19 +75,24 @@ async function syncUser(user: AuthUser) {
   const seenAt = knownUsers.get(user.uid);
   if (seenAt && Date.now() - seenAt < USER_SYNC_TTL_MS) return;
 
-  const emailLower = (user.email ?? '').toLowerCase();
-  const effectiveRole = (emailLower && DEFAULT_ADMIN_EMAILS.has(emailLower)) ? 'admin' : user.role;
+  // 'admin' is only ever persisted for team members; a forged or stale admin claim is downgraded.
+  const isAdmin = (await loadAdminScope(user.email)) !== null;
+  const effectiveRole: Role = isAdmin ? 'admin' : user.role === 'admin' ? 'customer' : user.role;
 
   await pool.query(
     `insert into users (id, email, full_name, role) values ($1, $2, $3, $4)
      on conflict (id) do update set email = coalesce(excluded.email, users.email),
                                     full_name = coalesce(users.full_name, excluded.full_name),
-                                    role = case when users.role = 'admin' or excluded.role = 'admin' then 'admin' else excluded.role end`,
+                                    role = excluded.role`,
     [user.uid, user.email, user.name, effectiveRole],
   );
 
   user.role = effectiveRole;
   knownUsers.set(user.uid, Date.now());
+}
+
+export function forgetUser(uid: string) {
+  knownUsers.delete(uid);
 }
 
 async function resolveUser(header: string | undefined): Promise<AuthUser | null> {
@@ -76,19 +109,17 @@ async function resolveUser(header: string | undefined): Promise<AuthUser | null>
 
   try {
     const token = await firebaseAuth.verifyIdToken(value);
-    const emailLower = (token.email ?? '').toLowerCase();
+    const emailLower = normalizeEmail(token.email);
 
     let role = toRole(token.role);
-    if (emailLower && DEFAULT_ADMIN_EMAILS.has(emailLower)) {
+    if (await loadAdminScope(emailLower)) {
       role = 'admin';
     } else {
-      const { rows: dbUsers } = await pool.query<{ role: Role }>(
-        `select role from users where id = $1 or lower(email) = $2 limit 1`,
-        [token.uid, emailLower],
-      );
-      if (dbUsers[0]?.role) {
-        role = toRole(dbUsers[0].role);
-      }
+      const { rows: dbUsers } = await pool.query<{ role: Role }>(`select role from users where id = $1 limit 1`, [token.uid]);
+      const dbRole = dbUsers[0]?.role ? toRole(dbUsers[0].role) : null;
+      // A stale users.role = 'admin' (member removed) never grants access.
+      if (dbRole && dbRole !== 'admin') role = dbRole;
+      else if (role === 'admin') role = 'customer';
     }
 
     const { rows: storeRows } = await pool.query<{ id: string }>(
@@ -117,16 +148,25 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
   next();
 }
 
-// Token claims live for up to an hour; the database role is checked so a demotion is immediate.
+// Token claims live for up to an hour; membership is read on every request so removal is immediate.
 export async function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   const user = currentUser(req);
-  const emailLower = (user.email ?? '').toLowerCase();
-  if (emailLower && DEFAULT_ADMIN_EMAILS.has(emailLower)) {
-    return next();
-  }
-  if (user.role !== 'admin') throw forbidden();
-  const { rows } = await pool.query<{ role: Role }>('select role from users where id = $1', [user.uid]);
-  if (rows[0]?.role !== 'admin') throw forbidden();
+  const scope = await loadAdminScope(user.email);
+  if (!scope) throw forbidden();
+  user.role = 'admin';
+  req.admin = scope;
+  next();
+}
+
+/** Team management: only owners. */
+export function requireOwner(req: Request, _res: Response, next: NextFunction) {
+  if (!adminScope(req).isOwner) throw forbidden('Only an owner can manage the admin team');
+  next();
+}
+
+/** Company-wide data (master catalog, audit log): admins without a regional restriction. */
+export function requireGlobalAdmin(req: Request, _res: Response, next: NextFunction) {
+  if (adminScope(req).regions !== null) throw forbidden('This action needs an admin with access to all regions');
   next();
 }
 
@@ -134,6 +174,17 @@ export function currentUser(req: Request): AuthUser {
   if (!req.user) throw unauthorized();
   return req.user;
 }
+
+export function adminScope(req: Request): AdminScope {
+  if (!req.admin) throw forbidden();
+  return req.admin;
+}
+
+/** SQL parameter for `($n::text[] is null or lower(btrim(city)) = any($n))`. */
+export const scopeCities = (scope: AdminScope): string[] | null => scope.regions;
+
+export const inScope = (scope: AdminScope, city: string | null | undefined) =>
+  scope.regions === null || (!!city && scope.regions.includes(city.trim().toLowerCase()));
 
 export async function setRoleClaims(uid: string, role: Role, storeId: string | null, db: Db = pool) {
   await db.query('update users set role = $2 where id = $1', [uid, role]);
@@ -144,7 +195,7 @@ export async function setRoleClaims(uid: string, role: Role, storeId: string | n
       logger.warn({ err, uid, role }, 'Could not set Firebase custom claims, relying on database role');
     }
   }
-  knownUsers.delete(uid);
+  forgetUser(uid);
 }
 
 export async function revokeSessions(uid: string) {

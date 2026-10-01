@@ -3,6 +3,8 @@
   Day-to-day operations for the Spaceborn AWS environment.
 
 .DESCRIPTION
+  up       Bring a destroyed stack back: re-attach the kept CloudFront distributions (same
+           URLs as before), terraform apply, build and deploy, then load the demo data.
   stop     Scale every ECS service to 0, stop RDS and the bastion. Keeps the VPC,
            NAT gateway and load balancers, so the public URL survives. ~$16/mo.
   start    Start RDS and the bastion, scale the services back up.
@@ -12,8 +14,9 @@
   seed     Load demo categories, products and three demo stores.
   status   Show task counts, image tags and the public URLs.
   destroy  terraform destroy. Removes everything except the state and build
-           buckets and the ECR images. This is the only way to stop paying for
-           the NAT gateway and load balancers.
+           buckets, the ECR images and the two CloudFront distributions (kept
+           so the storefront and vendor URLs never change; idle cost is $0).
+           This is the only way to stop paying for the NAT gateway and load balancers.
   tunnel   Port-forward the admin panel (8080) or Postgres (5433) over SSM.
 
 .EXAMPLE
@@ -25,7 +28,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory, Position = 0)]
-  [ValidateSet('stop', 'start', 'deploy', 'migrate', 'seed', 'status', 'destroy', 'tunnel', 'grant-admin')]
+  [ValidateSet('up', 'stop', 'start', 'deploy', 'migrate', 'seed', 'status', 'destroy', 'tunnel', 'grant-admin')]
   [string]$Command,
 
   [string]$Tag,
@@ -49,6 +52,8 @@ $BuildBucket = "spaceborn-build-$AccountId"
 $BuildProject = 'spaceborn-build'
 $RepoRoot    = Split-Path -Parent $PSScriptRoot
 $TerraformDir = Join-Path $RepoRoot 'terraform'
+
+. (Join-Path $PSScriptRoot 'cloudfront-keep.ps1')
 
 # storefront and api carry two tasks; the rest are singletons.
 $DesiredCounts = [ordered]@{ api = 2; worker = 1; storefront = 2; 'vendor-hub' = 1; 'admin-panel' = 1 }
@@ -75,7 +80,7 @@ function Get-NetworkConfiguration {
 function Get-BastionId {
   return Invoke-Aws ec2 describe-instances `
     --filters "Name=tag:Name,Values=$Cluster-bastion" 'Name=instance-state-name,Values=pending,running,stopping,stopped' `
-    --query 'Reservations[].Instances[0].InstanceId' --output text
+    --query 'sort_by(Reservations[].Instances[], &LaunchTime)[-1].InstanceId' --output text
 }
 
 # Runs a one-off task on the API image and waits for it to exit.
@@ -118,6 +123,25 @@ function Set-ServiceScale {
 }
 
 switch ($Command) {
+
+  'up' {
+    Write-Host 'Re-attaching the kept CloudFront distributions' -ForegroundColor Cyan
+    Adopt-CloudFront -TerraformDir $TerraformDir -Region $Region
+
+    Write-Host 'Creating the stack (about 10-15 minutes; RDS is the slow part)' -ForegroundColor Cyan
+    Push-Location $TerraformDir
+    try {
+      & terraform init -input=false | Out-Null
+      & terraform apply -auto-approve -input=false
+      if ($LASTEXITCODE -ne 0) { throw 'terraform apply failed' }
+    } finally { Pop-Location }
+
+    & $PSCommandPath deploy
+    & $PSCommandPath seed
+    Write-Host ''
+    Write-Host "Storefront: $(Get-TerraformOutput 'storefront_url')" -ForegroundColor Green
+    Write-Host "Vendor hub: $(Get-TerraformOutput 'vendor_url')" -ForegroundColor Green
+  }
 
   'stop' {
     Write-Host 'Scaling services to zero' -ForegroundColor Cyan
@@ -171,9 +195,11 @@ switch ($Command) {
 
     Invoke-Aws s3 cp $zip "s3://$BuildBucket/src.zip" --only-show-errors | Out-Null
 
-    Write-Host "Building images on CodeBuild as $Tag" -ForegroundColor Cyan
+    # The vendor hub URL is inlined into the storefront at build time; the ALB hostname changes on every rebuild of the stack.
+    $vendorUrl = Get-TerraformOutput 'vendor_url'
+    Write-Host "Building images on CodeBuild as $Tag (vendor hub: $vendorUrl)" -ForegroundColor Cyan
     $buildId = Invoke-Aws codebuild start-build --project-name $BuildProject `
-      --environment-variables-override "name=IMAGE_TAG,value=$Tag,type=PLAINTEXT" `
+      --environment-variables-override "name=IMAGE_TAG,value=$Tag,type=PLAINTEXT" "name=NEXT_PUBLIC_VENDOR_HUB_URL,value=$vendorUrl,type=PLAINTEXT" `
       --query 'build.id' --output text
 
     do {
@@ -188,6 +214,7 @@ switch ($Command) {
     }
 
     Write-Host "Pointing the task definitions at $Tag" -ForegroundColor Cyan
+    Adopt-CloudFront -TerraformDir $TerraformDir -Region $Region
     Push-Location $TerraformDir
     try {
       & terraform apply -auto-approve -input=false -var "image_tag=$Tag"
@@ -233,6 +260,7 @@ switch ($Command) {
     Write-Host 'This deletes the VPC, load balancers, NAT gateway, RDS instance and all ECS services.' -ForegroundColor Red
     Write-Host 'The Terraform state bucket, the build bucket and the ECR images are kept.' -ForegroundColor Yellow
     if ((Read-Host 'Type the word destroy to continue') -ne 'destroy') { Write-Host 'Cancelled.'; break }
+    Release-CloudFront -TerraformDir $TerraformDir
     Push-Location $TerraformDir
     try { & terraform destroy -auto-approve -input=false } finally { Pop-Location }
   }
@@ -252,7 +280,8 @@ switch ($Command) {
 
     if ($Target -eq 'admin') {
       $host_ = Get-TerraformOutput 'admin_internal_url'; $remotePort = 80; $localPort = 8080
-      Write-Host "Admin panel will be at http://localhost:$localPort" -ForegroundColor Green
+      Write-Host "Admin panel will be at http://localhost:$localPort (opening in your browser; Ctrl+C here closes it)" -ForegroundColor Green
+      Start-Job { Start-Sleep -Seconds 6; Start-Process "http://localhost:$using:localPort" } | Out-Null
     } else {
       $host_ = Get-TerraformOutput 'db_endpoint'; $remotePort = 5432; $localPort = 5433
       Write-Host "Postgres will be at localhost:$localPort" -ForegroundColor Green

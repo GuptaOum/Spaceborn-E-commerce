@@ -31,7 +31,8 @@ resource "aws_iam_instance_profile" "bastion" {
 resource "aws_instance" "bastion" {
   ami                    = data.aws_ssm_parameter.al2023_arm64.value
   instance_type          = "t4g.nano"
-  subnet_id              = aws_subnet.app[0].id
+  # Second AZ: ap-south-1a has run out of t4g.nano capacity more than once (InsufficientInstanceCapacity).
+  subnet_id              = aws_subnet.app[1].id
   vpc_security_group_ids = [aws_security_group.bastion.id]
   iam_instance_profile   = aws_iam_instance_profile.bastion.name
 

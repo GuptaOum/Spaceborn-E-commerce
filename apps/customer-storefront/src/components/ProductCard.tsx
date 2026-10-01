@@ -20,6 +20,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [quantity, setQuantity] = useState(cartQuantity);
   const [isAdded, setIsAdded] = useState(cartQuantity > 0);
+  const [imgSrc, setImgSrc] = useState(product.image || '/spaceborn-logo.svg');
+
+  useEffect(() => {
+    setImgSrc(product.image || '/spaceborn-logo.svg');
+  }, [product.image]);
 
   useEffect(() => {
     setQuantity(cartQuantity);
@@ -110,11 +115,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Product Image on Clean Light Canvas */}
       <div className="w-full h-36 rounded-xl bg-white border border-[#f9bf8f]/30 flex items-center justify-center p-2 mb-2 overflow-hidden relative">
-        <img 
-          src={product.image} 
+        <img
+          src={imgSrc}
           alt={product.name}
           className="max-h-full max-w-full object-contain transition-transform duration-300 ease-out group-hover:scale-110 will-change-transform"
           loading="lazy"
+          onError={() => setImgSrc('/spaceborn-logo.svg')}
         />
       </div>
 

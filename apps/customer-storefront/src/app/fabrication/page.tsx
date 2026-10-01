@@ -268,18 +268,34 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
 export default function FabricationPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { location } = useStore();
+  const { location, locateMe } = useStore();
   const [kind, setKind] = useState<ServiceKind>('3d_printing');
   const [selected, setSelected] = useState<ServiceListing | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
   const jobsRef = useRef<HTMLDivElement>(null);
 
-  const services = useLoad(
+  const nearby = useLoad(
     () =>
-      api<{ services: ServiceListing[] }>(`/services/nearby?lat=${location.latitude}&lng=${location.longitude}&kind=${kind}`).then(
-        (r) => r.services,
+      api<{ services: ServiceListing[]; outOfRange: ServiceListing[] }>(
+        `/services/nearby?lat=${location.latitude}&lng=${location.longitude}&kind=${kind}`,
       ),
     [location.latitude, location.longitude, kind],
   );
+  const services = { ...nearby, data: nearby.data?.services ?? null };
+  const outOfRange = nearby.data?.outOfRange ?? [];
+
+  const useMyLocation = async () => {
+    setLocating(true);
+    setLocateError(null);
+    try {
+      await locateMe();
+    } catch (err) {
+      setLocateError((err as Error).message);
+    } finally {
+      setLocating(false);
+    }
+  };
   const jobs = useLoad(
     () => (user ? api<{ jobs: FabJob[] }>('/fabrication/jobs').then((r) => r.jobs) : Promise.resolve([] as FabJob[])),
     [user?.uid],
@@ -334,8 +350,33 @@ export default function FabricationPage() {
           {services.loading && !services.data && <p className="text-sm text-[#7a6274]">Finding makers near {location.area}…</p>}
           {services.error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{services.error}</p>}
           {services.data?.length === 0 && (
-            <div className={`${card} text-center text-sm text-[#7a6274]`}>
-              No {SERVICE_KIND_LABEL[kind]} makers deliver to {location.area} yet. Try another location from the header.
+            <div className={`${card} space-y-3 text-sm text-[#7a6274]`}>
+              <p className="text-center">
+                No {SERVICE_KIND_LABEL[kind]} makers deliver to <b>{location.area}</b> yet.
+              </p>
+              {outOfRange.length > 0 && (
+                <div className="rounded-2xl bg-white/70 p-3 text-xs">
+                  <p className="font-semibold text-[#34222e]">Makers nearby that do not reach this address:</p>
+                  <ul className="mt-1 space-y-1">
+                    {outOfRange.map((s) => (
+                      <li key={s.id}>
+                        {s.storeName} · {s.title} · {s.distanceKm} km away, delivers within {s.deliveryRadiusKm} km
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  onClick={useMyLocation}
+                  disabled={locating}
+                  className="rounded-xl bg-[#0c831f] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+                >
+                  {locating ? 'Locating…' : 'Use my current location'}
+                </button>
+                <span className="text-xs">or pick another address from the header.</span>
+              </div>
+              {locateError && <p className="text-center text-xs text-red-600">{locateError}</p>}
             </div>
           )}
           {services.data?.map((s) => (

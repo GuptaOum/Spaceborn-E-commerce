@@ -7,6 +7,13 @@ import pg from 'pg';
  * Tests run against an embedded Postgres by default. Set TEST_DB_HOST (and optionally
  * TEST_DB_PORT/USER/PASSWORD) to use an external server instead, e.g. a Docker container in CI or
  * on machines where the embedded binary cannot run (Windows shells with admin rights).
+ * The server must be able to `CREATE EXTENSION vector` (pgvector). The embedded binary cannot, so
+ * on a developer machine run the suite against Docker:
+ *
+ *   docker run -d --name spaceborn-testpg -e POSTGRES_USER=spaceborn -e POSTGRES_PASSWORD=spaceborn -p 54329:5432 pgvector/pgvector:pg16
+ *   TEST_DB_HOST=127.0.0.1 TEST_DB_PORT=54329 npm test -w services/api
+ *
+ * (If the image cannot be pulled, `postgres:16` plus `apt-get install postgresql-16-pgvector` inside it works too.)
  */
 export async function startTestDb(dbName: string, embeddedPort: number, uploadsSuffix: string) {
   const external = process.env.TEST_DB_HOST;

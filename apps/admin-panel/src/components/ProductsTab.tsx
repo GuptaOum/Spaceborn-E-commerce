@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '@spaceborn/web-core/api';
+import { useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
 import type { Category } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
@@ -21,10 +22,18 @@ interface AdminProduct {
 const emptyForm = { sku: '', name: '', categoryId: '', brand: '', mrp: '', gstRate: '18', hsn: '', imageUrl: '', description: '' };
 
 export function ProductsTab() {
+  const { toast } = useFeedback();
+  const [typed, setTyped] = useState('');
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(typed.trim()), 300);
+    return () => clearTimeout(t);
+  }, [typed]);
 
   const categories = useLoad(() => api<{ categories: Category[] }>('/categories').then((r) => r.categories), []);
   const products = useLoad(
@@ -33,8 +42,18 @@ export function ProductsTab() {
   );
 
   const toggleActive = async (product: AdminProduct) => {
-    await api(`/admin/products/${product.id}`, { method: 'PATCH', body: { isActive: !product.isActive } });
-    await products.reload();
+    const wanted = !product.isActive;
+    setBusyId(product.id);
+    products.mutate((list) => list?.map((p) => (p.id === product.id ? { ...p, isActive: wanted } : p)) ?? list); // optimistic
+    try {
+      await api(`/admin/products/${product.id}`, { method: 'PATCH', body: { isActive: wanted } });
+      toast(wanted ? `${product.name} is active again` : `${product.name} deactivated; stores can no longer sell it`, 'success');
+    } catch (err) {
+      products.mutate((list) => list?.map((p) => (p.id === product.id ? { ...p, isActive: !wanted } : p)) ?? list);
+      toast((err as Error).message, 'error');
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const create = async (event: FormEvent) => {
@@ -42,7 +61,7 @@ export function ProductsTab() {
     setSaving(true);
     setFormError(null);
     try {
-      await api('/admin/products', {
+      const r = await api<{ product: Omit<AdminProduct, 'storeCount'> }>('/admin/products', {
         method: 'POST',
         body: {
           sku: form.sku,
@@ -57,7 +76,8 @@ export function ProductsTab() {
         },
       });
       setForm(emptyForm);
-      await products.reload();
+      products.mutate((list) => [{ ...r.product, storeCount: 0 }, ...(list ?? [])]);
+      toast(`${r.product.name} added to the catalog`, 'success');
     } catch (err) {
       setFormError((err as Error).message);
     } finally {
@@ -76,11 +96,13 @@ export function ProductsTab() {
       <section>
         <input
           placeholder="Search by name or SKU"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
         />
         {products.error && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{products.error}</p>}
+        {products.loading && <p className="mt-3 text-sm text-slate-400">Loading catalog…</p>}
+        {products.data?.length === 0 && <p className="mt-3 text-sm text-slate-500">No products match “{search}”.</p>}
         <ul className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
           {products.data?.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -90,7 +112,7 @@ export function ProductsTab() {
                   {p.sku} · {p.categoryId} · MRP {formatInr(p.mrp)} · GST {p.gstRate}% · listed in {p.storeCount} stores
                 </p>
               </div>
-              <button onClick={() => toggleActive(p)} className="shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold">
+              <button disabled={busyId === p.id} onClick={() => void toggleActive(p)} className="shrink-0 rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold disabled:opacity-50">
                 {p.isActive ? 'Deactivate' : 'Activate'}
               </button>
             </li>

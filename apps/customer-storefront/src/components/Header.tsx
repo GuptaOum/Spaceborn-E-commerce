@@ -51,7 +51,8 @@ export const Header: React.FC<HeaderProps> = ({
   products,
   onSelectProduct,
 }) => {
-  const { location, setLocation, locateMe, locateByPincode, searchPlaces, serviceArea, catalogStatus } = useStore();
+  const { location, setLocation, locateMe, locateByPincode, searchPlaces, serviceArea, catalogStatus, searchResults: rankedResults } =
+    useStore();
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -124,10 +125,10 @@ export const Header: React.FC<HeaderProps> = ({
   const cartSubtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
 
   const searchResults = searchQuery.trim().length > 1
-    ? products.filter(p => 
+    ? (rankedResults ?? products.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5)
+      )).slice(0, 5)
     : [];
 
   return (

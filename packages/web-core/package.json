@@ -9,7 +9,8 @@
     "./types": "./src/types.ts",
     "./format": "./src/format.ts",
     "./sign-in": "./src/SignInPanel.tsx",
-    "./use-load": "./src/useLoad.ts"
+    "./use-load": "./src/useLoad.ts",
+    "./feedback": "./src/feedback.tsx"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

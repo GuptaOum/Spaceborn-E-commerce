@@ -33,22 +33,32 @@ export const LISTING_COLUMNS = `
 
 const LAT_WINDOW = 0.27;
 
+const OUT_OF_RANGE_MAX = 5;
+
+/**
+ * Makers that deliver to this point, plus the nearest approved makers that do not (so the page can
+ * say "X is 8 km away but delivers within 5 km" instead of a bare "nothing here").
+ */
 fabricationRouter.get('/services/nearby', async (req, res) => {
   const q = parse(z.object({ lat: latitude, lng: longitude, kind: z.enum(SERVICE_KINDS).optional() }), req.query);
   const { rows } = await pool.query(
-    `select ${LISTING_COLUMNS}, s.name as "storeName", s.city, d.km as "distanceKm"
+    `select ${LISTING_COLUMNS}, s.name as "storeName", s.city, d.km as "distanceKm",
+            s.delivery_radius_km::float as "deliveryRadiusKm", (d.km <= s.delivery_radius_km) as "inRange"
        from service_listings l
        join stores s on s.id = l.store_id
        cross join lateral (select ${distanceSql('$1', '$2')} as km) d
-      where l.status = 'approved' and l.is_active and s.status = 'approved' and s.is_online
+      where l.status = 'approved' and l.is_active and s.status = 'approved'
         and ($3::service_kind is null or l.kind = $3)
         and s.latitude between $1 - ${LAT_WINDOW} and $1 + ${LAT_WINDOW}
-        and d.km <= s.delivery_radius_km
-      order by d.km
-      limit 20`,
+      order by (d.km <= s.delivery_radius_km) desc, d.km
+      limit ${20 + OUT_OF_RANGE_MAX}`,
     [q.lat, q.lng, q.kind ?? null],
   );
-  res.json({ services: rows.map((r) => ({ ...r, distanceKm: Math.round(r.distanceKm * 10) / 10 })) });
+  const present = ({ inRange: _inRange, ...r }: (typeof rows)[number]) => ({ ...r, distanceKm: Math.round(r.distanceKm * 10) / 10 });
+  res.json({
+    services: rows.filter((r) => r.inRange).slice(0, 20).map(present),
+    outOfRange: rows.filter((r) => !r.inRange).slice(0, OUT_OF_RANGE_MAX).map(present),
+  });
 });
 
 fabricationRouter.get('/services/:id', async (req, res) => {

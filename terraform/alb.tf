@@ -95,7 +95,9 @@ locals {
   public_origin = local.https_enabled ? "https://${var.domain_name}" : (
     local.cloudfront_enabled ? "https://${aws_cloudfront_distribution.main[0].domain_name}" : "http://${aws_lb.public.dns_name}"
   )
-  vendor_origin       = local.https_enabled ? "https://vendor.${var.domain_name}" : "http://${aws_lb.public.dns_name}:8080"
+  vendor_origin = local.https_enabled ? "https://vendor.${var.domain_name}" : (
+    local.cloudfront_enabled ? "https://${aws_cloudfront_distribution.vendor[0].domain_name}" : "http://${aws_lb.public.dns_name}:8080"
+  )
 }
 
 # Without a real domain there is no host header to route on, so the vendor hub gets its own port.

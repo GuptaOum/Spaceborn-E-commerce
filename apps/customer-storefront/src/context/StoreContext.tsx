@@ -23,6 +23,9 @@ export const LOCATION_PRESETS: DeliveryLocation[] = [
 ];
 
 export type CatalogStatus = 'loading' | 'ready' | 'unserviceable' | 'error';
+export type SearchStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 /** What the customer sees about their delivery area. Individual vendors are chosen by the server. */
 export interface ServiceArea {
@@ -38,6 +41,9 @@ interface StoreContextType {
   setSelectedCategory: (cat: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  /** Ranked server results for `searchQuery` near the delivery location; null while not searching or on error. */
+  searchResults: Product[] | null;
+  searchStatus: SearchStatus;
   selectedProduct: Product | null;
   setSelectedProduct: (product: Product | null) => void;
   quickViewProduct: Product | null;
@@ -80,7 +86,7 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-const PLACEHOLDER_IMAGE = '/spaceborn-logo.png';
+const PLACEHOLDER_IMAGE = '/spaceborn-logo.svg';
 const MAX_PER_LINE = 50;
 
 const KEYS = {
@@ -145,6 +151,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Product[] | null>(null);
+  const [searchStatus, setSearchStatus] = useState<SearchStatus>('idle');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
@@ -208,6 +216,35 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (hydrated) void loadCatalog(location);
   }, [location, loadCatalog, hydrated]);
+
+  // The server ranks by keywords and meaning, and only returns what nearby stores stock.
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!hydrated || q.length < 2 || catalogStatus !== 'ready') {
+      setSearchResults(null);
+      setSearchStatus('idle');
+      return;
+    }
+    let cancelled = false;
+    setSearchStatus('loading');
+    const timer = setTimeout(async () => {
+      try {
+        const at = `lat=${location.latitude}&lng=${location.longitude}`;
+        const res = await api<{ products: CatalogOffer[] }>(`/catalog/products?${at}&q=${encodeURIComponent(q)}&limit=60`);
+        if (cancelled) return;
+        setSearchResults(res.products.map(toProduct));
+        setSearchStatus('ready');
+      } catch {
+        if (cancelled) return;
+        setSearchResults(null);
+        setSearchStatus('error');
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, location, catalogStatus, hydrated]);
 
   const setLocation = (loc: DeliveryLocation) => {
     localStorage.setItem(KEYS.location, JSON.stringify(loc));
@@ -324,6 +361,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
+    searchResults,
+    searchStatus,
     selectedProduct,
     setSelectedProduct,
     quickViewProduct,

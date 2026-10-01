@@ -83,7 +83,17 @@ The platform operates as a monorepo (npm workspaces) with 3 client-facing fronte
 - **`ops/spaceborn.ps1 deploy`**: Cloud-packages source, triggers CodeBuild, updates task definitions, and performs zero-downtime rolling ECS container deployments.
 - **`ops/spaceborn.ps1 tunnel -Target admin`**: Automatically boots the Bastion EC2 host and forwards `http://localhost:8080` to the private Admin ALB.
 - **`ops/spaceborn.ps1 stop`**: Scales ECS tasks to 0 and stops RDS and Bastion to pause compute costs.
-- **`down.sh` & `down.ps1`**: 1-click total infrastructure wipe via `terraform destroy -auto-approve`, deleting all 98 AWS cloud resources down to $0.00.
+- **`down.sh` & `down.ps1`**: 1-click total infrastructure wipe via `terraform destroy -auto-approve`, deleting all 98 AWS cloud resources down to $0.00. The two CloudFront distributions are released from state first and re-adopted by `up`, so the public URLs never change.
+
+### 2.5 Pre-deploy Quality Gate
+Run these before `ops/spaceborn.ps1 deploy`; every production bug found so far would have been caught by one of them:
+1. `npm run typecheck` (all workspaces).
+2. API integration tests against Docker Postgres with pgvector (the embedded test Postgres cannot load `vector`):
+   `docker run -d --name spaceborn-testpg -e POSTGRES_USER=spaceborn -e POSTGRES_PASSWORD=spaceborn -p 54329:5432 pgvector/pgvector:pg16`
+   then `TEST_DB_HOST=127.0.0.1 TEST_DB_PORT=54329 npm test -w services/api`.
+3. `npm run build -w apps/<app>` for the three Next.js apps.
+
+Dashboard conventions: both the vendor hub and the admin panel wrap pages in `FeedbackProvider` (`@spaceborn/web-core/feedback`). Use `useAction` for buttons (busy state + error toast + success toast), `useFeedback().confirm/prompt` instead of `window.*`, and `useLoad().mutate` to update lists immediately after a mutation instead of re-fetching.
 
 ---
 
@@ -106,8 +116,10 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
            ▼
 ┌────────────────────────────────────────────────────────┐
 │ Role Resolution Hierarchy:                             │
-│ 1. Developer Whitelist (oumgupta555@gmail.com -> admin)│
-│ 2. PostgreSQL `users.role` (Postgres Database Record)  │
+│ 1. `admin_members` row for the token email -> admin    │
+│    (break-glass: oumgupta555@gmail.com is always owner)│
+│ 2. PostgreSQL `users.role` (vendor/customer only;      │
+│    a stale 'admin' here never grants access)           │
 │ 3. Firebase Custom Claim `token.role`                  │
 │ 4. Fallback Default: 'customer'                        │
 └────────────────────────────────────────────────────────┘
@@ -183,15 +195,25 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
      - Contains `DEFAULT_ADMIN_EMAILS = ['oumgupta555@gmail.com']`.
      - Automatically elevates matching sessions to `role = 'admin'`.
   2. **Backend API Guard (`services/api/src/auth.ts`):**
-     - `requireAdmin` middleware checks token email and PostgreSQL `users.role`.
-     - If email matches `oumgupta555@gmail.com`, it bypasses claim latency and grants instant administrative clearance.
+     - `requireAdmin` reads the `admin_members` table (migration 005) by token email on every request, so adding or
+       removing a teammate takes effect on their next call. Token claims are never trusted for admin.
+     - `oumgupta555@gmail.com` is the break-glass owner in code and is seeded into `admin_members`.
      - Decoupled from `FIREBASE_SERVICE_ACCOUNT_JSON` so it never crashes with credential errors.
+- **Admin team (multi-admin, per-city):**
+  - `admin_members(email, regions text[], is_owner)`. `regions` is a list of lower-cased store cities; `null` = all regions.
+  - **Owner:** manages the team (`/v1/admin/team`), always sees every region.
+  - **Global admin:** `regions = null`; can also edit the master catalog.
+  - **Regional admin:** only stores, orders, print jobs, services and product submissions whose store is in their cities.
+    Out-of-scope records return 404, as if they did not exist. Master catalog writes return 403.
+  - Every admin decision is written to `admin_audit_log` (who, what, which city, reason). Shown under the **Team** tab.
 - **Capabilities:**
   - **Store Applications Tab:** Review and approve/reject new vendor onboardings.
   - **Print & CNC Services Tab:** Audit and approve fabrication capability listings.
   - **Orders Tab:** Global platform-wide order monitor and manual interventions.
   - **Print Jobs Tab:** Inspect CAD files and review vendor quotes.
-  - **Master Catalog Tab:** Add/edit products, specifications, categories, and reference images.
+  - **Master Catalog Tab:** Add/edit products, specifications, categories, and reference images (global admins only).
+  - **Team Tab:** Owners add admins by email, pick their cities (or all regions), promote/demote owners, remove members.
+    Also shows the recent admin activity log.
 
 ---
 
@@ -204,6 +226,6 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
 | **Default Port** | `3000` | `3001` (ALB: `8080`) | `3002` (Tunnel: `8080`) |
 | **Auth Provider** | Firebase Auth (Google) | Firebase Auth (Google) | Firebase Auth (Google) |
 | **Primary Identifier**| Any email | Store Owner Email (`+alias` for dev)| `oumgupta555@gmail.com` |
-| **Authoritative Check**| PostgreSQL `users` | PostgreSQL `stores.owner_id` | PostgreSQL `users.role` + Whitelist |
+| **Authoritative Check**| PostgreSQL `users` | PostgreSQL `stores.owner_id` | PostgreSQL `admin_members` (+ break-glass owner) |
 | **Access Gating** | Open to public | Approved Store required | Admin role + Tunnel required |
 | **Sensitive Routes** | Public `/v1/*` | `/v1/vendor/*` | `/v1/admin/*` (Strictly internal) |

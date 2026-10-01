@@ -1,12 +1,19 @@
-# CDN in front of the public load balancer. Two jobs:
+# CDN in front of the public load balancer. Three jobs:
 #   1. Cache Next.js build assets at the edge so a task never serves the same chunk twice.
-#   2. Give the storefront HTTPS on a *.cloudfront.net name, before a real domain exists.
-# The vendor hub is not fronted here: it is a separate app served on the ALB's port 8080 at the
-# same root path, so CloudFront cannot tell it apart from the storefront by path alone.
+#   2. Give the storefront and vendor hub HTTPS on *.cloudfront.net names, before a real domain exists.
+#   3. Keep those names stable. down.ps1 / `spaceborn.ps1 destroy` detach both distributions from
+#      state instead of deleting them, and `spaceborn.ps1 up` re-imports them by `comment`, so the
+#      URLs (and the Firebase authorized domains) survive a full teardown. Idle distributions cost $0.
+# The vendor hub is a separate app on the ALB's port 8080 at the same root path, so it gets its own
+# distribution rather than a path behaviour on the storefront one.
 
 locals {
   cloudfront_enabled = var.enable_cloudfront && !local.https_enabled
   alb_origin_id      = "alb-public"
+  vendor_origin_id   = "alb-public-vendor"
+  # Lookup keys for re-adopting the distributions after a teardown. Do not change them.
+  cloudfront_storefront_comment = "${local.name} storefront and API"
+  cloudfront_vendor_comment     = "${local.name} vendor hub"
 }
 
 # AWS-managed policies, referenced by ID so no custom policy has to be maintained.
@@ -20,7 +27,7 @@ resource "aws_cloudfront_distribution" "main" {
   count = local.cloudfront_enabled ? 1 : 0
 
   enabled         = true
-  comment         = "${local.name} storefront and API"
+  comment         = local.cloudfront_storefront_comment
   # PriceClass_100 has no Indian edge locations; 200 adds Mumbai/Chennai/Hyderabad.
   price_class     = "PriceClass_200"
   http_version    = "http2and3"
@@ -70,6 +77,60 @@ resource "aws_cloudfront_distribution" "main" {
     target_origin_id       = local.alb_origin_id
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+    cache_policy_id        = local.cache_optimized_id
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution" "vendor" {
+  count = local.cloudfront_enabled ? 1 : 0
+
+  enabled         = true
+  comment         = local.cloudfront_vendor_comment
+  price_class     = "PriceClass_200"
+  http_version    = "http2and3"
+  is_ipv6_enabled = true
+
+  origin {
+    origin_id   = local.vendor_origin_id
+    domain_name = aws_lb.public.dns_name
+
+    custom_origin_config {
+      http_port                = 8080
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["TLSv1.2"]
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id         = local.vendor_origin_id
+    viewer_protocol_policy   = "redirect-to-https"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    compress                 = true
+    cache_policy_id          = local.cache_disabled_id
+    origin_request_policy_id = local.forward_all_id
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/_next/static/*"
+    target_origin_id       = local.vendor_origin_id
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     cache_policy_id        = local.cache_optimized_id

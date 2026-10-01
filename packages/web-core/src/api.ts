@@ -70,6 +70,15 @@ export async function uploadFile<T>(path: string, file: File): Promise<T> {
   return payload as T;
 }
 
+// <img> cannot send the bearer token, so private photos are fetched and shown from a blob URL.
+export async function fetchAuthedBlob(path: string): Promise<string> {
+  const res = await fetch(`/v1${path}`, { headers: await authHeader() }).catch(() => {
+    throw new ApiError(0, 'network', 'Could not load the image.');
+  });
+  if (!res.ok) throw new ApiError(res.status, 'download_failed', 'Could not load the image.');
+  return URL.createObjectURL(await res.blob());
+}
+
 // File downloads need the auth header, so they cannot be plain links.
 export async function downloadFile(path: string, fileName: string) {
   const res = await fetch(`/v1${path}`, { headers: await authHeader() });

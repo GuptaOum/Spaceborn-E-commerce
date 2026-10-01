@@ -1,28 +1,70 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
+export interface Loaded<T> {
+  data: T | null;
+  error: string | null;
+  /** True only while there is nothing to show yet (first load or after deps change). */
+  loading: boolean;
+  /** True while re-fetching behind existing data. */
+  refreshing: boolean;
+  /** Re-fetch, keeping the current data on screen until the new data arrives. */
+  reload: () => Promise<void>;
+  /** Alias of reload for call sites that want to spell out the intent. */
+  refresh: () => Promise<void>;
+  /** Update the data locally right away (optimistic UI). Pass a value or an updater. */
+  mutate: (next: T | ((current: T | null) => T | null)) => void;
+}
+
+export function useLoad<T>(load: () => Promise<T>, deps: unknown[]): Loaded<T> {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasData = useRef(false);
+  const generation = useRef(0);
+  const firstRun = useRef(true);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchNow = useCallback(async () => {
+    const mine = ++generation.current;
+    if (hasData.current) setRefreshing(true);
+    else setLoading(true);
     try {
-      setData(await load());
+      const next = await load();
+      if (mine !== generation.current) return; // a newer request superseded this one
+      hasData.current = true;
+      setData(next);
+      setError(null);
     } catch (err) {
+      if (mine !== generation.current) return;
       setError((err as Error).message);
     } finally {
-      setLoading(false);
+      if (mine === generation.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    // Deps changed: the current data belongs to the old query, so show the loading state again.
+    if (!firstRun.current) {
+      hasData.current = false;
+      setData(null);
+    }
+    firstRun.current = false;
+    void fetchNow();
+  }, [fetchNow]);
 
-  return { data, error, loading, reload };
+  const mutate = useCallback((next: T | ((current: T | null) => T | null)) => {
+    setData((current) => {
+      const value = typeof next === 'function' ? (next as (c: T | null) => T | null)(current) : next;
+      hasData.current = value !== null;
+      return value;
+    });
+  }, []);
+
+  return { data, error, loading, refreshing, reload: fetchNow, refresh: fetchNow, mutate };
 }

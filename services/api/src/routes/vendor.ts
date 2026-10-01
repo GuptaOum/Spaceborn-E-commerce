@@ -1,10 +1,19 @@
-import type { NextFunction, Request, Response } from 'express';
-import { Router } from 'express';
+import express, { Router, type NextFunction, type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { currentUser, requireAuth } from '../auth.js';
+import { config } from '../config.js';
+import {
+  createSubmission,
+  deleteSubmission,
+  listStoreSubmissions,
+  pipeImage,
+  saveProductImage,
+  submissionImage,
+  updateSubmission,
+} from '../catalog/submissions.js';
 import { pool } from '../db/pool.js';
-import { conflict, forbidden, notFound, parse, unprocessable } from '../errors.js';
+import { badRequest, conflict, forbidden, notFound, parse, unprocessable } from '../errors.js';
 import { listStoreOrders, transitionOrder } from '../orders/service.js';
 import { ORDER_STATUSES } from '../orders/status.js';
 import { getJob, getJobFile, listStoreJobs, quoteJob, transitionJob } from '../fabrication/service.js';
@@ -128,7 +137,8 @@ vendorRouter.get('/inventory', requireApprovedStore, async (req, res) => {
   const q = parse(pagination.extend({ q: z.string().trim().max(80).optional() }), req.query);
   const search = q.q ? `%${escapeLike(q.q)}%` : null;
   const { rows } = await pool.query(
-    `select p.id as "productId", p.sku, p.name, p.image_url as "imageUrl", p.mrp, p.category_id as "categoryId",
+    `select p.id as "productId", p.sku, p.name, p.mrp, p.category_id as "categoryId",
+            case when p.image_key is not null then '/v1/catalog/products/' || p.id::text || '/image' else p.image_url end as "imageUrl",
             i.price, i.stock, i.is_listed as "isListed", i.updated_at as "updatedAt"
        from inventory i join products p on p.id = i.product_id
       where i.store_id = $1 and ($2::text is null or p.name ilike $2 or p.sku ilike $2)
@@ -143,7 +153,8 @@ vendorRouter.get('/catalog', requireApprovedStore, async (req, res) => {
   const q = parse(pagination.extend({ q: z.string().trim().max(80).optional() }), req.query);
   const search = q.q ? `%${escapeLike(q.q)}%` : null;
   const { rows } = await pool.query(
-    `select p.id as "productId", p.sku, p.name, p.image_url as "imageUrl", p.mrp, p.category_id as "categoryId"
+    `select p.id as "productId", p.sku, p.name, p.mrp, p.category_id as "categoryId",
+            case when p.image_key is not null then '/v1/catalog/products/' || p.id::text || '/image' else p.image_url end as "imageUrl"
        from products p
       where p.is_active
         and not exists (select 1 from inventory i where i.store_id = $1 and i.product_id = p.id)
@@ -179,20 +190,84 @@ vendorRouter.put('/inventory/:productId', requireApprovedStore, async (req, res)
     throw unprocessable('price_and_stock_required', 'Price and stock are required when listing a new product');
   }
 
+  // Postgres validates NOT NULL on the proposed row before it checks ON CONFLICT, so a plain
+  // upsert fails whenever price is omitted. Update existing rows and insert only new ones.
   // stock uses a delta so concurrent orders reducing stock are not overwritten.
-  const { rows } = await pool.query(
-    `insert into inventory (store_id, product_id, price, stock, is_listed)
-     values ($1, $2, $3, coalesce($4, 0), coalesce($6, true))
-     on conflict (store_id, product_id) do update set
-       price = coalesce($3, inventory.price),
-       stock = case when $4::int is not null then $4
-                    when $5::int is not null then greatest(0, inventory.stock + $5)
-                    else inventory.stock end,
-       is_listed = coalesce($6, inventory.is_listed)
-     returning product_id as "productId", price, stock, is_listed as "isListed"`,
-    [storeId(req), productId, body.price ?? null, body.stock ?? null, body.stockDelta ?? null, body.isListed ?? null],
-  );
-  res.json({ item: rows[0] });
+  const params = [storeId(req), productId, body.price ?? null, body.stock ?? null, body.stockDelta ?? null, body.isListed ?? null];
+  const { rows } = existing.rows[0]
+    ? await pool.query(
+        `update inventory set
+           price = coalesce($3, price),
+           stock = case when $4::int is not null then $4
+                        when $5::int is not null then greatest(0, stock + $5)
+                        else stock end,
+           is_listed = coalesce($6, is_listed)
+         where store_id = $1 and product_id = $2
+         returning product_id as "productId", price, stock, is_listed as "isListed"`,
+        params,
+      )
+    : await pool.query(
+        `insert into inventory (store_id, product_id, price, stock, is_listed)
+         values ($1, $2, $3, $4, $5)
+         on conflict (store_id, product_id) do update set
+           price = excluded.price, stock = excluded.stock, is_listed = excluded.is_listed
+         returning product_id as "productId", price, stock, is_listed as "isListed"`,
+        [storeId(req), productId, body.price, body.stock, body.isListed ?? true],
+      );
+  if (!rows[0]) throw notFound('Inventory item not found');
+  res.json({ item: { ...rows[0], price: Number(rows[0].price) } });
+});
+
+const submissionBody = z.object({
+  name: z.string().trim().min(3).max(200),
+  description: z.string().trim().min(10).max(4000),
+  categoryId: z.string().trim().min(1).max(60),
+  brand: z.string().trim().max(80).optional(),
+  mrp: z.number().positive().max(1_000_000),
+  price: z.number().positive().max(1_000_000),
+  stock: z.number().int().min(0).max(100_000),
+  imageKey: z.string().trim().min(8).max(300),
+});
+
+const imageLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 20,
+  keyGenerator: (req) => currentUser(req).storeId ?? currentUser(req).uid,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+});
+
+vendorRouter.post(
+  '/product-images',
+  requireApprovedStore,
+  imageLimiter,
+  express.raw({ type: 'application/octet-stream', limit: `${config.PRODUCT_IMAGE_MAX_MB}mb` }),
+  async (req, res) => {
+    const name = req.header('X-File-Name');
+    if (!name || !Buffer.isBuffer(req.body)) throw badRequest('Send the photo as application/octet-stream with an X-File-Name header');
+    res.status(201).json(await saveProductImage(storeId(req), decodeURIComponent(name), req.body));
+  },
+);
+
+vendorRouter.get('/product-submissions', requireApprovedStore, async (req, res) => {
+  res.json({ submissions: await listStoreSubmissions(storeId(req)) });
+});
+
+vendorRouter.post('/product-submissions', requireApprovedStore, async (req, res) => {
+  res.status(201).json({ submission: await createSubmission(storeId(req), parse(submissionBody, req.body)) });
+});
+
+vendorRouter.patch('/product-submissions/:id', requireApprovedStore, async (req, res) => {
+  res.json({ submission: await updateSubmission(storeId(req), parse(uuid, req.params.id), parse(submissionBody, req.body)) });
+});
+
+vendorRouter.delete('/product-submissions/:id', requireApprovedStore, async (req, res) => {
+  await deleteSubmission(storeId(req), parse(uuid, req.params.id));
+  res.status(204).end();
+});
+
+vendorRouter.get('/product-submissions/:id/image', requireApprovedStore, async (req, res) => {
+  pipeImage(res, await submissionImage(parse(uuid, req.params.id), storeId(req)), 'private');
 });
 
 vendorRouter.get('/orders', requireApprovedStore, async (req, res) => {

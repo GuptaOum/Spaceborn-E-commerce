@@ -172,6 +172,7 @@ export interface ServiceListing {
   storeName?: string;
   city?: string;
   distanceKm?: number;
+  deliveryRadiusKm?: number;
   ownerEmail?: string;
 }
 
@@ -209,6 +210,77 @@ export interface FabJob {
   createdAt: string;
   paymentStatus: string | null;
   files: FabFile[];
+}
+
+export type SubmissionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ProductSubmission {
+  id: string;
+  storeId: string;
+  name: string;
+  description: string;
+  categoryId: string;
+  brand: string | null;
+  mrp: number;
+  price: number;
+  stock: number;
+  status: SubmissionStatus;
+  reviewNote: string | null;
+  productId: string | null;
+  createdAt: string;
+  hasImage: boolean;
+  storeName?: string;
+  city?: string;
+  ownerEmail?: string | null;
+}
+
+export interface SimilarMatch {
+  kind: 'catalog' | 'submission';
+  id: string;
+  name: string;
+  sku: string | null;
+  city: string | null;
+  score: number;
+  textScore: number;
+  imageScore: number | null;
+  likelyDuplicate: boolean;
+}
+
+/** What the signed-in admin may act on. `regions` are lower-cased store cities; null means every city. */
+export interface AdminScope {
+  email: string;
+  regions: string[] | null;
+  isOwner: boolean;
+  isGlobal: boolean;
+}
+
+export interface AdminMember {
+  email: string;
+  displayName: string | null;
+  regions: string[] | null;
+  isOwner: boolean;
+  addedBy: string | null;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  userId: string | null;
+  lastSeenAt: string | null;
+}
+
+export interface AdminRegion {
+  city: string;
+  stores: number;
+}
+
+export interface AuditEntry {
+  id: number;
+  actorEmail: string | null;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  city: string | null;
+  detail: Record<string, unknown>;
+  createdAt: string;
 }
 
 export interface CheckoutPayment {

@@ -103,12 +103,25 @@ export async function listStoreOrders(storeId: string, statuses: OrderStatus[] |
   return rows.map(withoutOtp);
 }
 
-export async function listAllOrders(statuses: OrderStatus[] | null, limit: number) {
+/** `cities` is an admin's lower-cased region list; null means every city. */
+export async function listAllOrders(statuses: OrderStatus[] | null, limit: number, cities: string[] | null = null) {
   const { rows } = await pool.query<OrderView>(
-    `${ORDER_SELECT} where ($1::order_status[] is null or o.status = any($1)) order by o.created_at desc limit $2`,
-    [statuses, limit],
+    `${ORDER_SELECT}
+      where ($1::order_status[] is null or o.status = any($1))
+        and ($3::text[] is null or lower(btrim(s.city)) = any($3))
+      order by o.created_at desc limit $2`,
+    [statuses, limit, cities],
   );
   return rows.map(withoutOtp);
+}
+
+/** The city an order's store sits in, or null when the order does not exist. */
+export async function orderCity(orderId: string): Promise<string | null> {
+  const { rows } = await pool.query<{ city: string }>(
+    'select s.city from orders o join stores s on s.id = o.store_id where o.id = $1',
+    [orderId],
+  );
+  return rows[0]?.city ?? null;
 }
 
 async function recordStatus(db: Db, orderId: string, from: OrderStatus | null, to: OrderStatus, actor: ActorContext, note?: string) {

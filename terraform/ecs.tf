@@ -86,6 +86,22 @@ resource "aws_iam_role_policy" "backend_s3_access" {
   policy = data.aws_iam_policy_document.backend_s3.json
 }
 
+data "aws_iam_policy_document" "backend_bedrock" {
+  statement {
+    actions   = ["bedrock:InvokeModel"]
+    resources = [
+      "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-text-v2:0",
+      "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-embed-image-v1",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "backend_bedrock" {
+  name   = "bedrock-embeddings"
+  role   = aws_iam_role.backend_task.id
+  policy = data.aws_iam_policy_document.backend_bedrock.json
+}
+
 resource "aws_iam_role" "web_task" {
   name               = "${local.name}-web-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
@@ -128,6 +144,10 @@ locals {
     { name = "FIREBASE_PROJECT_ID", value = var.firebase_project_id },
     { name = "DB_SSL_CA_PATH", value = "/etc/ssl/certs/rds-global-bundle.pem" },
     { name = "UPLOADS_BUCKET", value = aws_s3_bucket.uploads.bucket },
+    { name = "BEDROCK_TEXT_MODEL", value = "amazon.titan-embed-text-v2:0" },
+    { name = "BEDROCK_IMAGE_MODEL", value = "amazon.titan-embed-image-v1" },
+    # Non-prod stacks may run with mock payments until real Razorpay keys are put in the app secret.
+    { name = "PAYMENTS_ALLOW_MOCK", value = var.environment == "prod" ? "false" : "true" },
     { name = "MAIL_PROVIDER", value = var.mail_from == "" ? "log" : "ses" },
     { name = "MAIL_FROM", value = var.mail_from },
     { name = "MAIL_CONFIGURATION_SET", value = aws_sesv2_configuration_set.main.configuration_set_name },
