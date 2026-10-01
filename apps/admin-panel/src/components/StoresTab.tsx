@@ -81,7 +81,17 @@ export function StoresTab({ counts, onDecided }: { counts?: Record<string, numbe
                       {store.gstin && <> · GSTIN {store.gstin}</>}
                     </p>
                     <p className="text-xs text-slate-500">
-                      Radius {store.deliveryRadiusKm} km · at {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)} · Applied {formatDateTime(store.createdAt)}
+                      Radius {store.deliveryRadiusKm} km ·{' '}
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-sky-700 underline hover:text-sky-900"
+                        title="Open store location in Google Maps"
+                      >
+                        📍 {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)} (Maps)
+                      </a>{' '}
+                      · Applied {formatDateTime(store.createdAt)}
                     </p>
                     {store.reviewNote && <p className="mt-1 text-xs text-amber-700">Note: {store.reviewNote}</p>}
                   </div>

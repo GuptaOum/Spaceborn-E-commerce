@@ -27,9 +27,30 @@ interface Summary {
   deliveredToday: number;
   revenueToday: number;
   lowStock: number;
+  fabQuotesPending?: number;
+  fabInProgress?: number;
 }
 
-const SUMMARY_REFRESH_MS = 30_000;
+function playNotificationChime() {
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+  } catch {
+    // AudioContext might be blocked until user clicks
+  }
+}
+
+const SUMMARY_REFRESH_MS = 20_000;
 
 export function Dashboard({ initialStore }: { initialStore: Store }) {
   const [store, setStore] = useState(initialStore);
@@ -40,6 +61,14 @@ export function Dashboard({ initialStore }: { initialStore: Store }) {
     const timer = setInterval(() => void summary.refresh(), SUMMARY_REFRESH_MS);
     return () => clearInterval(timer);
   }, [summary.refresh]);
+
+  useEffect(() => {
+    if (!summary.data) return;
+    const totalUrgent = (summary.data.awaitingAcceptance || 0) + (summary.data.fabQuotesPending || 0);
+    if (totalUrgent > 0) {
+      playNotificationChime();
+    }
+  }, [summary.data?.awaitingAcceptance, summary.data?.fabQuotesPending]);
 
   const [toggleOnline, toggling] = useAction(
     async () => {
@@ -59,13 +88,17 @@ export function Dashboard({ initialStore }: { initialStore: Store }) {
 
   const s = summary.data;
   const stats: [string, string | number | undefined, string?][] = [
-    ['New orders', s?.awaitingAcceptance, s?.awaitingAcceptance ? 'text-amber-600' : undefined],
-    ['In progress', s?.inProgress],
+    ['New orders', s?.awaitingAcceptance, s?.awaitingAcceptance ? 'text-amber-600 font-bold' : undefined],
+    ['Quotes needed', s?.fabQuotesPending, s?.fabQuotesPending ? 'text-amber-600 font-bold' : undefined],
+    ['In progress', (s?.inProgress ?? 0) + (s?.fabInProgress ?? 0)],
     ['Delivered today', s?.deliveredToday],
     ['Revenue today', s ? formatInr(s.revenueToday) : undefined],
-    ['Low stock', s?.lowStock, s?.lowStock ? 'text-amber-600' : undefined],
   ];
-  const badge: Partial<Record<Tab, number | undefined>> = { orders: s?.awaitingAcceptance, inventory: s?.lowStock };
+  const badge: Partial<Record<Tab, number | undefined>> = {
+    orders: s?.awaitingAcceptance,
+    inventory: s?.lowStock,
+    'fab-jobs': s?.fabQuotesPending,
+  };
 
   return (
     <main className="mx-auto max-w-5xl space-y-5 p-4">

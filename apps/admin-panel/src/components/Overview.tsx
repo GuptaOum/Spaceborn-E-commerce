@@ -21,10 +21,10 @@ export function Overview({ data, onJump }: { data: OverviewData | null; onJump: 
         { label: 'Pending applications', value: data.pendingStores, attention: data.pendingStores > 0, jump: 'stores' },
         { label: 'Services to review', value: data.pendingServices, attention: data.pendingServices > 0, jump: 'services' },
         { label: 'Products to review', value: data.pendingProducts, attention: data.pendingProducts > 0, jump: 'submissions' },
-        { label: 'Stores online', value: `${data.onlineStores} / ${data.approvedStores}` },
+        { label: 'Stores online', value: `${data.onlineStores} / ${data.approvedStores}`, jump: 'stores' },
         { label: 'Orders today', value: data.ordersToday, jump: 'orders' },
-        { label: 'Delivered GMV today', value: formatInr(data.gmvToday) },
-        { label: 'Refunds pending', value: data.refundsPending, attention: data.refundsPending > 0 },
+        { label: 'Delivered GMV today', value: formatInr(data.gmvToday), jump: 'orders' },
+        { label: 'Refunds pending', value: data.refundsPending, attention: data.refundsPending > 0, jump: 'orders' },
         { label: 'Active print jobs', value: data.activeFabJobs, jump: 'fab-jobs' },
       ]
     : [];
@@ -35,11 +35,17 @@ export function Overview({ data, onJump }: { data: OverviewData | null; onJump: 
         const inner = (
           <>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{c.label}</p>
-            <p className={`mt-1 text-lg font-bold ${c.attention ? 'text-amber-600' : ''}`}>{c.value}</p>
+            <p className={`mt-1 text-lg font-bold ${c.attention ? 'text-amber-600' : 'text-slate-900'}`}>{c.value}</p>
           </>
         );
         return c.jump ? (
-          <button key={c.label} onClick={() => onJump(c.jump!)} className={`rounded-xl border bg-white p-3 text-left hover:border-slate-400 ${c.attention ? 'border-amber-300' : 'border-slate-200'}`}>
+          <button
+            key={c.label}
+            onClick={() => onJump(c.jump!)}
+            className={`rounded-xl border bg-white p-3 text-left transition hover:border-slate-400 hover:shadow-sm ${
+              c.attention ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'
+            }`}
+          >
             {inner}
           </button>
         ) : (

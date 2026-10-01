@@ -16,17 +16,37 @@ import { StoresTab } from '@/components/StoresTab';
 import { TeamTab } from '@/components/TeamTab';
 import { useQueue } from '@/hooks/useQueue';
 
-const TABS = [
-  { id: 'stores', label: 'Store applications' },
-  { id: 'services', label: 'Print & CNC services' },
-  { id: 'submissions', label: 'Product submissions' },
-  { id: 'orders', label: 'Orders' },
-  { id: 'fab-jobs', label: 'Print jobs' },
-  { id: 'products', label: 'Master catalog' },
-  { id: 'team', label: 'Team' },
-] as const;
+export type TabId = 'stores' | 'services' | 'submissions' | 'orders' | 'fab-jobs' | 'products' | 'team';
 
-type TabId = (typeof TABS)[number]['id'];
+interface NavPillar {
+  title: string;
+  tabs: { id: TabId; label: string; globalOnly?: boolean }[];
+}
+
+const PILLARS: NavPillar[] = [
+  {
+    title: 'Triage Inbox',
+    tabs: [
+      { id: 'stores', label: 'Store applications' },
+      { id: 'services', label: 'Print & CNC services' },
+      { id: 'submissions', label: 'Product proposals' },
+    ],
+  },
+  {
+    title: 'Live Operations',
+    tabs: [
+      { id: 'orders', label: 'Orders & Delivery' },
+      { id: 'fab-jobs', label: 'Print jobs' },
+    ],
+  },
+  {
+    title: 'Platform Management',
+    tabs: [
+      { id: 'products', label: 'Master catalog', globalOnly: true },
+      { id: 'team', label: 'Admin team' },
+    ],
+  },
+];
 
 const ADMIN_EMAILS = ['oumgupta555@gmail.com'];
 const QUEUE_REFRESH_MS = 30_000;
@@ -75,8 +95,6 @@ export default function AdminHome() {
     );
   }
 
-  // Regional admins do not edit the company-wide catalog; it is hidden rather than failing on save.
-  const tabs = TABS.filter((t) => t.id !== 'products' || me.isGlobal);
   const scopeLabel = me.isOwner ? 'Owner · all regions' : me.regions === null ? 'All regions' : me.regions.map(titleCase).join(', ');
   const pending: Partial<Record<TabId, number>> = {
     stores: queue.data?.stores.pending,
@@ -93,7 +111,7 @@ export default function AdminHome() {
             {user.email} · <span className="font-semibold text-slate-700">{scopeLabel}</span>
           </p>
         </div>
-        <button onClick={signOut} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold">
+        <button onClick={signOut} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold hover:bg-slate-50">
           Sign out
         </button>
       </header>
@@ -106,22 +124,49 @@ export default function AdminHome() {
 
       <Overview data={overview.data} onJump={setTab} />
 
-      <nav className="mt-6 flex flex-wrap gap-1 border-b border-slate-200" role="tablist">
-        {tabs.map((t) => {
-          const n = pending[t.id];
+      {/* 3-Tier Operational Pillars Navigation */}
+      <nav className="mt-6 flex flex-wrap items-end gap-4 border-b border-slate-200 pb-3" role="tablist">
+        {PILLARS.map((pillar) => {
+          const visibleTabs = pillar.tabs.filter((t) => !t.globalOnly || me.isGlobal);
+          if (visibleTabs.length === 0) return null;
+          const pillarPendingTotal = visibleTabs.reduce((acc, t) => acc + (pending[t.id] ?? 0), 0);
           return (
-            <button
-              key={t.id}
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={`-mb-px flex items-center gap-1.5 border-b-2 px-4 py-2 text-sm font-semibold ${
-                tab === t.id ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {t.label}
-              {n ? <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">{n}</span> : null}
-            </button>
+            <div key={pillar.title} className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <span>{pillar.title}</span>
+                {pillarPendingTotal > 0 && (
+                  <span className="rounded-full bg-amber-100 px-1.5 py-0.2 text-[10px] font-bold text-amber-800">
+                    {pillarPendingTotal} pending
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100/90 p-1">
+                {visibleTabs.map((t) => {
+                  const n = pending[t.id];
+                  const active = tab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setTab(t.id)}
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                        active
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                      }`}
+                    >
+                      {t.label}
+                      {n ? (
+                        <span className={`rounded-full px-1.5 text-[10px] font-bold ${active ? 'bg-amber-500 text-white' : 'bg-amber-200 text-amber-900'}`}>
+                          {n}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>

@@ -27,7 +27,7 @@ type View = keyof typeof VIEWS;
 const save = (productId: string, body: Record<string, unknown>) =>
   api<{ item: Saved }>(`/vendor/inventory/${productId}`, { method: 'PUT', body }).then((r) => r.item);
 
-function Row({ item, onSaved }: { item: InventoryItem; onSaved: (saved: Saved) => void }) {
+function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (saved: Saved) => void; onDeleted?: (id: string) => void }) {
   const [price, setPrice] = useState(String(item.price));
   const [delta, setDelta] = useState('');
   useEffect(() => setPrice(String(item.price)), [item.price]);
@@ -123,6 +123,19 @@ function Row({ item, onSaved }: { item: InventoryItem; onSaved: (saved: Saved) =
           className="rounded border border-slate-300 px-2 py-1 text-xs font-semibold disabled:opacity-40"
         >
           {item.isListed ? 'Hide' : 'Show'}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={async () => {
+            if (!window.confirm(`Permanently remove ${item.name} from your inventory?`)) return;
+            await api(`/vendor/inventory/${item.productId}`, { method: 'DELETE' });
+            onDeleted?.(item.productId);
+          }}
+          className="rounded border border-red-200 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40"
+          title="Remove from inventory"
+        >
+          Remove
         </button>
       </td>
     </tr>
@@ -292,7 +305,12 @@ export function InventoryPanel({ onChange }: { onChange: () => void }) {
             </thead>
             <tbody>
               {visible.map((item) => (
-                <Row key={item.productId} item={item} onSaved={apply} />
+                <Row
+                  key={item.productId}
+                  item={item}
+                  onSaved={apply}
+                  onDeleted={(id) => inventory.mutate((list) => list?.filter((it) => it.productId !== id) ?? list)}
+                />
               ))}
             </tbody>
           </table>

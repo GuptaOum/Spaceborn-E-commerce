@@ -125,7 +125,9 @@ vendorRouter.get('/summary', requireApprovedStore, async (req, res) => {
             count(*) filter (where status in ('accepted', 'packing', 'ready_for_pickup', 'out_for_delivery')) as "inProgress",
             count(*) filter (where status = 'delivered' and delivered_at >= date_trunc('day', now())) as "deliveredToday",
             coalesce(sum(items_total) filter (where status = 'delivered' and delivered_at >= date_trunc('day', now())), 0) as "revenueToday",
-            (select count(*) from inventory where store_id = $1 and is_listed and stock <= 5) as "lowStock"
+            (select count(*) from inventory where store_id = $1 and is_listed and stock <= 5) as "lowStock",
+            (select count(*) from fab_jobs where store_id = $1 and status = 'submitted') as "fabQuotesPending",
+            (select count(*) from fab_jobs where store_id = $1 and status in ('in_production', 'ready', 'out_for_delivery')) as "fabInProgress"
        from orders where store_id = $1`,
     [storeId(req)],
   );
@@ -218,6 +220,16 @@ vendorRouter.put('/inventory/:productId', requireApprovedStore, async (req, res)
   res.json({ item: { ...rows[0], price: Number(rows[0].price) } });
 });
 
+vendorRouter.delete('/inventory/:productId', requireApprovedStore, async (req, res) => {
+  const productId = parse(uuid, req.params.productId);
+  const { rowCount } = await pool.query(
+    'delete from inventory where store_id = $1 and product_id = $2',
+    [storeId(req), productId],
+  );
+  if (!rowCount) throw notFound('Inventory item not found');
+  res.json({ ok: true });
+});
+
 const submissionBody = z.object({
   name: z.string().trim().min(3).max(200),
   description: z.string().trim().min(10).max(4000),
@@ -257,8 +269,12 @@ vendorRouter.post('/product-submissions', requireApprovedStore, async (req, res)
   res.status(201).json({ submission: await createSubmission(storeId(req), parse(submissionBody, req.body)) });
 });
 
+const updateSubmissionBody = submissionBody.extend({
+  imageKey: z.string().trim().min(8).max(300).optional(),
+});
+
 vendorRouter.patch('/product-submissions/:id', requireApprovedStore, async (req, res) => {
-  res.json({ submission: await updateSubmission(storeId(req), parse(uuid, req.params.id), parse(submissionBody, req.body)) });
+  res.json({ submission: await updateSubmission(storeId(req), parse(uuid, req.params.id), parse(updateSubmissionBody, req.body)) });
 });
 
 vendorRouter.delete('/product-submissions/:id', requireApprovedStore, async (req, res) => {

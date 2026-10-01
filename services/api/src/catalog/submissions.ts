@@ -127,21 +127,41 @@ export async function createSubmission(storeId: string, input: SubmissionInput) 
   return present(rows[0]);
 }
 
-export async function updateSubmission(storeId: string, id: string, input: SubmissionInput) {
+export type UpdateSubmissionInput = Omit<SubmissionInput, 'imageKey'> & { imageKey?: string };
+
+export async function updateSubmission(storeId: string, id: string, input: UpdateSubmissionInput) {
   if (input.price > input.mrp) throw unprocessable('price_above_mrp', 'Price cannot exceed the MRP');
-  ownImageKey(storeId, input.imageKey);
   await requireCategory(pool, input.categoryId);
-  const { text, image } = await vectorsFor(input);
+  const text = await embedText(`${input.name}\n${input.description}`);
+  let imageVector: string | null = null;
+  let imageModel: string | null = null;
+
+  if (input.imageKey) {
+    ownImageKey(storeId, input.imageKey);
+    try {
+      const img = await embedImage(await readStored(input.imageKey));
+      imageVector = img ? toPgVector(img.vector) : null;
+      imageModel = img?.model ?? null;
+    } catch (err) {
+      logger.warn({ err, key: input.imageKey }, 'could not read product image for embedding');
+      throw unprocessable('image_missing', 'Upload the product photo again');
+    }
+  }
+
   const { rows } = await pool.query(
     `update product_submissions s set
        name = $3, description = $4, category_id = $5, brand = $6, mrp = $7, price = $8, stock = $9,
-       image_key = $10, text_embedding = $11::vector, embedding_model = $12,
-       image_embedding = $13::vector, image_embedding_model = $14, review_note = null
-     where s.id = $1 and s.store_id = $2 and s.status = 'pending'
+       image_key = coalesce($10, s.image_key),
+       text_embedding = $11::vector, embedding_model = $12,
+       image_embedding = case when $10::text is not null then $13::vector else s.image_embedding end,
+       image_embedding_model = case when $10::text is not null then $14 else s.image_embedding_model end,
+       review_note = null,
+       status = 'pending', reviewed_by = null, reviewed_at = null
+     where s.id = $1 and s.store_id = $2 and s.status in ('pending', 'rejected')
      returning ${COLUMNS}`,
     [id, storeId, input.name, input.description, input.categoryId, input.brand ?? null, input.mrp, input.price,
-      input.stock, input.imageKey, toPgVector(text.vector), text.model,
-      image ? toPgVector(image.vector) : null, image?.model ?? null],
+      input.stock, input.imageKey ?? null, toPgVector(text.vector), text.model,
+      imageVector, imageModel],
   );
   if (!rows[0]) throw notFound('Submission not found');
   return present(rows[0]);
