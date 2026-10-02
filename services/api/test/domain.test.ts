@@ -56,6 +56,8 @@ describe('order status machine', () => {
     expect(canTransition('placed', 'packing', 'vendor')).toBe(false);
     expect(canTransition('ready_for_pickup', 'out_for_delivery', 'vendor')).toBe(true);
     expect(canTransition('out_for_delivery', 'delivered', 'vendor')).toBe(true);
+    expect(canTransition('out_for_delivery', 'delivered', 'admin')).toBe(false);
+    expect(canTransition('out_for_delivery', 'delivered', 'customer')).toBe(false);
   });
 });
 

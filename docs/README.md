@@ -43,10 +43,14 @@ Welcome to the **Spaceborn Documentation Hub**. This directory contains the comp
 
 ---
 
-## 🔑 Key Identities & Portals
+## 🔑 Where it runs
 
-| Role | Production Entry Point | Login Method | Authorized Email |
-| :--- | :--- | :--- | :--- |
-| **Customer** | `https://d2w4nxdybzrkls.cloudfront.net` | Google Sign-In | Any Google account |
-| **Vendor** | Public ALB Port `8080` | Google / Email | `oumgupta555+vendor@gmail.com` *(use alias)* |
-| **Admin** | `http://localhost:8080` *(via SSM tunnel)* | Google Sign-In | `oumgupta555@gmail.com` *(Hardcoded Admin)* |
+Current detail is in [`agent-memory/HANDOFF.md`](./agent-memory/HANDOFF.md) (updated 3 Oct 2026, `main` at `075765a`). Production AWS is not serving traffic yet. The live site is the Render demo.
+
+| Surface | Entry | Notes |
+| :--- | :--- | :--- |
+| **Customer, vendor, admin (demo)** | `https://spacebornecomdemo-1.onrender.com` | One container. `?app=store\|vendor\|admin` switches the app. |
+| **Customer (AWS, not live)** | `https://d1my794d3ygm15.cloudfront.net` | Storefront and `/v1`. Do not recreate this distribution. |
+| **Vendor (AWS, not live)** | `https://d2zizda8lkhnw6.cloudfront.net` | Vendor hub. |
+| **Admin (AWS)** | SSM tunnel, then the internal admin ALB | Access is the `admin_members` table. `oumgupta555@gmail.com` is the break-glass owner. |
+| **Domain, later** | `elbotrob.me` | Certificate is issued. DNS is still GitHub Pages. |
