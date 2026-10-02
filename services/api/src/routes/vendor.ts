@@ -15,7 +15,7 @@ import {
 } from '../catalog/submissions.js';
 import { pool } from '../db/pool.js';
 import { badRequest, conflict, forbidden, notFound, parse, unprocessable } from '../errors.js';
-import { listStoreOrders, transitionOrder } from '../orders/service.js';
+import { listStoreOrders, requestHandoverOtp, transitionOrder } from '../orders/service.js';
 import { HOLDS_STOCK, ORDER_STATUSES } from '../orders/status.js';
 import { getJob, getJobFile, listStoreJobs, quoteJob, transitionJob } from '../fabrication/service.js';
 import { SERVICE_KINDS } from '../fabrication/status.js';
@@ -423,6 +423,13 @@ vendorRouter.post('/fab-jobs/:id/transition', requireApprovedStore, handoverLimi
     req.body,
   );
   res.json({ job: await transitionJob({ jobId: parse(uuid, req.params.id), actor: vendorActor(req), ...b }) });
+});
+
+// The vendor is at the door: mint this order's delivery code and send it to the customer.
+vendorRouter.post('/orders/:id/handover-otp', requireApprovedStore, handoverLimiter, async (req, res) => {
+  const user = currentUser(req);
+  const receipt = await requestHandoverOtp(parse(uuid, req.params.id), { role: 'vendor', uid: user.uid, storeId: user.storeId });
+  res.json(receipt);
 });
 
 vendorRouter.post('/orders/:id/transition', requireApprovedStore, handoverLimiter, async (req, res) => {

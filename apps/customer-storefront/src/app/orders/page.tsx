@@ -65,12 +65,23 @@ function OrderCard({ order, onCancelled }: { order: Order; onCancelled: () => vo
         </div>
       )}
 
-      {order.handoverOtp && ACTIVE.includes(order.status) && order.status !== 'pending_payment' && (
-        <p className="mt-4 rounded-xl bg-[#34222e] px-4 py-3 text-sm text-[#fee9d7]">
-          Delivery code: <b className="font-mono text-lg tracking-widest">{order.handoverOtp}</b>
-          <span className="ml-2 text-xs opacity-80">Share it only when your order is in your hands.</span>
-        </p>
-      )}
+      {order.status === 'out_for_delivery' &&
+        (order.handoverOtp ? (
+          <p className="mt-4 rounded-xl bg-[#34222e] px-4 py-3 text-sm text-[#fee9d7]">
+            Delivery code: <b className="font-mono text-lg tracking-widest">{order.handoverOtp}</b>
+            <span className="ml-2 text-xs opacity-80">
+              Read it to the person at your door once the parcel is in your hands.
+              {order.handoverOtpExpiresAt
+                ? ` Valid until ${new Date(order.handoverOtpExpiresAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}.`
+                : ''}
+            </span>
+          </p>
+        ) : (
+          <p className="mt-4 rounded-xl border border-[#f9bf8f]/60 bg-white px-4 py-3 text-xs text-[#7a6274]">
+            Your order is on its way. When it reaches you, a 4-digit delivery code appears here and in your email. Nobody will ask for
+            it by phone.
+          </p>
+        ))}
 
       <ul className="mt-4 space-y-2 text-sm text-[#34222e]">
         {order.items.map((item) => (
@@ -137,11 +148,13 @@ export default function OrdersPage() {
   }, [loading, user, router]);
 
   const hasActive = orders.data?.some((o) => ACTIVE.includes(o.status));
+  // At the door the code has to show up quickly, so poll faster while a delivery is out.
+  const atDoor = orders.data?.some((o) => o.status === 'out_for_delivery');
   useEffect(() => {
     if (!hasActive) return;
-    const timer = setInterval(() => void orders.reload(), 20_000);
+    const timer = setInterval(() => void orders.reload(), atDoor ? 5_000 : 20_000);
     return () => clearInterval(timer);
-  }, [hasActive, orders.reload]);
+  }, [hasActive, atDoor, orders.reload]);
 
   if (loading || !user) {
     return <div className="min-h-[50vh] flex items-center justify-center text-xs text-[#7a6274]">Loading...</div>;
@@ -169,7 +182,7 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between pt-1">
         <div>
           <h1 className="text-xl font-bold text-[#34222e]">My orders</h1>
-          <p className="text-xs text-[#7a6274] mt-0.5">Live tracking, handover OTP codes, and delivery progress.</p>
+          <p className="text-xs text-[#7a6274] mt-0.5">Live tracking and delivery progress. Your delivery code appears here when the order reaches you.</p>
         </div>
         <button
           onClick={() => void orders.reload()}

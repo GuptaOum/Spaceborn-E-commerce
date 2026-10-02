@@ -11,7 +11,7 @@ interface OrderMailRow {
   status: OrderStatus;
   grand_total: string;
   eta_minutes: number;
-  handover_otp: string;
+  handover_otp: string | null;
   cancel_reason: string | null;
   delivery_address: { fullName?: string; line1?: string; city?: string; pincode?: string };
   customer_email: string | null;
@@ -51,19 +51,17 @@ export async function notifyOrderPlaced(orderId: string) {
     const lines = [
       h`Hi ${o.customer_name ?? 'there'}, your order <b>#${o.order_number}</b> is confirmed and <b>${o.store_name}</b> is packing it now.`,
       h`Estimated delivery: <b>~${o.eta_minutes} minutes</b>. Total paid: <b>${inr(o.grand_total)}</b>.`,
-      'Share this handover code with the rider when your order arrives:',
-      otpBlock(o.handover_otp),
+      'When the delivery reaches you, we will send a 4-digit code to confirm the handover. Share it only once the parcel is in your hands.',
       `Items:<br>${itemLinesHtml(o)}`,
     ];
     await sendMail({
       to: o.customer_email,
       template: 'order_placed_customer',
-      // The handover code stays out of the subject: it shows in lock-screen previews.
       subject: `Order #${o.order_number} confirmed`,
       text: [
         `Your Spaceborn order #${o.order_number} is confirmed. ${o.store_name} is packing it now.`,
         `ETA ~${o.eta_minutes} min. Total ${inr(o.grand_total)}.`,
-        `Handover code (give to the rider): ${o.handover_otp}`,
+        'A 4-digit handover code will be sent to you when the delivery reaches you.',
         '',
         ...itemLines(o).map((l) => l.replace(' × ', 'x ')),
         '',
@@ -92,7 +90,10 @@ export async function notifyOrderPlaced(orderId: string) {
 
 const STATUS_COPY: Partial<Record<OrderStatus, { subject: string; body: string }>> = {
   accepted: { subject: 'is being packed', body: 'The store accepted your order and is packing it now.' },
-  out_for_delivery: { subject: 'is out for delivery', body: 'A rider has picked up your order. Keep your handover code ready.' },
+  out_for_delivery: {
+    subject: 'is out for delivery',
+    body: 'Your order is on its way. When it reaches you, we will send a 4-digit code to confirm the handover.',
+  },
   delivered: { subject: 'was delivered', body: 'Your order has been delivered. Thanks for shopping with Spaceborn!' },
   cancelled: { subject: 'was cancelled', body: 'Your order was cancelled. If you already paid, the refund is on its way (5-7 working days).' },
 };
@@ -103,14 +104,39 @@ export async function notifyOrderStatus(orderId: string, to: OrderStatus) {
   const o = await loadOrder(orderId);
   if (!o?.customer_email) return;
   const lines = [h`Hi ${o.customer_name ?? 'there'}, order <b>#${o.order_number}</b> from ${o.store_name} ${copy.subject}.`, copy.body];
-  if (to === 'out_for_delivery') lines.push('Handover code:', otpBlock(o.handover_otp));
   if (to === 'cancelled' && o.cancel_reason) lines.push(h`Reason: ${o.cancel_reason}`);
   await sendMail({
     to: o.customer_email,
     template: `order_${to}`,
     subject: `Order #${o.order_number} ${copy.subject}`,
-    text: `Order #${o.order_number} ${copy.subject}. ${copy.body}${to === 'out_for_delivery' ? ` Handover code: ${o.handover_otp}` : ''}`,
+    text: `Order #${o.order_number} ${copy.subject}. ${copy.body}`,
     html: renderHtml(`Order #${o.order_number} ${copy.subject}`, lines, { label: 'View order', href: `${config.PUBLIC_ORIGIN}/orders` }),
+  });
+}
+
+// Sent when the vendor at the door asks for the code. The code is for this order only and expires.
+export async function notifyHandoverOtp(orderId: string) {
+  const o = await loadOrder(orderId);
+  if (!o?.customer_email || !o.handover_otp || o.status !== 'out_for_delivery') return;
+  const ordersUrl = `${config.PUBLIC_ORIGIN}/orders`;
+  const lines = [
+    h`Hi ${o.customer_name ?? 'there'}, your delivery for order <b>#${o.order_number}</b> has arrived.`,
+    'Read this code to the person handing over your parcel, only once it is in your hands:',
+    otpBlock(o.handover_otp),
+    'It works for this order only and expires in a few minutes. Nobody from Spaceborn will ask for it by phone.',
+  ];
+  await sendMail({
+    to: o.customer_email,
+    template: 'order_handover_otp',
+    // The code stays out of the subject: it shows in lock-screen previews.
+    subject: `Order #${o.order_number}: your delivery code`,
+    text: [
+      `Your delivery for order #${o.order_number} has arrived.`,
+      `Delivery code (read it to the person at your door, once the parcel is in your hands): ${o.handover_otp}`,
+      'It works for this order only and expires in a few minutes.',
+      `View order: ${ordersUrl}`,
+    ].join('\n'),
+    html: renderHtml('Your delivery code', lines, { label: 'View order', href: ordersUrl }),
   });
 }
 

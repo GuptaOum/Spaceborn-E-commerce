@@ -44,7 +44,10 @@ const ORDER_SELECT = `
          o.store_id as "storeId", s.name as "storeName", s.phone as "storePhone",
          o.items_total as "itemsTotal", o.delivery_fee as "deliveryFee", o.platform_fee as "platformFee",
          o.grand_total as "grandTotal", o.delivery_address as "deliveryAddress", o.distance_km as "distanceKm",
-         o.eta_minutes as "etaMinutes", o.handover_otp as "handoverOtp", o.reserved_until as "reservedUntil",
+         o.eta_minutes as "etaMinutes",
+         case when o.handover_otp_expires_at > now() then o.handover_otp end as "handoverOtp",
+         o.handover_otp_sent_at as "handoverOtpSentAt", o.handover_otp_expires_at as "handoverOtpExpiresAt",
+         o.reserved_until as "reservedUntil",
          o.cancel_reason as "cancelReason", o.placed_at as "placedAt", o.accepted_at as "acceptedAt",
          o.delivered_at as "deliveredAt", o.created_at as "createdAt", o.checkout_id as "checkoutId",
          p.status as "paymentStatus",
@@ -265,8 +268,8 @@ async function writeSplit(c: Db, slices: StoreSlice[], input: PlaceOrderInput) {
     const inserted = await c.query<{ id: string }>(
       `insert into orders (customer_id, store_id, checkout_id, items_total, delivery_fee, platform_fee, grand_total,
                            delivery_address, delivery_lat, delivery_lng, distance_km, eta_minutes,
-                           handover_otp, reserved_until, idempotency_key)
-       values ($1, $2, $3, $4, $5, $15, $6, $7, $8, $9, $10, $11, $12, now() + make_interval(mins => $13), $14)
+                           reserved_until, idempotency_key)
+       values ($1, $2, $3, $4, $5, $14, $6, $7, $8, $9, $10, $11, now() + make_interval(mins => $12), $13)
        returning id`,
       [
         input.customerId,
@@ -280,7 +283,6 @@ async function writeSplit(c: Db, slices: StoreSlice[], input: PlaceOrderInput) {
         input.address.longitude,
         Math.round(part.slice.distanceKm * 100) / 100,
         etaMinutes(part.slice.prepMinutes, part.slice.distanceKm),
-        crypto.randomInt(1000, 10000).toString(),
         RESERVATION_MINUTES,
         `${input.idempotencyKey}:${index + 1}`,
         platformFee,
@@ -520,6 +522,7 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
   const run = async (c: pg.PoolClient) => {
     const { rows } = await c.query(
       `select o.id, o.status, o.customer_id, o.store_id, o.handover_otp, o.grand_total, o.checkout_id,
+              (o.handover_otp_expires_at > now()) as otp_live,
               p.id as payment_id, p.status as payment_status, p.provider_payment_id, p.amount_paise
          from orders o
          left join payments p on p.order_id = o.id or (o.checkout_id is not null and p.checkout_id = o.checkout_id)
@@ -538,6 +541,9 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
       throw conflict(`Order cannot move from ${from} to ${input.to}`);
     }
     if (input.to === 'delivered') {
+      // The code only exists after the vendor asked for it at the door, and it does not live long.
+      if (!order.handover_otp) throw conflict('Send the delivery code to the customer first');
+      if (!order.otp_live) throw conflict('The delivery code has expired. Send a new one to the customer');
       const otp = input.otp ?? '';
       const matches =
         otp.length === order.handover_otp.length && crypto.timingSafeEqual(Buffer.from(otp), Buffer.from(order.handover_otp));
@@ -585,6 +591,57 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
   const orderId = db ? await run(db) : await withTransaction(run);
   if (input.to === 'cancelled' || input.to === 'expired') void bumpCatalog();
   return getOrder(db ?? pool, orderId, input.actor);
+}
+
+export const HANDOVER_OTP_TTL_MINUTES = 10;
+export const HANDOVER_OTP_RESEND_SECONDS = 45;
+
+export interface HandoverOtpReceipt {
+  orderId: string;
+  sentAt: string;
+  expiresAt: string;
+}
+
+// Called by the vendor when they are standing in front of the customer. Mints a fresh 4-digit
+// code for this order only, stores it with a short expiry, and queues the message to the
+// customer. The vendor never sees the code; the customer reads it back to them.
+export async function requestHandoverOtp(orderId: string, actor: ActorContext): Promise<HandoverOtpReceipt> {
+  return withTransaction(async (c) => {
+    const { rows } = await c.query<{
+      id: string;
+      status: OrderStatus;
+      store_id: string;
+      sent_at: Date | null;
+      resend_in: number | null;
+    }>(
+      `select id, status, store_id, handover_otp_sent_at as sent_at,
+              greatest(0, ceil(extract(epoch from (handover_otp_sent_at + make_interval(secs => $2) - now()))))::int as resend_in
+         from orders where id = $1 for update`,
+      [orderId, HANDOVER_OTP_RESEND_SECONDS],
+    );
+    const order = rows[0];
+    if (!order) throw notFound('Order not found');
+    if (actor.role === 'vendor' && order.store_id !== actor.storeId) throw notFound('Order not found');
+    if (actor.role !== 'vendor') throw forbidden('Only the delivering store can send the code');
+    if (order.status !== 'out_for_delivery') throw conflict('The delivery code can be sent once the order is out for delivery');
+    if (order.sent_at && order.resend_in && order.resend_in > 0) {
+      throw conflict(`A code was just sent. Try again in ${order.resend_in}s`, { retryAfterSeconds: order.resend_in });
+    }
+
+    const code = crypto.randomInt(1000, 10000).toString();
+    const stamped = await c.query<{ sent_at: Date; expires_at: Date }>(
+      `update orders
+          set handover_otp = $2,
+              handover_otp_sent_at = now(),
+              handover_otp_expires_at = now() + make_interval(mins => $3)
+        where id = $1
+        returning handover_otp_sent_at as sent_at, handover_otp_expires_at as expires_at`,
+      [order.id, code, HANDOVER_OTP_TTL_MINUTES],
+    );
+    await enqueue(c, 'order.handover_otp', { orderId: order.id });
+    const row = stamped.rows[0]!;
+    return { orderId: order.id, sentAt: row.sent_at.toISOString(), expiresAt: row.expires_at.toISOString() };
+  });
 }
 
 async function expireReservationsInTx(batchSize = 50): Promise<number> {

@@ -12,8 +12,13 @@ const NEXT_STEP: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>
   accepted: { to: 'packing', label: 'Start packing' },
   packing: { to: 'ready_for_pickup', label: 'Ready for delivery' },
   ready_for_pickup: { to: 'out_for_delivery', label: 'Dispatch for delivery' },
-  out_for_delivery: { to: 'delivered', label: 'Confirm customer OTP' },
+  out_for_delivery: { to: 'delivered', label: 'Confirm customer code' },
 };
+
+// The code the customer reads back is minted when the vendor presses "Send" at the door.
+const otpIsLive = (order: Order, now: number) => !!order.handoverOtpExpiresAt && new Date(order.handoverOtpExpiresAt).getTime() > now;
+
+const formatClock = (iso: string) => new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -89,7 +94,7 @@ function printPackingSlip(order: Order) {
         </div>
 
         <div class="otp-box">
-          COLLECT 4-DIGIT DELIVERY CODE FROM CUSTOMER UPON HANDOVER
+          AT THE DOOR: PRESS "SEND DELIVERY CODE" IN THE HUB, THEN ENTER THE 4-DIGIT CODE THE CUSTOMER READS BACK
         </div>
 
         <script>
@@ -123,6 +128,7 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
   const { prompt } = useFeedback();
   const [filter, setFilter] = useState<keyof typeof FILTERS>('active');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const orders = useLoad(() => api<{ orders: Order[] }>(`/vendor/orders?status=${FILTERS[filter]}`).then((r) => r.orders), [filter]);
 
   useEffect(() => {
@@ -130,6 +136,12 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
     const timer = setInterval(() => void orders.refresh(), 15_000);
     return () => clearInterval(timer);
   }, [filter, orders.refresh]);
+
+  // Keeps the "code valid until" state honest without another request.
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 10_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const replace = (next: Order) =>
     orders.mutate((list) => {
@@ -139,13 +151,28 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
       return stillHere ? list.map((o) => (o.id === next.id ? next : o)) : list.filter((o) => o.id !== next.id);
     });
 
+  const [sendCode] = useAction(
+    async (order: Order) => {
+      setBusyId(order.id);
+      try {
+        const receipt = await api<{ sentAt: string; expiresAt: string }>(`/vendor/orders/${order.id}/handover-otp`, { method: 'POST', body: {} });
+        replace({ ...order, handoverOtpSentAt: receipt.sentAt, handoverOtpExpiresAt: receipt.expiresAt });
+        setNow(Date.now());
+        return `Code sent to ${order.deliveryAddress.fullName}. Ask them to read it to you.`;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    { success: (msg) => msg as string },
+  );
+
   const [transition] = useAction(
     async (order: Order, to: OrderStatus) => {
       const body: { to: OrderStatus; otp?: string; reason?: string } = { to };
       if (to === 'delivered') {
         const otp = await prompt({
           title: `Deliver order #${order.orderNumber}`,
-          body: `Ask ${order.deliveryAddress.fullName} for the 4-digit delivery code.`,
+          body: `Ask ${order.deliveryAddress.fullName} to read you the 4-digit code we just sent them.`,
           label: 'Delivery code',
           placeholder: '1234',
           minLength: 4,
@@ -204,7 +231,10 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
       {orders.data?.length === 0 && <p className="p-6 text-center text-sm text-slate-500">{filter === 'active' ? 'No open orders right now.' : 'No completed orders yet.'}</p>}
 
       {orders.data?.map((order) => {
-        const next = NEXT_STEP[order.status];
+        const atDoor = order.status === 'out_for_delivery';
+        const codeLive = atDoor && otpIsLive(order, now);
+        // Out for delivery: the confirm step only appears once a live code is with the customer.
+        const next = atDoor && !codeLive ? undefined : NEXT_STEP[order.status];
         const busy = busyId === order.id;
         const addr = order.deliveryAddress;
         return (
@@ -267,7 +297,28 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
             </ul>
             {order.cancelReason && <p className="mt-2 text-xs text-red-600">Cancelled: {order.cancelReason}</p>}
 
+            {atDoor && (
+              <p className="mt-2 text-xs text-slate-600">
+                {codeLive && order.handoverOtpExpiresAt
+                  ? `Delivery code sent to the customer${order.handoverOtpSentAt ? ` at ${formatClock(order.handoverOtpSentAt)}` : ''}. Valid until ${formatClock(order.handoverOtpExpiresAt)}.`
+                  : order.handoverOtpSentAt
+                    ? 'The last delivery code expired. Send a new one when you are with the customer.'
+                    : 'When you reach the customer, send the delivery code. They read it back to you.'}
+              </p>
+            )}
+
             <div className="mt-3 flex flex-wrap gap-2">
+              {atDoor && (
+                <button
+                  disabled={busy}
+                  onClick={() => void sendCode(order)}
+                  className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                    codeLive ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50' : 'bg-indigo-600 text-white hover:bg-indigo-500'
+                  }`}
+                >
+                  {busy ? 'Working…' : codeLive ? 'Resend code' : 'Send delivery code'}
+                </button>
+              )}
               {next && (
                 <button
                   disabled={busy}

@@ -186,7 +186,8 @@ describe('order lifecycle across roles', () => {
   it('only the owning store can fulfil, and delivery needs the customer’s code', async () => {
     const placed = await placeOrder('cust-c');
     const orderId = placed.body.order.id;
-    const otp = placed.body.order.handoverOtp;
+    // The code is minted at the door, not at checkout.
+    expect(placed.body.order.handoverOtp).toBeUndefined();
 
     expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'accepted' })).status).toBe(409);
 
@@ -200,10 +201,32 @@ describe('order lifecycle across roles', () => {
     expect(seen).toBeTruthy();
     expect(seen.handoverOtp).toBeUndefined();
 
+    // Only the delivering vendor can ask for the code, and only once the order is out for delivery.
+    expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {})).status).toBe(409);
+
     for (const to of ['accepted', 'packing', 'ready_for_pickup', 'out_for_delivery']) {
       const step = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to });
       expect(step.status, to).toBe(200);
     }
+
+    // No code has been sent yet, so the delivery cannot be closed with any guess.
+    expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp: '1234' })).status).toBe(409);
+    expect((await call(vendorPune(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {})).status).toBe(404);
+
+    const sent = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {});
+    expect(sent.status).toBe(200);
+    expect(sent.body.expiresAt).toBeTruthy();
+    // Resending straight away is throttled.
+    expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {})).status).toBe(409);
+
+    // The vendor still never sees the code; the customer does.
+    const vendorAtDoor = await call(vendorBlr(), 'GET', `/v1/vendor/orders?status=out_for_delivery`);
+    const atDoor = vendorAtDoor.body.orders.find((o: { id: string }) => o.id === orderId);
+    expect(atDoor.handoverOtp).toBeUndefined();
+    expect(atDoor.handoverOtpExpiresAt).toBeTruthy();
+    const customerView = await call('cust-c:customer', 'GET', `/v1/orders/${orderId}`);
+    const otp: string = customerView.body.order.handoverOtp;
+    expect(otp).toMatch(/^\d{4}$/);
 
     const wrongCode = otp === '1234' ? '4321' : '1234';
     expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp: wrongCode })).status).toBe(403);

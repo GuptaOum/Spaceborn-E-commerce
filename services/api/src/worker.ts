@@ -3,7 +3,7 @@ import { config } from './config.js';
 import { pool, withTransaction } from './db/pool.js';
 import { logger } from './logger.js';
 import { expireQuotes, removeOrphanFiles } from './fabrication/service.js';
-import { notifyJobStatus, notifyJobSubmitted, notifyOrderPlaced, notifyOrderStatus } from './notifications.js';
+import { notifyHandoverOtp, notifyJobStatus, notifyJobSubmitted, notifyOrderPlaced, notifyOrderStatus } from './notifications.js';
 import { expireReservations } from './orders/service.js';
 import type { OrderStatus } from './orders/status.js';
 import { refundPayment } from './payments/razorpay.js';
@@ -89,6 +89,9 @@ async function handle(row: OutboxRow) {
       return;
     case 'order.status_changed':
       await notifyOrderStatus(row.payload.orderId as string, row.payload.to as OrderStatus);
+      return;
+    case 'order.handover_otp':
+      await notifyHandoverOtp(row.payload.orderId as string);
       return;
     default:
       logger.warn({ topic: row.topic }, 'unknown outbox topic');

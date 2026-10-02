@@ -128,7 +128,11 @@ export interface Order {
   deliveryAddress: DeliveryAddress;
   distanceKm: number;
   etaMinutes: number;
+  /** Customer only, and only while the code the vendor requested at the door is still valid. */
   handoverOtp?: string;
+  /** When the vendor last asked the server to send the code to the customer. */
+  handoverOtpSentAt?: string | null;
+  handoverOtpExpiresAt?: string | null;
   reservedUntil: string | null;
   cancelReason: string | null;
   placedAt: string | null;

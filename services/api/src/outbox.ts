@@ -3,6 +3,7 @@ import type { Db } from './db/pool.js';
 export type OutboxTopic =
   | 'order.placed'
   | 'order.status_changed'
+  | 'order.handover_otp'
   | 'refund.requested'
   | 'fab_job.submitted'
   | 'fab_job.paid'

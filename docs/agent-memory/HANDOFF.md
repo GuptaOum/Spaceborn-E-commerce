@@ -21,8 +21,11 @@ the customer pages. Fabrication is the exception: the customer is booking that s
 | Live demo | `https://spacebornecomdemo-1.onrender.com` (Render service `spacebornecomdemo-1`, free, Virginia, auto-deploy on `demo/main`) |
 | Archive | `D:\spacebornecomm\_backup_Spaceborn-E-commerce` (do not treat as the app) |
 
-Push production first, then merge `main` into the `demo-sync` branch and push `demo demo-sync:main`.
-The demo and production trees are meant to stay the same code. What differs is environment.
+Push production to `origin main`. The demo is synced separately: merge `main` into `demo-sync`
+and push `demo demo-sync:main` only for demo-level work (UI, copy, bug fixes). The demo stays a
+light showcase. Do not carry heavy production features into it (the at-the-door OTP flow below,
+courier clients, payment webhooks, fleet or dispatch work). The user decides when something is
+demo-worthy.
 
 `scripts/render-gateway.mjs` runs the API, the three Next apps, and the outbox worker in one
 container. `?app=store|vendor|admin` (cookie) picks the app. A demo-only "Hub" pill switches
@@ -161,7 +164,9 @@ secrets that were in the file. `gh` on this machine is logged in as GuptaOum wit
 
 Roles stay `customer`, `vendor`, and `admin` (`user_role` in `migrations/001_init.sql`). There is no delivery-driver app.
 
-An order becomes `delivered` only when the vendor submits the customer's `handover_otp`. Admin and customer cannot make that transition (`services/api/src/orders/status.ts`). The vendor hub is the screen that collects the code. Do not weaken that check.
+The vendor delivers. An order becomes `delivered` only when the vendor submits the customer's `handover_otp`. Admin and customer cannot make that transition (`services/api/src/orders/status.ts`). Do not weaken that check.
+
+Production only (not on the demo): the code is minted at the door, not at checkout (migration `010_handover_otp_on_request.sql`). When the vendor reaches the customer they press "Send delivery code" in the vendor hub (`POST /vendor/orders/:id/handover-otp`, `requestHandoverOtp` in `orders/service.ts`). The server generates a 4-digit code for that order, valid 10 minutes, resend throttled to 45 s, and queues `order.handover_otp` so the worker emails it (`notifyHandoverOtp`). The customer sees it on `/orders` (polls every 5 s while out for delivery) and reads it back. The vendor never sees the code. `delivered` is refused with 409 when no live code exists, 403 when it does not match. Confirmation and placed/out-for-delivery mails no longer contain the code.
 
 BlueDart is not the quick-commerce lane. Their Domestic Priority product is next-business-day air. The storefront lines that mention BlueDart (warranty RMA, contact, about, the sample order in `products.ts`) are the open honesty bugs above, not a shipping integration.
 
