@@ -40,8 +40,8 @@ export const StickyCartDock: React.FC<StickyCartDockProps> = ({
   }
 
   return (
-    <aside className="fixed bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-8 z-40 w-[95%] sm:w-[94%] max-w-xl md:w-auto animate-in slide-in-from-bottom-6 duration-300">
-      <div className="flex items-center justify-between gap-2.5 sm:gap-4 px-3 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#0c831f] text-white shadow-2xl shadow-[#0c831f]/30 border border-[#0a701a]">
+    <aside className="fixed bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-8 z-40 w-[94%] max-w-xl md:w-auto transition-all duration-300">
+      <div className="flex items-center justify-between gap-2.5 sm:gap-4 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-[#0c831f] text-white shadow-2xl shadow-[#0c831f]/30 border border-[#0a701a]">
         
         {/* Cart Icon & Live Dispatch Counter */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -73,7 +73,7 @@ export const StickyCartDock: React.FC<StickyCartDockProps> = ({
         {/* Action Checkout Trigger */}
         <button
           onClick={onOpenCart}
-          className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-white text-[#0c831f] font-black text-[11px] sm:text-xs uppercase tracking-wider hover:bg-slate-100 shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white text-[#0c831f] font-black text-xs uppercase tracking-wider hover:bg-slate-100 shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
         >
           <span>View Cart</span>
           <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />

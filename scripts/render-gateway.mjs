@@ -467,20 +467,60 @@ function proxyRequest(req, res, targetPort) {
 }
 
 function getBannerHtml() {
-  // On phones the pill collapses to a small "Hub" toggle, lifted above the storefront's
-  // bottom cart dock so it never covers the cart or checkout buttons.
+  // On phones the pill collapses to a small "Hub" toggle on the bottom-left, lifted above
+  // the storefront's bottom cart dock so it never covers View Cart or checkout buttons.
+  // It is also hidden automatically whenever a modal or cart drawer is open.
   return `
 <style>
+  #spaceborn-demo-banner {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 35;
+    background: rgba(15,23,42,0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+    padding: 10px 14px;
+    color: #fff;
+    font-family: system-ui,-apple-system,sans-serif;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
   @media (max-width: 640px) {
-    #spaceborn-demo-banner { bottom: 92px !important; right: 8px !important; left: auto !important; padding: 4px 8px !important; gap: 6px !important; font-size: 11px !important; border-radius: 999px !important; }
+    #spaceborn-demo-banner {
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+      left: 12px !important;
+      right: auto !important;
+      padding: 5px 10px !important;
+      gap: 6px !important;
+      font-size: 11px !important;
+      border-radius: 999px !important;
+      z-index: 35 !important;
+    }
     #spaceborn-demo-banner > span:first-child { display: none !important; }
     #spaceborn-demo-banner:not(.open) > a { display: none !important; }
-    #spaceborn-demo-banner.open { flex-wrap: wrap !important; justify-content: flex-end !important; max-width: calc(100vw - 12px) !important; border-radius: 12px !important; }
+    #spaceborn-demo-banner.open {
+      flex-wrap: wrap !important;
+      justify-content: flex-start !important;
+      max-width: calc(100vw - 24px) !important;
+      border-radius: 14px !important;
+      left: 12px !important;
+      right: auto !important;
+    }
     #spaceborn-demo-banner-toggle { display: inline-block !important; }
   }
   #spaceborn-demo-banner-toggle { display: none; background: none; border: none; color: #38bdf8; font-weight: 700; cursor: pointer; font-size: 11px; padding: 0 2px; }
+  /* Automatically hide floating demo banner when any modal or cart drawer is open */
+  body:has([role="dialog"]) #spaceborn-demo-banner,
+  body.modal-open #spaceborn-demo-banner {
+    display: none !important;
+  }
 </style>
-<div id="spaceborn-demo-banner" style="position:fixed;bottom:16px;right:16px;z-index:999999;background:rgba(15,23,42,0.92);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);border-radius:12px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.5);padding:10px 14px;color:#fff;font-family:system-ui,-apple-system,sans-serif;font-size:12px;display:flex;align-items:center;gap:10px;">
+<div id="spaceborn-demo-banner">
   <span style="font-weight:700;letter-spacing:0.5px;color:#38bdf8;display:flex;align-items:center;gap:4px">
     <span>🚀</span> Spaceborn Hub:
   </span>

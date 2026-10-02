@@ -76,3 +76,48 @@ h1, h2, h3, h4, h5, h6 {
 .animate-arrow-bounce {
   animation: arrowBounce 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+/* Mobile Bottom Sheet & Slide-over Drawer Animations */
+@keyframes sheetSlideUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideRight {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes backdropFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-sheet-slide-up {
+  animation: sheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-fade {
+  animation: backdropFadeIn 0.2s ease-out forwards;
+}
+
+@media (min-width: 640px) {
+  .sm\:animate-drawer-slide-right {
+    animation: drawerSlideRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+}
+

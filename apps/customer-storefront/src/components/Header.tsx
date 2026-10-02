@@ -185,15 +185,15 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-50 bg-[#fffbf7] border-b border-[#f9bf8f]/60 shadow-xs transition-all">
 
       {/* Main Clean Header */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-2.5">
         <div className="flex items-center justify-between gap-1.5 sm:gap-3 md:gap-6 min-w-0">
           
           {/* Brand Logo & Location Switcher */}
-          <div className="flex items-center space-x-2 sm:space-x-5 shrink-0 min-w-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-5 shrink min-w-0">
             {/* Spaceborn Brand Logo (reduced size) */}
             <div 
               onClick={() => onNavigate('home')} 
-              className="cursor-pointer shrink-0 mr-1 sm:mr-2 hover:opacity-90 active:scale-98 transition-all"
+              className="cursor-pointer shrink min-w-0 mr-1 sm:mr-2 hover:opacity-90 active:scale-98 transition-all"
               title="Spaceborn"
             >
               <SpacebornLogo size="sm" subtitle={false} />
@@ -321,28 +321,28 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right Action Controls */}
-          {/* Right Action Controls */}
-          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3 shrink-0">
             
             {/* Orders Action */}
             <button 
               onClick={() => onNavigate('orders')}
               aria-label="Orders"
               title="Orders"
-              className="inline-flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-semibold transition-all cursor-pointer"
+              className="inline-flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <Receipt className="w-4 h-4 text-[#7a6274]" />
+              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7a6274]" />
               <span className="hidden sm:inline">Orders</span>
             </button>
 
             {/* Account Profile Icon */}
-            <div className="relative">
+            <div className="relative shrink-0">
               {user ? (
                 <button
                   onClick={() => setShowAccountMenu(!showAccountMenu)}
-                  className="flex items-center space-x-1.5 sm:space-x-2 text-[#34222e] p-1 rounded-xl hover:bg-[#fee9d7]/50 transition cursor-pointer"
+                  aria-label="Account menu"
+                  className="flex items-center space-x-1 sm:space-x-2 text-[#34222e] p-0.5 sm:p-1 rounded-xl hover:bg-[#fee9d7]/50 transition cursor-pointer"
                 >
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#34222e] text-[#fee9d7] font-bold text-xs flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#34222e] text-[#fee9d7] font-bold text-xs flex items-center justify-center">
                     {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="text-left hidden lg:block pr-1">
@@ -354,10 +354,11 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <button
                   onClick={() => onOpenAuth('login')}
-                  className="flex items-center gap-1 sm:gap-2 bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95"
+                  aria-label="Sign in"
+                  title="Sign in"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] w-8 h-8 sm:w-auto sm:h-auto px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95 shrink-0"
                 >
                   <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f8cb46]" />
-                  <span className="sm:hidden">Sign in</span>
                   <span className="hidden sm:inline">Sign In / Google</span>
                 </button>
               )}
@@ -404,13 +405,17 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenCart}
               aria-label={cartItemsCount > 0 ? `Cart, ${cartItemsCount} items` : 'Cart'}
-              className={`inline-flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shrink-0 ${
+              className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 ${
+                cartItemsCount > 0 ? 'h-8 px-2.5 sm:h-auto sm:px-4' : 'w-8 h-8 sm:w-auto sm:h-auto sm:px-4'
+              } py-1.5 sm:py-2 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shrink-0 ${
                 isCartBumping ? 'animate-badge-bump ring-2 ring-[#0c831f]/40' : ''
               }`}
             >
               <ShoppingCart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${isCartBumping ? 'scale-125' : ''}`} />
-              {/* Phones: icon + count only. Larger screens: count and subtotal. */}
-              <span className="sm:hidden">{cartItemsCount > 0 ? cartItemsCount : 'Cart'}</span>
+              {/* Phones: live item count badge when items > 0. Desktop: full text and subtotal */}
+              {cartItemsCount > 0 && (
+                <span className="font-mono font-bold text-xs sm:hidden">{cartItemsCount}</span>
+              )}
               <span className="hidden sm:inline">{cartItemsCount > 0 ? `${cartItemsCount} items` : 'Cart'}</span>
               {cartItemsCount > 0 && (
                 <>
