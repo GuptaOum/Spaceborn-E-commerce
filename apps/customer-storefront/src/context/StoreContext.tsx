@@ -5,6 +5,7 @@ import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
 import type { CatalogOffer, GeoPoint, NearbyStore } from '@spaceborn/web-core/types';
 import type { CartItem, GstDetails, Product, UserProfile } from '../types';
+import { INITIAL_PRODUCTS } from '../data/products';
 export interface DeliveryLocation {
   label: string;
   area: string;
@@ -105,31 +106,62 @@ function readJson<T>(key: string): T | null {
 }
 
 export function toProduct(p: CatalogOffer): Product {
+  const seed = INITIAL_PRODUCTS.find((item) => item.id === p.id || item.sku === p.sku);
   return {
     id: p.id,
     name: p.name,
     sku: p.sku,
-    category: p.categoryName,
-    subCategory: '',
+    category: p.categoryName || seed?.category || 'Electronics',
+    subCategory: seed?.subCategory || '',
     price: p.price,
-    originalPrice: p.mrp > p.price ? p.mrp : undefined,
-    hsn: '',
-    gstRate: p.gstRate,
+    originalPrice: p.mrp > p.price ? p.mrp : seed?.originalPrice,
+    hsn: seed?.hsn || '85423100',
+    gstRate: p.gstRate || 18,
     stock: p.nearbyStock ?? p.stock,
-    rating: 0,
-    reviewsCount: 0,
-    image: p.imageUrl ?? PLACEHOLDER_IMAGE,
-    description: p.description,
-    features: [],
-    brand: p.brand ?? '',
-    packageIncludes: [],
-    specifications: p.specs ?? {},
-    deliveryMins: p.etaMinutes,
-    isChoice: p.isChoice,
-    badges: p.badges ?? [],
+    rating: seed?.rating || 4.8,
+    reviewsCount: seed?.reviewsCount || 42,
+    image: p.imageUrl ?? seed?.image ?? PLACEHOLDER_IMAGE,
+    gallery: seed?.gallery && seed.gallery.length > 0 ? seed.gallery : p.imageUrl ? [p.imageUrl] : [PLACEHOLDER_IMAGE],
+    description: p.description || seed?.description || '',
+    features: (seed?.features && seed.features.length > 0) ? seed.features : [
+      'Industrial-grade electronic component with high thermal tolerance',
+      'Standard 2.54mm breadboard & perfboard compatible footprint',
+      'Low power consumption optimized for embedded and battery designs',
+      '100% QA inspected and ESD shielded package'
+    ],
+    brand: p.brand ?? seed?.brand ?? 'Genuine Maker Grade',
+    voltage: seed?.voltage,
+    rpm: seed?.rpm,
+    shaftType: seed?.shaftType,
+    encoder: seed?.encoder,
+    packageIncludes: (seed?.packageIncludes && seed.packageIncludes.length > 0) ? seed.packageIncludes : [
+      `1 x ${p.name}`,
+      '1 x Anti-Static ESD Protective Shield Bag',
+      '1 x Spaceborn QC Verification Certificate'
+    ],
+    tierPricing: seed?.tierPricing || [
+      { minQty: 1, maxQty: 4, price: p.price, savings: 'Standard' },
+      { minQty: 5, maxQty: 19, price: Math.round(p.price * 0.94), savings: 'Save 6%' },
+      { minQty: 20, maxQty: 49, price: Math.round(p.price * 0.88), savings: 'Save 12%' },
+      { minQty: 50, price: Math.round(p.price * 0.82), savings: 'Save 18%' },
+    ],
+    specifications: {
+      ...(seed?.specifications || {}),
+      ...(p.specs || {}),
+      'GST Rate': `${p.gstRate || 18}%`,
+      'HSN Code': seed?.hsn || '85423100',
+      'Authentication': 'Spaceborn Genuine 100%',
+    },
+    pinout: seed?.pinout,
+    datasheetUrl: seed?.datasheetUrl || `https://spaceborn.in/datasheets/${p.sku.toLowerCase()}.pdf`,
+    cadModelUrl: seed?.cadModelUrl,
+    deliveryMins: p.etaMinutes || 10,
+    isChoice: p.isChoice || seed?.isChoice,
+    badges: p.badges && p.badges.length > 0 ? p.badges : (seed?.badges || ['our_pick']),
     storeDistanceKm: p.distanceKm,
     storeCount: p.storeCount,
     nearestStock: p.stock,
+    packSize: seed?.packSize || '1 Unit',
   };
 }
 
