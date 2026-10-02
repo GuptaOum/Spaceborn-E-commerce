@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { currentUser, requireAuth } from '../auth.js';
 import { cacheGet, cacheSet, catalogGeneration } from '../cache.js';
 import { pool } from '../db/pool.js';
-import { notFound, parse } from '../errors.js';
+import { badRequest, notFound, parse } from '../errors.js';
 import { toPgVector } from '../catalog/embeddings.js';
 import { embedQuery } from '../catalog/search.js';
 import { pipeImage } from '../catalog/submissions.js';
@@ -180,6 +181,50 @@ catalogRouter.get('/catalog/products/:productId', async (req, res) => {
   res.json({ product: withEta(rows[0]), offers: offers.rows.map(withEta) });
 });
 
+catalogRouter.get('/catalog/products/:productId/reviews', async (req, res) => {
+  const productId = parse(uuid, req.params.productId);
+  const { rows } = await pool.query(
+    `select pr.id, pr.rating, pr.title, pr.content, pr.created_at as "createdAt",
+            u.full_name as "authorName"
+       from product_reviews pr
+       join users u on u.id = pr.user_id
+      where pr.product_id = $1
+      order by pr.created_at desc`,
+    [productId]
+  );
+  res.json({ reviews: rows });
+});
+
+catalogRouter.post('/catalog/products/:productId/reviews', requireAuth, async (req, res) => {
+  const productId = parse(uuid, req.params.productId);
+  const user = currentUser(req);
+  const body = parse(
+    z.object({
+      rating: z.number().int().min(1).max(5),
+      title: z.string().optional(),
+      content: z.string().min(1)
+    }),
+    req.body
+  );
+  const { rows: orderRows } = await pool.query(
+    `select 1 from order_items oi
+       join orders o on o.id = oi.order_id
+      where oi.product_id = $1 and o.customer_id = $2 and o.status = 'delivered'`,
+    [productId, user.uid]
+  );
+  if (orderRows.length === 0) {
+    throw badRequest('You can only review products you have bought and received.');
+  }
+  
+  await pool.query(
+    `insert into product_reviews (product_id, user_id, rating, title, content)
+     values ($1, $2, $3, $4, $5)
+     on conflict (product_id, user_id) do update
+     set rating = excluded.rating, title = excluded.title, content = excluded.content`,
+    [productId, user.uid, body.rating, body.title, body.content]
+  );
+  res.json({ success: true });
+});
 // Cart preview: which store would fulfil these items from this location, and what it costs.
 catalogRouter.post('/catalog/resolve', async (req, res) => {
   const body = parse(
@@ -231,3 +276,5 @@ catalogRouter.get('/stores/nearby', async (req, res) => {
 
 // There is deliberately no per-store shelf endpoint: customers browse one pooled catalog and the
 // shop behind a listing is not public. Vendors see their own shelf under /vendor, admins under /admin.
+
+

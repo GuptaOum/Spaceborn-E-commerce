@@ -132,18 +132,29 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     setShowReviewForm(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Load persisted reviews
-    try {
-      const stored = localStorage.getItem(`spaceborn_reviews_${product.id}`);
-      if (stored) {
-        const parsed = JSON.parse(stored) as ReviewItem[];
-        setReviews([...parsed, ...DEFAULT_REVIEWS]);
-      } else {
+    const fetchReviews = async () => {
+      try {
+        const { reviews: fetched } = await api<{ reviews: any[] }>(`/catalog/products/${product.id}/reviews`);
+        const mapped = fetched.map(r => ({
+          name: r.authorName,
+          org: '',
+          date: new Date(r.createdAt).toLocaleDateString(),
+          title: r.title || '',
+          comment: r.content,
+          rating: r.rating,
+          verified: true
+        }));
+        if (mapped.length > 0) {
+          setReviews([...mapped, ...DEFAULT_REVIEWS]);
+        } else {
+          setReviews(DEFAULT_REVIEWS);
+        }
+      } catch (err) {
+        console.error('Failed to fetch reviews', err);
         setReviews(DEFAULT_REVIEWS);
       }
-    } catch {
-      setReviews(DEFAULT_REVIEWS);
-    }
+    };
+    fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
@@ -237,28 +248,35 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !newTitle.trim()) return;
 
-    const newRev: ReviewItem = {
-      name: newName.trim() || 'Verified Maker',
-      org: newOrg.trim() || 'Robotics & Hardware Lab',
-      date: 'Just now',
-      title: newTitle.trim(),
-      comment: newComment.trim(),
-      rating: newRating,
-      verified: true,
-    };
-
-    const updated = [newRev, ...reviews];
-    setReviews(updated);
-
     try {
-      const userAdded = updated.filter((r) => r.date === 'Just now' || !DEFAULT_REVIEWS.some((d) => d.title === r.title));
-      localStorage.setItem(`spaceborn_reviews_${product.id}`, JSON.stringify(userAdded));
-    } catch {
-      /* ignore storage write error */
+      await api(`/catalog/products/${product.id}/reviews`, {
+        method: 'POST',
+        body: JSON.stringify({
+          rating: newRating,
+          title: newTitle.trim(),
+          content: newComment.trim(),
+        }),
+      });
+      
+      const newRev: ReviewItem = {
+        name: newName.trim() || 'Verified Maker',
+        org: newOrg.trim() || 'Robotics & Hardware Lab',
+        date: 'Just now',
+        title: newTitle.trim(),
+        comment: newComment.trim(),
+        rating: newRating,
+        verified: true,
+      };
+
+      const updated = [newRev, ...reviews];
+      setReviews(updated);
+    } catch (err: any) {
+      alert(err.message || 'Failed to submit review');
+      return;
     }
 
     setReviewSubmitted(true);
