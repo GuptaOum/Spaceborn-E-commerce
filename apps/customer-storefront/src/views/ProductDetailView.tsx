@@ -125,8 +125,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-5 sm:py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
+    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-3 sm:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 space-y-4 sm:space-y-6">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center justify-between gap-3 text-xs text-[#7a6274]">
           <ol className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
@@ -150,12 +150,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </nav>
 
         {/* Main card */}
-        <section className="rounded-2xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-6 lg:p-8">
+        <section className="rounded-2xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-3.5 sm:p-6 lg:p-8">
           <div className="grid gap-6 lg:grid-cols-12 lg:gap-10">
             {/* Gallery */}
             <div className="lg:col-span-5 space-y-3 lg:sticky lg:top-24 self-start">
               <div
-                className="relative flex h-72 items-center justify-center overflow-hidden rounded-xl border border-[#f9bf8f]/50 bg-white p-6 sm:h-96 lg:cursor-zoom-in"
+                className="relative flex h-64 sm:h-96 items-center justify-center overflow-hidden rounded-xl border border-[#f9bf8f]/50 bg-white p-4 sm:p-6 lg:cursor-zoom-in"
                 onMouseMove={trackZoom}
                 onMouseLeave={() => setZoomAt(null)}
               >
@@ -321,21 +321,25 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   </button>
                 </div>
 
-                <form onSubmit={(e) => void checkPin(e)} className="flex flex-wrap items-center gap-2 border-t border-[#f9bf8f]/40 pt-3 text-sm">
-                  <MapPin className="w-4 h-4 text-[#7a6274]" />
-                  <label htmlFor="pin-check" className="text-[#7a6274]">Check another PIN</label>
-                  <input
-                    id="pin-check"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="6-digit PIN"
-                    className="h-9 w-32 rounded-lg border border-[#f9bf8f] px-3 text-sm outline-none focus:border-[#0c831f]"
-                  />
-                  <button type="submit" className="h-9 rounded-lg border border-[#34222e] px-3 text-sm font-semibold hover:bg-[#34222e] hover:text-white transition cursor-pointer">
-                    Check
-                  </button>
+                <form onSubmit={(e) => void checkPin(e)} className="flex flex-wrap sm:flex-nowrap items-center gap-2 border-t border-[#f9bf8f]/40 pt-3 text-sm">
+                  <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                    <MapPin className="w-4 h-4 text-[#7a6274] shrink-0" />
+                    <label htmlFor="pin-check" className="text-[#7a6274] text-xs sm:text-sm shrink-0">Check PIN</label>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+                    <input
+                      id="pin-check"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={pincode}
+                      onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="6-digit PIN"
+                      className="h-9 flex-1 sm:w-32 min-w-0 rounded-lg border border-[#f9bf8f] px-3 text-sm outline-none focus:border-[#0c831f]"
+                    />
+                    <button type="submit" className="h-9 shrink-0 rounded-lg border border-[#34222e] px-3 text-sm font-semibold hover:bg-[#34222e] hover:text-white transition cursor-pointer">
+                      Check
+                    </button>
+                  </div>
                   {pinStatus && (
                     <p className={`basis-full text-xs ${pinStatus.tone === 'ok' ? 'text-[#0c831f]' : pinStatus.tone === 'warn' ? 'text-[#e2434b]' : 'text-[#7a6274]'}`}>
                       {pinStatus.text}
@@ -356,7 +360,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
         {/* Description and specs */}
         {(product.description || specs.length > 0) && (
-          <section className="grid gap-6 rounded-2xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-6 lg:grid-cols-12 lg:p-8">
+          <section className="grid gap-6 rounded-2xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-3.5 sm:p-6 lg:grid-cols-12 lg:p-8">
             {product.description && (
               <div className={specs.length > 0 ? 'lg:col-span-5' : 'lg:col-span-12'}>
                 <h2 className="text-base font-semibold">About this item</h2>
@@ -368,9 +372,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 <h2 className="text-base font-semibold">Specifications</h2>
                 <dl className="mt-2 overflow-hidden rounded-xl border border-[#f9bf8f]/50 bg-white text-sm">
                   {specs.map(([key, value], i) => (
-                    <div key={key} className={`grid grid-cols-[minmax(7rem,1fr)_2fr] gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-[#f9bf8f]/30' : ''}`}>
-                      <dt className="text-[#7a6274]">{key}</dt>
-                      <dd className="font-medium">{value}</dd>
+                    <div key={key} className={`grid grid-cols-1 sm:grid-cols-[minmax(7rem,1fr)_2fr] gap-1 sm:gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 ${i > 0 ? 'border-t border-[#f9bf8f]/30' : ''}`}>
+                      <dt className="text-[#7a6274] text-xs sm:text-sm">{key}</dt>
+                      <dd className="font-medium text-xs sm:text-sm">{value}</dd>
                     </div>
                   ))}
                 </dl>
@@ -388,7 +392,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 View all <ArrowRight className="w-4 h-4" />
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4">
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} onSelect={onSelectProduct} onAddToCart={(prod, qty) => onAddToCart(prod, qty || 1)} />
               ))}

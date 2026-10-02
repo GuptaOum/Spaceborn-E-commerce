@@ -177,7 +177,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
     >
       {/* Sliding Track Viewport */}
       <div
-        className="relative overflow-hidden min-h-[260px] sm:min-h-[290px] md:min-h-[310px] touch-pan-y"
+        className="relative overflow-hidden min-h-[230px] sm:min-h-[290px] md:min-h-[310px] touch-pan-y"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -188,13 +188,13 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
           {slides.map((slide, idx) => (
             <div
               key={slide.id}
-              className={`min-w-full w-full shrink-0 relative bg-gradient-to-r ${slide.bgGradient} flex flex-col justify-between p-5 sm:p-7 md:p-9`}
+              className={`min-w-full w-full shrink-0 relative bg-gradient-to-r ${slide.bgGradient} flex flex-col justify-between p-4 sm:p-7 md:p-9`}
             >
               {/* Top Tag Badges Row */}
               <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black tracking-wide ${slide.tagBg} ${slide.tagColor} shadow-2xs border border-black/5`}>
-                    <Sparkles className="w-3.5 h-3.5" />
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-black tracking-wide ${slide.tagBg} ${slide.tagColor} shadow-2xs border border-black/5`}>
+                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>{slide.tag}</span>
                   </span>
                   {slide.badge && (
@@ -203,7 +203,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-[#7a6274] font-bold bg-white/70 px-2.5 py-0.5 rounded-full border border-[#f9bf8f]/40">
+                <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-[#7a6274] font-bold bg-white/70 px-2 sm:px-2.5 py-0.5 rounded-full border border-[#f9bf8f]/40">
                   <span className="text-[#34222e] font-black">{idx + 1}</span>
                   <span>/</span>
                   <span>{slides.length}</span>
@@ -211,17 +211,17 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
               </div>
 
               {/* Center Content: Two Columns (Text Left, Real Media Right) */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-center my-auto">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 md:gap-6 items-center my-auto">
                 {/* Left Text Column (Rich Dark Brand Charcoal / Teal Blue Typography) */}
-                <div className="md:col-span-7 lg:col-span-8 space-y-2 sm:space-y-3">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[28px] font-black text-[#34222e] tracking-tight leading-snug">
+                <div className="md:col-span-7 lg:col-span-8 space-y-1.5 sm:space-y-3">
+                  <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-[28px] font-black text-[#34222e] tracking-tight leading-snug">
                     <span>{slide.titlePrefix}</span>
                     <span className={`${slide.highlightColor} underline decoration-current/25 decoration-2 underline-offset-4`}>
                       {slide.titleHighlight}
                     </span>
                     {slide.titleSuffix && <span>{slide.titleSuffix}</span>}
                   </h2>
-                  <p className="text-xs sm:text-[13px] text-[#5a4454] line-clamp-3 sm:line-clamp-2 max-w-xl font-medium leading-relaxed">
+                  <p className="text-xs sm:text-[13px] text-[#5a4454] line-clamp-2 sm:line-clamp-2 max-w-xl font-medium leading-relaxed">
                     {slide.subtitle}
                   </p>
 
@@ -230,16 +230,16 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
                     <button
                       type="button"
                       onClick={slide.action}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-extrabold text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer group/btn"
+                      className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-extrabold text-xs sm:text-sm transition-all shadow-sm active:scale-95 cursor-pointer group/btn"
                     >
                       <span>{slide.ctaText}</span>
-                      <ArrowRight className="w-4 h-4 stroke-[2.5] group-hover/btn:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                   </div>
                 </div>
 
-                {/* Right Media Column (Real World Verified Robu WebP Imagery) */}
-                <div className="md:col-span-5 lg:col-span-4 flex justify-center md:justify-end">
+                {/* Right Media Column - Displayed cleanly from sm up */}
+                <div className="hidden sm:flex md:col-span-5 lg:col-span-4 justify-center md:justify-end">
                   <div 
                     onClick={slide.action}
                     className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-none h-32 sm:h-40 md:h-48 rounded-2xl overflow-hidden bg-white border border-[#f9bf8f]/60 shadow-sm p-1.5 flex items-center justify-center cursor-pointer group/media hover:shadow-md transition-all"

@@ -94,28 +94,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <article 
       onClick={() => onSelect(product)}
-      className="bg-[#fffbf7] border border-[#f9bf8f]/60 hover:border-[#059669] hover:shadow-lg rounded-2xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between group overflow-hidden cursor-pointer relative shadow-xs"
+      className="bg-[#fffbf7] border border-[#f9bf8f]/60 hover:border-[#059669] hover:shadow-lg rounded-2xl p-2 sm:p-3 transition-all duration-200 flex flex-col justify-between group overflow-hidden cursor-pointer relative shadow-xs"
     >
       {/* Top Badges Row */}
-      <div className="flex items-center justify-between mb-1.5 relative z-10">
+      <div className="flex items-center justify-between mb-1 sm:mb-1.5 relative z-10 gap-1">
         {/* Delivery ETA Badge */}
-        <span className="inline-flex items-center gap-1 text-[10px] font-black text-[#059669] uppercase tracking-wide bg-[#ecfdf5] border border-[#10b981]/20 px-1.5 py-0.5 rounded-md">
+        <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-black text-[#059669] uppercase tracking-wide bg-[#ecfdf5] border border-[#10b981]/20 px-1 sm:px-1.5 py-0.5 rounded-md shrink-0">
           <Zap className="w-2.5 h-2.5 fill-[#059669]" />
-          <span>{deliveryTime} MINS</span>
+          <span>{deliveryTime}M</span>
+          <span className="hidden sm:inline">INS</span>
         </span>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {/* Discount Ribbon */}
           {discountPercent && discountPercent > 0 && (
-            <span className="bg-[#e2434b] text-white text-[9.5px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+            <span className="bg-[#e2434b] text-white text-[8.5px] sm:text-[9.5px] font-black px-1 sm:px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
               {discountPercent}% OFF
             </span>
           )}
 
-          {/* Quick View Button */}
+          {/* Quick View Button - Desktop Only */}
           <button
             onClick={handleQuickViewClick}
-            className="w-6 h-6 rounded-full bg-white/95 text-[#34222e]/60 hover:text-[#e2434b] hover:bg-white flex items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs border border-[#f9bf8f]/40"
+            className="w-6 h-6 rounded-full bg-white/95 text-[#34222e]/60 hover:text-[#e2434b] hover:bg-white hidden md:flex items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs border border-[#f9bf8f]/40"
             title="Quick View"
           >
             <Eye className="w-3.5 h-3.5" />
@@ -124,7 +125,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Product Image on Clean Light Canvas */}
-      <div className="w-full h-36 rounded-xl bg-white border border-[#f9bf8f]/30 flex items-center justify-center p-2 mb-2 overflow-hidden relative">
+      <div className="w-full h-32 sm:h-36 rounded-xl bg-white border border-[#f9bf8f]/30 flex items-center justify-center p-2 mb-1.5 sm:mb-2 overflow-hidden relative">
         <img
           src={imgSrc}
           alt={product.name}
@@ -133,8 +134,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onError={() => setImgSrc('/spaceborn-logo.svg')}
         />
         {primaryBadge && (
-          <span className="absolute bottom-1.5 left-1.5 z-10 inline-flex items-center gap-1 rounded-md bg-[#34222e] px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-xs">
-            <BadgeCheck className="w-3 h-3" />
+          <span className="absolute bottom-1.5 left-1.5 z-10 inline-flex items-center gap-1 rounded-md bg-[#34222e] px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-white shadow-xs">
+            <BadgeCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             {PRODUCT_BADGES[primaryBadge].label}
           </span>
         )}
@@ -144,98 +145,97 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="flex-1 flex flex-col justify-between">
         <div>
           {/* Robu-Style Category / Brand & Rating Tag */}
-          <div className="flex items-center justify-between text-[10px] text-[#34222e]/60 font-medium mb-0.5">
-            <span className="truncate max-w-[120px] font-bold text-[#e2434b] uppercase tracking-wider">{product.brand || product.category}</span>
+          <div className="flex items-center justify-between text-[9.5px] sm:text-[10px] text-[#34222e]/60 font-medium mb-0.5">
+            <span className="truncate max-w-[110px] sm:max-w-[120px] font-bold text-[#e2434b] uppercase tracking-wider">{product.brand || product.category}</span>
             {product.stock > 0 && product.stock <= 5 && (
-              <span className="font-bold text-[#e2434b]">Only {product.stock} left</span>
+              <span className="font-bold text-[#e2434b] text-[9px] sm:text-[10px]">Only {product.stock} left</span>
             )}
           </div>
 
           {/* Title: 2-line clamped */}
-          <h3 className="text-xs font-bold text-[#34222e] line-clamp-2 leading-snug group-hover:text-[#e2434b] transition-colors mb-1 min-h-[32px]">
+          <h3 className="text-xs font-bold text-[#34222e] line-clamp-2 leading-snug group-hover:text-[#e2434b] transition-colors mb-1 min-h-[30px] sm:min-h-[32px]">
             {product.name}
           </h3>
 
           {/* Robu-Style SKU Line */}
-          <div className="flex items-center justify-between text-[9.5px] text-[#7a6274] font-mono mb-1">
-            <span>SKU: {product.sku}</span>
+          <div className="flex items-center justify-between text-[9px] sm:text-[9.5px] text-[#7a6274] font-mono mb-1">
+            <span className="truncate max-w-[80px] sm:max-w-none">SKU: {product.sku}</span>
             {product.stock > 0 && (
-              <span className="text-[#059669] font-medium truncate max-w-[100px]">
+              <span className="text-[#059669] font-medium truncate max-w-[90px] sm:max-w-[100px]">
                 {product.stock} near you
               </span>
             )}
           </div>
 
           {/* Clean Technical Spec Line */}
-          <p className="text-[10.5px] font-medium text-[#34222e]/70 truncate mb-2">
+          <p className="text-[10px] sm:text-[10.5px] font-medium text-[#34222e]/70 truncate mb-1.5 sm:mb-2">
             {specSummary}
           </p>
         </div>
 
         {/* Pricing & Robu-styled Add to Cart Button */}
-        <div className="pt-2 border-t border-[#f9bf8f]/30 flex items-center justify-between mt-auto">
-          <div className="flex flex-col">
-            <div className="flex items-baseline space-x-1">
-              <span className="text-xs sm:text-sm font-black text-[#34222e]">
+        <div className="pt-1.5 sm:pt-2 border-t border-[#f9bf8f]/30 flex items-center justify-between gap-1 mt-auto">
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-baseline space-x-1 flex-wrap">
+              <span className="text-xs sm:text-sm font-black text-[#34222e] leading-tight">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-[10px] text-[#34222e]/40 line-through font-medium">
+                <span className="text-[9px] sm:text-[10px] text-[#34222e]/40 line-through font-medium leading-tight">
                   ₹{product.originalPrice}
                 </span>
               )}
             </div>
-            <span className="text-[9px] text-[#34222e]/60 font-medium">
-              (Incl. {product.gstRate || 18}% GST)
+            <span className="text-[8.5px] sm:text-[9px] text-[#34222e]/60 font-medium truncate">
+              (Incl. GST)
             </span>
           </div>
 
           {/* Dynamic Stepper Button with Soft Green */}
-          <div onClick={(e) => e.stopPropagation()} className="shrink-0 w-[74px] h-8">
+          <div onClick={(e) => e.stopPropagation()} className="shrink-0 w-[64px] sm:w-[74px] h-7 sm:h-8">
             {product.stock > 0 ? (
               !isAdded || quantity === 0 ? (
                 <button
                   type="button"
                   onClick={handleAdd}
-                  className={`w-[74px] h-8 rounded-lg border-2 border-[#059669] text-[#059669] bg-[#ecfdf5] hover:bg-[#059669] hover:text-white font-black text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-xs cursor-pointer active:scale-95 ${
+                  className={`w-full h-full rounded-lg border-2 border-[#059669] text-[#059669] bg-[#ecfdf5] hover:bg-[#059669] hover:text-white font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-0.5 sm:gap-1 shadow-xs cursor-pointer active:scale-95 ${
                     isPopping ? 'animate-btn-pop' : ''
                   }`}
                 >
                   <span>ADD</span>
-                  <Plus className="w-3 h-3 stroke-[3]" />
+                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                 </button>
               ) : (
-                <div className={`w-[74px] h-8 rounded-lg bg-[#059669] text-white flex items-center justify-between px-1.5 font-bold text-xs shadow-sm shadow-[#059669]/30 animate-in zoom-in-95 duration-150 ${
+                <div className={`w-full h-full rounded-lg bg-[#059669] text-white flex items-center justify-between px-1 sm:px-1.5 font-bold text-xs shadow-sm shadow-[#059669]/30 animate-in zoom-in-95 duration-150 ${
                   isPopping ? 'animate-btn-pop' : ''
                 }`}>
                   <button 
                     type="button"
                     onClick={handleDecrement}
-                    className="w-5 h-5 flex items-center justify-center hover:bg-black/20 rounded transition-colors active:scale-90 cursor-pointer"
+                    className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center hover:bg-black/20 rounded transition-colors active:scale-90 cursor-pointer"
                     title="Decrease"
                   >
-                    <Minus className="w-3 h-3 stroke-[3]" />
+                    <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                   </button>
-                  <span className="text-[12px] font-black tabular-nums">{quantity}</span>
+                  <span className="text-[11px] sm:text-[12px] font-black tabular-nums">{quantity}</span>
                   <button 
                     type="button"
                     onClick={handleIncrement}
                     disabled={quantity >= product.stock}
-                    className="w-5 h-5 flex items-center justify-center hover:bg-black/20 rounded transition-colors active:scale-90 cursor-pointer disabled:opacity-30"
+                    className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center hover:bg-black/20 rounded transition-colors active:scale-90 cursor-pointer disabled:opacity-30"
                     title="Increase"
                   >
-                    <Plus className="w-3 h-3 stroke-[3]" />
+                    <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                   </button>
                 </div>
               )
             ) : (
-              <span className="h-8 px-2 rounded-lg font-bold text-[9px] bg-[#fcedde] text-[#34222e]/40 border border-[#f9bf8f]/60 uppercase flex items-center justify-center">
+              <span className="w-full h-full px-1 sm:px-2 rounded-lg font-bold text-[8.5px] sm:text-[9px] bg-[#fcedde] text-[#34222e]/40 border border-[#f9bf8f]/60 uppercase flex items-center justify-center">
                 Out of Stock
               </span>
             )}
           </div>
         </div>
-
       </div>
     </article>
   );

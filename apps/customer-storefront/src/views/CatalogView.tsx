@@ -262,8 +262,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       : `${filteredProducts.length} item${filteredProducts.length === 1 ? '' : 's'}`;
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-4 sm:py-6">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-3 sm:py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
         
         {/* Breadcrumb Navigation */}
         <div className="flex items-center space-x-2 text-xs text-[#7a6274] mb-3 sm:mb-4 min-w-0">
@@ -323,7 +323,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
         {/* Category Header Banner (browsing only) */}
         {!isSearching && (
-        <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 sm:p-6 mb-4 sm:mb-6 shadow-xs">
+        <div className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 p-3.5 sm:p-6 mb-4 sm:mb-6 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center space-x-2 text-xs font-bold text-[#0c831f] mb-1">
@@ -350,7 +350,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
         {/* Quick-Commerce Category Pills / Chips Rail (browsing only; the sidebar and filters cover this while searching) */}
         {!isSearching && (
-        <div className="mb-4 sm:mb-6 bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-3 sm:p-4 shadow-xs">
+        <div className="mb-4 sm:mb-6 bg-[#fffbf7] rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 p-3 sm:p-4 shadow-xs">
           <div className="flex items-center justify-between mb-2.5 px-1">
             <span className="text-xs font-bold text-[#34222e] flex items-center gap-1.5 uppercase tracking-wider">
               <LayoutGrid className="w-3.5 h-3.5 text-[#0c831f]" />
@@ -741,7 +741,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 </div>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
                 {filteredProducts.map(product => (
                   <ProductCard
                     key={product.id}
@@ -759,7 +759,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   <div
                     key={product.id}
                     onClick={() => onSelectProduct(product)}
-                    className="bg-[#fffbf7] rounded-2xl border border-[#f9bf8f]/60 p-4 hover:border-[#0c831f] hover:shadow-sm transition-all flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer text-[#34222e]"
+                    className="bg-[#fffbf7] rounded-2xl border border-[#f9bf8f]/60 p-3 sm:p-4 hover:border-[#0c831f] hover:shadow-sm transition-all flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 cursor-pointer text-[#34222e]"
                   >
                     <div className="flex items-center space-x-4 w-full sm:w-auto">
                       <div className="w-20 h-20 rounded-xl bg-white border border-[#f9bf8f]/40 p-1.5 shrink-0 flex items-center justify-center overflow-hidden">

@@ -40,24 +40,24 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#34222e]/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative bg-[#fffbf7] rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#f9bf8f]/60 text-[#34222e]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#34222e]/40 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative bg-[#fffbf7] rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#f9bf8f]/60 text-[#34222e]">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white hover:bg-[#fee9d7] text-[#7a6274] hover:text-[#34222e] flex items-center justify-center transition cursor-pointer border border-[#f9bf8f]/60 shadow-xs"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white hover:bg-[#fee9d7] text-[#7a6274] hover:text-[#34222e] flex items-center justify-center transition cursor-pointer border border-[#f9bf8f]/60 shadow-xs"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        <div className="p-4 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start">
           {/* Gallery Column */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div 
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
-              className="bg-white border border-[#f9bf8f]/60 rounded-2xl p-4 flex items-center justify-center h-64 overflow-hidden shadow-xs relative cursor-crosshair select-none group"
+              className="bg-white border border-[#f9bf8f]/60 rounded-2xl p-4 flex items-center justify-center h-52 sm:h-64 overflow-hidden shadow-xs relative cursor-crosshair select-none group"
             >
               <span className={`absolute top-3 left-3 px-2 py-0.5 rounded-full bg-[#f2fcf4] text-[#0c831f] text-[10px] font-bold border border-[#0c831f]/20 flex items-center gap-1 transition-opacity ${isZoomed ? 'opacity-0' : 'opacity-100'}`}>
                 <Zap className="w-3 h-3 fill-[#0c831f]" />

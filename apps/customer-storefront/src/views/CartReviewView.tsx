@@ -79,8 +79,8 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
         
         {/* 3-Step Breadcrumb Stepper */}
         <div className="mb-8">

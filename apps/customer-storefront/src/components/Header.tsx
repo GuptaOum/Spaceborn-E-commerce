@@ -185,8 +185,8 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-50 bg-[#fffbf7] border-b border-[#f9bf8f]/60 shadow-xs transition-all">
 
       {/* Main Clean Header */}
-      <div className="max-w-7xl mx-auto px-4 py-2.5">
-        <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-6 min-w-0">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-2.5">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-3 md:gap-6 min-w-0">
           
           {/* Brand Logo & Location Switcher */}
           <div className="flex items-center space-x-2 sm:space-x-5 shrink-0 min-w-0">
@@ -321,14 +321,15 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Right Action Controls */}
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             
             {/* Orders Action */}
             <button 
               onClick={() => onNavigate('orders')}
               aria-label="Orders"
               title="Orders"
-              className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-semibold transition-all cursor-pointer"
+              className="inline-flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-semibold transition-all cursor-pointer"
             >
               <Receipt className="w-4 h-4 text-[#7a6274]" />
               <span className="hidden sm:inline">Orders</span>
@@ -339,9 +340,9 @@ export const Header: React.FC<HeaderProps> = ({
               {user ? (
                 <button
                   onClick={() => setShowAccountMenu(!showAccountMenu)}
-                  className="flex items-center space-x-2 text-[#34222e] p-1 rounded-xl hover:bg-[#fee9d7]/50 transition cursor-pointer"
+                  className="flex items-center space-x-1.5 sm:space-x-2 text-[#34222e] p-1 rounded-xl hover:bg-[#fee9d7]/50 transition cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#34222e] text-[#fee9d7] font-bold text-xs flex items-center justify-center">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#34222e] text-[#fee9d7] font-bold text-xs flex items-center justify-center">
                     {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="text-left hidden lg:block pr-1">
@@ -353,9 +354,9 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <button
                   onClick={() => onOpenAuth('login')}
-                  className="flex items-center gap-1.5 sm:gap-2 bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95"
+                  className="flex items-center gap-1 sm:gap-2 bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95"
                 >
-                  <User className="w-4 h-4 text-[#f8cb46]" />
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f8cb46]" />
                   <span className="sm:hidden">Sign in</span>
                   <span className="hidden sm:inline">Sign In / Google</span>
                 </button>
@@ -403,11 +404,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenCart}
               aria-label={cartItemsCount > 0 ? `Cart, ${cartItemsCount} items` : 'Cart'}
-              className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shrink-0 ${
+              className={`inline-flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shrink-0 ${
                 isCartBumping ? 'animate-badge-bump ring-2 ring-[#0c831f]/40' : ''
               }`}
             >
-              <ShoppingCart className={`w-4 h-4 transition-transform duration-200 ${isCartBumping ? 'scale-125' : ''}`} />
+              <ShoppingCart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${isCartBumping ? 'scale-125' : ''}`} />
               {/* Phones: icon + count only. Larger screens: count and subtotal. */}
               <span className="sm:hidden">{cartItemsCount > 0 ? cartItemsCount : 'Cart'}</span>
               <span className="hidden sm:inline">{cartItemsCount > 0 ? `${cartItemsCount} items` : 'Cart'}</span>
@@ -426,56 +427,104 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Mobile: delivery location chip + search bar */}
-        <div className="mt-2 block md:hidden space-y-2">
+        <div className="mt-1.5 block md:hidden space-y-1.5">
           <button
             type="button"
             onClick={() => setShowLocationModal(true)}
-            className="flex w-full items-center gap-1.5 text-left cursor-pointer min-w-0"
+            className="flex w-full items-center gap-1 text-left cursor-pointer min-w-0 py-0.5"
           >
             <MapPin className="w-3.5 h-3.5 text-[#e2434b] shrink-0" />
-            <span className="text-xs font-bold text-[#34222e] truncate">{location.area}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-[#34222e]/60 shrink-0" />
-            <span className="ml-auto text-[11px] font-bold text-[#059669] truncate shrink-0 max-w-[55%]">{deliveryLabel}</span>
+            <span className="text-xs font-bold text-[#34222e] truncate max-w-[45%]">{location.area}</span>
+            <ChevronDown className="w-3 h-3 text-[#34222e]/60 shrink-0" />
+            <span className="ml-auto text-[10.5px] font-bold text-[#059669] truncate shrink-0 max-w-[50%]">{deliveryLabel}</span>
           </button>
-          <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 px-3 py-2 focus-within:bg-white focus-within:border-[#059669] transition-all">
-            <Search className="w-4 h-4 text-[#7a6274] mr-2 shrink-0" />
-            <input
-              ref={mobileSearchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handlePerformSearch();
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  handleClearMobileSearch();
-                }
-              }}
-              placeholder="Search components, sensors, motors..."
-              className="w-full bg-transparent text-xs text-[#34222e] placeholder:text-[#7a6274]/70 outline-none font-medium"
-            />
-            {searchQuery ? (
-              <div className="flex items-center gap-1 shrink-0 ml-1.5">
-                <button
-                  type="button"
-                  onClick={handleClearMobileSearch}
-                  aria-label="Clear search"
-                  title="Clear search"
-                  className="p-1 text-[#7a6274] hover:text-[#34222e] hover:bg-[#fee9d7] rounded-full cursor-pointer transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
+          <div className="relative">
+            <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 px-2.5 py-1.5 focus-within:bg-white focus-within:border-[#059669] transition-all">
+              <Search className="w-3.5 h-3.5 text-[#7a6274] mr-2 shrink-0" />
+              <input
+                ref={mobileSearchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  onSearchChange(e.target.value);
+                  setShowSearchDropdown(true);
+                }}
+                onFocus={() => setShowSearchDropdown(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handlePerformSearch();
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    handleClearMobileSearch();
+                  }
+                }}
+                placeholder="Search components, sensors, motors..."
+                className="w-full bg-transparent text-xs text-[#34222e] placeholder:text-[#7a6274]/70 outline-none font-medium"
+              />
+              {searchQuery ? (
+                <div className="flex items-center gap-1 shrink-0 ml-1">
+                  <button
+                    type="button"
+                    onClick={handleClearMobileSearch}
+                    aria-label="Clear search"
+                    title="Clear search"
+                    className="p-1 text-[#7a6274] hover:text-[#34222e] hover:bg-[#fee9d7] rounded-full cursor-pointer transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePerformSearch()}
+                    className="px-2 py-0.5 rounded-lg bg-[#0c831f] text-white text-[11px] font-bold cursor-pointer transition"
+                  >
+                    Search
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Mobile Autocomplete Search Suggestions Dropdown */}
+            {showSearchDropdown && searchResults.length > 0 && (
+              <div 
+                className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl border border-[#f9bf8f]/60 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+              >
+                <div className="px-3 py-1 text-[10.5px] font-bold text-[#7a6274] border-b border-[#f9bf8f]/30 flex items-center justify-between">
+                  <span>Search Suggestions</span>
+                  <span className="text-[#0c831f] font-semibold">10-15 Min Delivery</span>
+                </div>
+                {searchResults.map(p => (
+                  <div
+                    key={p.id}
+                    onClick={() => {
+                      onSelectProduct(p);
+                      setShowSearchDropdown(false);
+                    }}
+                    className="px-3 py-1.5 hover:bg-[#fee9d7]/50 flex items-center justify-between cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#fffbf7] border border-[#f9bf8f]/40 flex items-center justify-center p-0.5 shrink-0">
+                        <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-[#34222e] truncate">{p.name}</p>
+                        <p className="text-[9.5px] text-[#7a6274]">SKU: {p.sku}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-[#34222e] bg-[#fee9d7] px-2 py-0.5 rounded-md shrink-0">
+                      ₹{p.price}
+                    </span>
+                  </div>
+                ))}
+                <div
                   onClick={() => handlePerformSearch()}
-                  className="px-2 py-0.5 rounded-lg bg-[#0c831f] text-white text-[11px] font-bold cursor-pointer transition"
+                  className="px-3 py-1.5 border-t border-[#f9bf8f]/30 text-xs font-bold text-[#0c831f] hover:bg-[#fee9d7]/40 flex items-center justify-between cursor-pointer transition-colors"
                 >
-                  Search
-                </button>
+                  <span className="truncate">Search entire catalog for &ldquo;{searchQuery}&rdquo;</span>
+                  <span className="text-[#7a6274] font-mono text-[10px]">↵</span>
+                </div>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
       </div>

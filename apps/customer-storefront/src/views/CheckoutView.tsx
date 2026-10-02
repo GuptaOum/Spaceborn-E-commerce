@@ -186,7 +186,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   }
 
   const fieldClass =
-    'mt-1.5 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2.5 text-sm text-[#34222e] outline-none transition focus:border-[#0c831f] focus:ring-2 focus:ring-[#0c831f]/10';
+    'mt-1.5 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2 sm:py-2.5 text-sm text-[#34222e] outline-none transition focus:border-[#0c831f] focus:ring-2 focus:ring-[#0c831f]/10';
 
   const field = (label: string, key: keyof AddressForm, props: React.InputHTMLAttributes<HTMLInputElement> = {}, wide = false) => (
     <label className={`text-xs font-semibold text-[#7a6274] ${wide ? 'sm:col-span-2' : ''}`}>
@@ -196,9 +196,9 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   );
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] py-8">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 md:flex-row">
-        <form onSubmit={handlePayment} className="flex-1 space-y-5 rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-6 shadow-sm">
+    <div className="min-h-screen bg-[#fee9d7] py-4 sm:py-8">
+      <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:gap-6 px-3 sm:px-4 md:flex-row">
+        <form onSubmit={handlePayment} className="flex-1 space-y-4 sm:space-y-5 rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-6 shadow-sm">
           <button
             type="button"
             onClick={() => navigateTo('cart')}
@@ -282,7 +282,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
         </form>
 
         <aside className="h-fit w-full space-y-4 md:w-80">
-          <div className="rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-5 shadow-sm">
+          <div className="rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-5 shadow-sm">
             <h2 className="mb-3 font-bold text-[#34222e]">Order Summary</h2>
             <div className="mb-4 max-h-56 space-y-2.5 overflow-y-auto">
               {cart.map((item) => {

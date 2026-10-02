@@ -56,14 +56,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
   return (
     <div className="min-h-screen bg-[#fee9d7] text-[#34222e] pb-24">
       
-      <main className="max-w-7xl mx-auto px-4 pt-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3 sm:pt-6 space-y-4 sm:space-y-6">
 
         {/* Robu-Style Sliding Advertisement & Services Hero Banner */}
         <HeroSlider onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
 
         {/* Categories Grid */}
-        <section className="bg-[#fffbf7] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
-          <div className="flex items-center justify-between mb-4">
+        <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
               Shop by Category
             </h2>
@@ -76,7 +76,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-2 sm:gap-3">
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-1.5 sm:gap-3">
             {QUICK_CATEGORIES.map((cat, index) => {
               const Icon = cat.icon;
               return (
@@ -86,15 +86,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     onSelectCategory(cat.category);
                     onNavigate('catalog');
                   }}
-                  className="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
+                  className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
                 >
                   <div 
                     style={{ backgroundColor: cat.bg }}
-                    className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border border-black/5 flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-2"
+                    className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl border border-black/5 flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-1.5 sm:mb-2"
                   >
-                    <Icon className="w-6 h-6" style={{ color: cat.color }} />
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: cat.color }} />
                   </div>
-                  <span className="text-[11px] sm:text-xs font-medium text-[#34222e] leading-tight group-hover:text-[#e2434b] transition-colors line-clamp-2 break-words">
+                  <span className="text-[10px] sm:text-xs font-medium text-[#34222e] leading-tight group-hover:text-[#e2434b] transition-colors line-clamp-2 break-words">
                     {cat.name}
                   </span>
                 </div>
@@ -102,18 +102,18 @@ export const HomeView: React.FC<HomeViewProps> = ({
             })}
             <div
               onClick={() => onNavigate('fabrication')}
-              className="group flex flex-col items-center text-center p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
+              className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
             >
-              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border border-black/5 bg-[#34222e] flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-2">
-                <Cable className="w-6 h-6 text-[#f8cb46]" />
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl border border-black/5 bg-[#34222e] flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-1.5 sm:mb-2">
+                <Cable className="w-5 h-5 sm:w-6 sm:h-6 text-[#f8cb46]" />
               </div>
-              <span className="text-xs font-bold text-[#34222e] leading-tight line-clamp-1">Print & CNC</span>
+              <span className="text-[10px] sm:text-xs font-bold text-[#34222e] leading-tight line-clamp-1">Print & CNC</span>
             </div>
           </div>
         </section>
 
         {/* Trending Electronics */}
-        <section className="bg-[#fffbf7] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
+        <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
@@ -133,7 +133,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {trendingProducts.map((product) => {
               const inCart = cart.find(item => item.product.id === product.id)?.quantity || 0;
               return (
@@ -152,7 +152,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         {/* Development Boards Section */}
         {devBoards.length > 0 && (
-          <section className="bg-[#fffbf7] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
+          <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
@@ -175,7 +175,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
               {devBoards.map((product) => {
                 const inCart = cart.find(item => item.product.id === product.id)?.quantity || 0;
                 return (
@@ -195,7 +195,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         {/* Sensors & Motors Section */}
         {sensorsAndMotors.length > 0 && (
-          <section className="bg-[#fffbf7] rounded-3xl p-5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
+          <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
@@ -218,7 +218,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
               {sensorsAndMotors.map((product) => {
                 const inCart = cart.find(item => item.product.id === product.id)?.quantity || 0;
                 return (
