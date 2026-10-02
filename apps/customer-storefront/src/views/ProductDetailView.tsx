@@ -345,9 +345,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               </div>
 
               <ul className="grid gap-1.5 text-sm text-[#7a6274] sm:grid-cols-2">
-                <li>Packed and delivered by the store nearest to you.</li>
+                <li>Packed and delivered from the stock nearest to you.</li>
                 <li>Pay by UPI, card or net banking at checkout.</li>
-                <li>Cancel from your orders page until the store accepts the order.</li>
+                <li>Cancel from your orders page until your order is accepted.</li>
                 <li>Delivery is free on orders of ₹499 or more.</li>
               </ul>
             </div>
