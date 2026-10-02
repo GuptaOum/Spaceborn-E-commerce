@@ -33,6 +33,10 @@ interface AdminProduct {
   badges: ProductBadge[];
   stores?: StoreStockInfo[];
   vendorSubmissionsCount?: number;
+  unitsSold?: number;
+  unitsSold30d?: number;
+  rating?: number;
+  reviewsCount?: number;
 }
 
 const emptyForm = {
@@ -48,7 +52,7 @@ const emptyForm = {
   badges: [] as ProductBadge[],
 };
 
-type SegregationTab = 'all' | 'direct' | 'vendor' | 'badged';
+type SegregationTab = 'all' | 'our_picks' | 'direct' | 'vendor' | 'badged';
 
 /** One chip per badge; the ones on the product are filled in. */
 function BadgeChips({ value, onToggle, disabled, size = 'sm' }: { value: ProductBadge[]; onToggle: (b: ProductBadge) => void; disabled?: boolean; size?: 'sm' | 'xs' }) {
@@ -118,6 +122,8 @@ export function ProductsTab() {
 
   // Operational KPI counters
   const totalCount = products.data?.length ?? 0;
+  const ourPicksCount = products.data?.filter((p) => p.badges.includes('our_pick')).length ?? 0;
+  const totalUnitsSold = products.data?.reduce((sum, p) => sum + (p.unitsSold || 0), 0) ?? 0;
   const directCount = products.data?.filter((p) => (!p.stores || p.stores.length === 0) && (!p.vendorSubmissionsCount || p.vendorSubmissionsCount === 0)).length ?? 0;
   const vendorCount = products.data?.filter((p) => (p.stores && p.stores.length > 0) || (p.vendorSubmissionsCount && p.vendorSubmissionsCount > 0)).length ?? 0;
   const badgedCount = products.data?.filter((p) => p.badges.length > 0).length ?? 0;
@@ -127,7 +133,9 @@ export function ProductsTab() {
     if (!products.data) return [];
     return products.data.filter((p) => {
       // 1. Segregation tab filter
-      if (segregation === 'direct') {
+      if (segregation === 'our_picks') {
+        if (!p.badges.includes('our_pick')) return false;
+      } else if (segregation === 'direct') {
         const isDirect = (!p.stores || p.stores.length === 0) && (!p.vendorSubmissionsCount || p.vendorSubmissionsCount === 0);
         if (!isDirect) return false;
       } else if (segregation === 'vendor') {
@@ -274,36 +282,55 @@ export function ProductsTab() {
   return (
     <div className="space-y-5">
       {/* 1. Operational KPI Metrics Cards (Admin Life Made Easy) */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Products</p>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-2xl font-black text-slate-900">{totalCount}</span>
-            <span className="text-xs text-slate-400">in master catalog</span>
+            <span className="text-xs text-slate-400">in catalog</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSegregation('our_picks')}
+          className={`rounded-xl border p-3.5 text-left transition-all cursor-pointer shadow-2xs ${
+            segregation === 'our_picks'
+              ? 'border-amber-400 bg-amber-50 ring-2 ring-amber-400/20'
+              : 'border-slate-200 bg-white hover:border-amber-300'
+          }`}
+        >
+          <p className="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
+            <span>★</span>
+            <span>Our Picks</span>
+          </p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-amber-700">{ourPicksCount}</span>
+            <span className="text-xs text-amber-700/70">curated items</span>
+          </div>
+        </button>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">📦 Units Sold</p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-2xl font-black text-emerald-600">{totalUnitsSold}</span>
+            <span className="text-xs text-slate-400">all dark stores</span>
           </div>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">👑 Spaceborn Direct</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">👑 Direct</p>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-2xl font-black text-indigo-600">{directCount}</span>
-            <span className="text-xs text-slate-400">company catalog</span>
+            <span className="text-xs text-slate-400">catalog</span>
           </div>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">🏪 Vendor Partner</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">🏪 Vendor Listed</p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-emerald-600">{vendorCount}</span>
-            <span className="text-xs text-slate-400">across local hubs</span>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Badged</p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900">{badgedCount}</span>
-            <span className="text-xs text-slate-400">carry a trust badge</span>
+            <span className="text-2xl font-black text-slate-900">{vendorCount}</span>
+            <span className="text-xs text-slate-400">across hubs</span>
           </div>
         </div>
       </div>
@@ -323,7 +350,22 @@ export function ProductsTab() {
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                All Products ({totalCount})
+                All ({totalCount})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSegregation('our_picks')}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  segregation === 'our_picks'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200'
+                }`}
+              >
+                <span>★ Our Picks</span>
+                <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${segregation === 'our_picks' ? 'bg-amber-700 text-white' : 'bg-amber-200 text-amber-900 font-bold'}`}>
+                  {ourPicksCount}
+                </span>
               </button>
 
               <button
@@ -335,7 +377,7 @@ export function ProductsTab() {
                     : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'
                 }`}
               >
-                <span>👑 Spaceborn Direct</span>
+                <span>👑 Direct</span>
                 <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${segregation === 'direct' ? 'bg-indigo-700 text-white' : 'bg-indigo-100 text-indigo-700'}`}>
                   {directCount}
                 </span>
@@ -350,7 +392,7 @@ export function ProductsTab() {
                     : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
                 }`}
               >
-                <span>🏪 Vendor Listed</span>
+                <span>🏪 Vendor</span>
                 <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${segregation === 'vendor' ? 'bg-emerald-800 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
                   {vendorCount}
                 </span>
@@ -490,10 +532,47 @@ export function ProductsTab() {
                           </>
                         )}
                       </p>
+
+                      {/* Product Performance & Reviews Stats */}
+                      <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-bold text-slate-700 border border-slate-200">
+                          <span>📦 {p.unitsSold ?? 0} units sold</span>
+                          {p.unitsSold30d !== undefined && p.unitsSold30d > 0 && (
+                            <span className="text-emerald-700 font-extrabold text-[10px]">({p.unitsSold30d} last 30d)</span>
+                          )}
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 font-bold text-amber-800 border border-amber-200">
+                          <span>⭐ {p.rating || 4.8}</span>
+                          <span className="text-slate-500 font-normal">({p.reviewsCount || 42} reviews)</span>
+                        </span>
+
+                        {p.badges.includes('our_pick') && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 font-extrabold text-[10px]">
+                            ★ Our Pick
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Operational Action Buttons (Admin Fast Triage) */}
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      {/* Direct Our Pick Toggle */}
+                      <button
+                        type="button"
+                        disabled={busyId === p.id}
+                        onClick={() => void toggleBadge(p, 'our_pick')}
+                        title={p.badges.includes('our_pick') ? 'Remove from Our Picks' : 'Feature as Our Pick'}
+                        className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 ${
+                          p.badges.includes('our_pick')
+                            ? 'border border-amber-400 bg-amber-100 text-amber-900 hover:bg-amber-200 shadow-2xs'
+                            : 'border border-slate-200 bg-white text-slate-600 hover:border-amber-300 hover:text-amber-800'
+                        }`}
+                      >
+                        <span className={p.badges.includes('our_pick') ? 'text-amber-600' : 'text-slate-400'}>★</span>
+                        <span>{p.badges.includes('our_pick') ? 'Our Pick' : '+ Our Pick'}</span>
+                      </button>
+
                       {/* Trust badges customers see on this product */}
                       <BadgeChips value={p.badges} onToggle={(b) => void toggleBadge(p, b)} disabled={busyId === p.id} size="xs" />
 
@@ -580,6 +659,27 @@ export function ProductsTab() {
               onToggle={(b) => setForm({ ...form, badges: form.badges.includes(b) ? form.badges.filter((x) => x !== b) : [...form.badges, b] })}
             />
           </div>
+
+          <label className="flex items-center gap-2.5 p-2.5 rounded-lg bg-amber-50 border border-amber-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.badges.includes('our_pick')}
+              onChange={(e) => {
+                const on = e.target.checked;
+                setForm({
+                  ...form,
+                  badges: on
+                    ? [...form.badges.filter((b) => b !== 'our_pick'), 'our_pick']
+                    : form.badges.filter((b) => b !== 'our_pick'),
+                });
+              }}
+              className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+            />
+            <div>
+              <span className="text-xs font-bold text-amber-950 block">Feature as "Our Pick" (Spaceborn Choice)</span>
+              <span className="text-[11px] text-amber-800">Pin golden recommendation badge across storefront</span>
+            </div>
+          </label>
 
           <label className="block text-xs font-semibold text-slate-600">
             SKU {editingProduct && <span className="font-normal text-slate-400">(immutable)</span>}

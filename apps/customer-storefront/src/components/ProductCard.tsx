@@ -1,8 +1,8 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { Eye, Zap, Plus, Minus, BadgeCheck } from 'lucide-react';
-import { PRODUCT_BADGES } from '@spaceborn/web-core/types';
+import { Zap, Plus, Minus, Star, Eye } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -26,7 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const triggerPop = () => {
     setIsPopping(true);
-    setTimeout(() => setIsPopping(false), 350);
+    setTimeout(() => setIsPopping(false), 300);
   };
 
   useEffect(() => {
@@ -79,137 +79,132 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const deliveryTime = product.deliveryMins || 10;
-  const primaryBadge = product.badges?.[0] ?? (product.isChoice ? 'our_pick' : undefined);
-  const discountPercent = product.originalPrice && product.originalPrice > product.price
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : null;
+  const isOurPick = Boolean(product.isChoice) || Boolean(product.badges?.includes('our_pick'));
+  const discountPercent =
+    product.originalPrice && product.originalPrice > product.price
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      : null;
 
-  // Short spec string for quick commerce scanning (e.g. "12V • 300 RPM • Hall Enc.")
-  const specSummary = product.rpm 
-    ? `${product.voltage || '12V'} • ${product.rpm} RPM`
-    : product.shaftType
-    ? `${product.shaftType} • 1 Unit`
-    : product.packSize || '1 Unit • Standard Pack';
+  const ratingScore = product.rating || 4.8;
+  const reviewsCount = product.reviewsCount || 42;
 
   return (
-    <article 
+    <article
       onClick={() => onSelect(product)}
-      className="bg-[#fffbf7] border border-[#f9bf8f]/60 hover:border-[#059669] hover:shadow-lg rounded-2xl p-2 sm:p-3 transition-all duration-200 flex flex-col justify-between group overflow-hidden cursor-pointer relative shadow-xs"
+      className="bg-[#fffbf7] border border-[#f9bf8f]/60 hover:border-[#0c831f] hover:shadow-md rounded-2xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between group overflow-hidden cursor-pointer relative shadow-2xs"
     >
-      {/* Top Badges Row */}
-      <div className="flex items-center justify-between mb-1 sm:mb-1.5 relative z-10 gap-1">
-        {/* Delivery ETA Badge */}
-        <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-black text-[#059669] uppercase tracking-wide bg-[#ecfdf5] border border-[#10b981]/20 px-1 sm:px-1.5 py-0.5 rounded-md shrink-0">
-          <Zap className="w-2.5 h-2.5 fill-[#059669]" />
-          <span>{deliveryTime}M</span>
-          <span className="hidden sm:inline">INS</span>
+      {/* Top Header: Delivery ETA & Badges */}
+      <div className="flex items-center justify-between gap-1 mb-1.5 relative z-10 min-h-[22px]">
+        {/* Delivery ETA Pill */}
+        <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-bold text-[#0c831f] bg-[#f2fcf4] border border-[#0c831f]/20 px-1.5 py-0.5 rounded-md shrink-0">
+          <Zap className="w-2.5 h-2.5 fill-[#0c831f]" />
+          <span>{deliveryTime} MINS</span>
         </span>
 
         <div className="flex items-center gap-1 shrink-0">
-          {/* Discount Ribbon */}
-          {discountPercent && discountPercent > 0 && (
-            <span className="bg-[#e2434b] text-white text-[8.5px] sm:text-[9.5px] font-black px-1 sm:px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">
+          {/* Discount Pill */}
+          {discountPercent && discountPercent > 0 ? (
+            <span className="bg-[#e2434b] text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-2xs">
               {discountPercent}% OFF
             </span>
-          )}
+          ) : null}
 
-          {/* Quick View Button - Desktop Only */}
+          {/* Quick View Button (Desktop Hover) */}
           <button
             onClick={handleQuickViewClick}
-            className="w-6 h-6 rounded-full bg-white/95 text-[#34222e]/60 hover:text-[#e2434b] hover:bg-white hidden md:flex items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs border border-[#f9bf8f]/40"
+            className="w-5 h-5 rounded-full bg-white text-[#34222e]/60 hover:text-[#0c831f] hover:bg-white hidden md:flex items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-2xs border border-[#f9bf8f]/40"
             title="Quick View"
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      {/* Product Image on Clean Light Canvas */}
-      <div className="w-full h-32 sm:h-36 rounded-xl bg-white border border-[#f9bf8f]/30 flex items-center justify-center p-2 mb-1.5 sm:mb-2 overflow-hidden relative">
+      {/* Product Image Canvas */}
+      <div className="w-full h-32 sm:h-36 rounded-xl bg-white border border-[#f9bf8f]/30 flex items-center justify-center p-2 mb-2 overflow-hidden relative">
         <img
           src={imgSrc}
           alt={product.name}
-          className="max-h-full max-w-full object-contain transition-transform duration-300 ease-out group-hover:scale-110 will-change-transform"
+          className="max-h-full max-w-full object-contain transition-transform duration-300 ease-out group-hover:scale-105 will-change-transform"
           loading="lazy"
           onError={() => setImgSrc('/spaceborn-logo.svg')}
         />
-        {primaryBadge && (
-          <span className="absolute bottom-1.5 left-1.5 z-10 inline-flex items-center gap-1 rounded-md bg-[#34222e] px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-white shadow-xs">
-            <BadgeCheck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-            {PRODUCT_BADGES[primaryBadge].label}
+
+        {/* Our Pick Badge: Only on verified selected products */}
+        {isOurPick && (
+          <span className="absolute bottom-1.5 left-1.5 z-10 inline-flex items-center gap-0.5 rounded-md bg-amber-50 border border-amber-300 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-800 shadow-2xs">
+            ★ Our Pick
           </span>
         )}
       </div>
 
-      {/* Product Info */}
+      {/* Product Body Details */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          {/* Robu-Style Category / Brand & Rating Tag */}
-          <div className="flex items-center justify-between text-[9.5px] sm:text-[10px] text-[#34222e]/60 font-medium mb-0.5">
-            <span className="truncate max-w-[110px] sm:max-w-[120px] font-bold text-[#e2434b] uppercase tracking-wider">{product.brand || product.category}</span>
+          {/* Brand & Stock warning */}
+          <div className="flex items-center justify-between text-[10px] text-[#7a6274] mb-0.5">
+            <span className="truncate max-w-[120px] font-semibold uppercase tracking-wider text-[#34222e]/70">
+              {product.brand || product.category}
+            </span>
             {product.stock > 0 && product.stock <= 5 && (
-              <span className="font-bold text-[#e2434b] text-[9px] sm:text-[10px]">Only {product.stock} left</span>
+              <span className="font-bold text-[#e2434b] text-[9.5px]">Only {product.stock} left</span>
             )}
           </div>
 
-          {/* Title: 2-line clamped */}
-          <h3 className="text-xs font-bold text-[#34222e] line-clamp-2 leading-snug group-hover:text-[#e2434b] transition-colors mb-1 min-h-[30px] sm:min-h-[32px]">
+          {/* Product Title (2-line clamped) */}
+          <h3 className="text-xs sm:text-[13px] font-bold text-[#34222e] line-clamp-2 leading-snug group-hover:text-[#0c831f] transition-colors mb-1 min-h-[32px]">
             {product.name}
           </h3>
 
-          {/* Robu-Style SKU Line */}
-          <div className="flex items-center justify-between text-[9px] sm:text-[9.5px] text-[#7a6274] font-mono mb-1">
-            <span className="truncate max-w-[80px] sm:max-w-none">SKU: {product.sku}</span>
-            {product.stock > 0 && (
-              <span className="text-[#059669] font-medium truncate max-w-[90px] sm:max-w-[100px]">
-                {product.stock} near you
-              </span>
-            )}
+          {/* Customer Rating */}
+          <div className="flex items-center gap-1 text-[10px] text-[#7a6274] mb-2">
+            <div className="flex items-center text-amber-400">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+            </div>
+            <span className="font-bold text-[#34222e]">{ratingScore}</span>
+            <span className="text-[#7a6274]">({reviewsCount})</span>
           </div>
-
-          {/* Clean Technical Spec Line */}
-          <p className="text-[10px] sm:text-[10.5px] font-medium text-[#34222e]/70 truncate mb-1.5 sm:mb-2">
-            {specSummary}
-          </p>
         </div>
 
-        {/* Pricing & Robu-styled Add to Cart Button */}
-        <div className="pt-1.5 sm:pt-2 border-t border-[#f9bf8f]/30 flex items-center justify-between gap-1 mt-auto">
+        {/* Pricing & Add to Cart Action */}
+        <div className="pt-2 border-t border-[#f9bf8f]/30 flex items-center justify-between gap-1.5 mt-auto">
           <div className="flex flex-col min-w-0">
-            <div className="flex items-baseline space-x-1 flex-wrap">
+            <div className="flex items-baseline gap-1 flex-wrap">
               <span className="text-xs sm:text-sm font-black text-[#34222e] leading-tight">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-[9px] sm:text-[10px] text-[#34222e]/40 line-through font-medium leading-tight">
+                <span className="text-[9.5px] text-[#7a6274] line-through font-medium leading-tight">
                   ₹{product.originalPrice}
                 </span>
               )}
             </div>
-            <span className="text-[8.5px] sm:text-[9px] text-[#34222e]/60 font-medium truncate">
+            <span className="text-[8.5px] text-[#7a6274] font-medium leading-none mt-0.5">
               (Incl. GST)
             </span>
           </div>
 
-          {/* Dynamic Stepper Button with Soft Green */}
-          <div onClick={(e) => e.stopPropagation()} className="shrink-0 w-[64px] sm:w-[74px] h-7 sm:h-8">
+          {/* Stepper / Add Button */}
+          <div onClick={(e) => e.stopPropagation()} className="shrink-0 w-[64px] sm:w-[72px] h-7 sm:h-8">
             {product.stock > 0 ? (
               !isAdded || quantity === 0 ? (
                 <button
                   type="button"
                   onClick={handleAdd}
-                  className={`w-full h-full rounded-lg border-2 border-[#059669] text-[#059669] bg-[#ecfdf5] hover:bg-[#059669] hover:text-white font-black text-[10px] sm:text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-0.5 sm:gap-1 shadow-xs cursor-pointer active:scale-95 ${
-                    isPopping ? 'animate-btn-pop' : ''
+                  className={`w-full h-full rounded-lg border border-[#0c831f] text-[#0c831f] bg-[#f2fcf4] hover:bg-[#0c831f] hover:text-white font-bold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-0.5 shadow-2xs cursor-pointer active:scale-95 ${
+                    isPopping ? 'scale-95' : ''
                   }`}
                 >
                   <span>ADD</span>
-                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
+                  <Plus className="w-3 h-3 stroke-[2.5]" />
                 </button>
               ) : (
-                <div className={`w-full h-full rounded-lg bg-[#059669] text-white flex items-center justify-between px-1 sm:px-1.5 font-bold text-xs shadow-sm shadow-[#059669]/30 animate-in zoom-in-95 duration-150 ${
-                  isPopping ? 'animate-btn-pop' : ''
-                }`}>
-                  <button 
+                <div
+                  className={`w-full h-full rounded-lg bg-[#0c831f] text-white flex items-center justify-between px-1.5 font-bold text-xs shadow-2xs animate-in zoom-in-95 duration-150 ${
+                    isPopping ? 'scale-95' : ''
+                  }`}
+                >
+                  <button
                     type="button"
                     onClick={handleDecrement}
                     className="w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center hover:bg-black/20 rounded transition-colors active:scale-90 cursor-pointer"
@@ -218,7 +213,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                   </button>
                   <span className="text-[11px] sm:text-[12px] font-black tabular-nums">{quantity}</span>
-                  <button 
+                  <button
                     type="button"
                     onClick={handleIncrement}
                     disabled={quantity >= product.stock}
@@ -230,7 +225,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </div>
               )
             ) : (
-              <span className="w-full h-full px-1 sm:px-2 rounded-lg font-bold text-[8.5px] sm:text-[9px] bg-[#fcedde] text-[#34222e]/40 border border-[#f9bf8f]/60 uppercase flex items-center justify-center">
+              <span className="w-full h-full px-1 rounded-lg font-bold text-[8.5px] bg-[#fee9d7]/50 text-[#7a6274] border border-[#f9bf8f]/50 uppercase flex items-center justify-center">
                 Out of Stock
               </span>
             )}

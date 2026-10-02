@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
@@ -71,13 +72,22 @@ function OrderCard({ order, onCancelled }: { order: Order; onCancelled: () => vo
         </p>
       )}
 
-      <ul className="mt-4 space-y-1 text-sm text-[#34222e]">
+      <ul className="mt-4 space-y-2 text-sm text-[#34222e]">
         {order.items.map((item) => (
-          <li key={item.productId} className="flex justify-between gap-2">
-            <span className="truncate">
+          <li key={item.productId} className="flex items-center justify-between gap-2">
+            <span className="truncate flex-1">
               {item.quantity} × {item.name}
             </span>
-            <span>{formatInr(item.lineTotal)}</span>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className="font-semibold">{formatInr(item.lineTotal)}</span>
+              <Link
+                href={`/product/${encodeURIComponent(item.productId)}`}
+                className="rounded-lg bg-[#fee9d7] hover:bg-[#0c831f] hover:text-white px-2 py-0.5 text-[11px] font-bold text-[#34222e] transition"
+                title="Review this component"
+              >
+                ★ Review
+              </Link>
+            </div>
           </li>
         ))}
       </ul>

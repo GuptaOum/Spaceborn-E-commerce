@@ -279,6 +279,11 @@ adminRouter.get('/products', async (req, res) => {
   const { rows } = await pool.query(
     `select ${PRODUCT_COLUMNS},
             (select count(*)::int from inventory i where i.product_id = p.id and i.is_listed) as "storeCount",
+            (select coalesce(sum(oi.quantity), 0)::int from order_items oi join orders o on o.id = oi.order_id
+              where oi.product_id = p.id and o.status not in ('pending_payment', 'cancelled', 'expired')) as "unitsSold",
+            (select coalesce(sum(oi.quantity), 0)::int from order_items oi join orders o on o.id = oi.order_id
+              where oi.product_id = p.id and o.status not in ('pending_payment', 'cancelled', 'expired')
+                and o.created_at >= now() - interval '30 days') as "unitsSold30d",
             coalesce(
               (select json_agg(json_build_object(
                  'storeId', s.id, 'storeName', s.name, 'city', s.city, 'price', i.price, 'stock', i.stock,
