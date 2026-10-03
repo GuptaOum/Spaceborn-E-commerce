@@ -7,7 +7,9 @@ RUN npm ci
 
 COPY packages/web-core ./packages/web-core
 COPY services/api ./services/api
-RUN npm run build -w services/api && npm prune --omit=dev
+# prune drops sharp's musl binary. Reinstall it for this Alpine image.
+RUN npm run build -w services/api && npm prune --omit=dev \
+  && npm install --no-save --os=linux --libc=musl --cpu=x64 sharp@0.33.5
 
 FROM node:20-alpine
 WORKDIR /app
