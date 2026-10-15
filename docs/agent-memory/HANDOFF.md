@@ -1,13 +1,14 @@
 # Spaceborn — project handoff
 
-Source of truth for the next agent. Last updated 3 Oct 2026, after the at-the-door delivery
-code hardening (wrong-guess counter, same-code resend, migration `011`). Demo `main` does not
-have that flow. Do not assume the two remotes match.
+Source of truth for the project. Last updated 16 Oct 2026.
 
-Quick commerce for electronics and robotics parts, plus on-demand 3D printing and CNC.
-Customers see one pooled catalog. The server picks the nearest shop that can fill each line,
-splits a purchase into deliveries when it has to, and takes one payment. Shop names stay off
-the customer pages. Fabrication is the exception: the customer is booking that shop's machine.
+Academic Context: Built as a B.Tech Final Year Engineering Project demonstrating enterprise-grade
+distributed cloud architecture, Zero-Trust network segmentation, and modern RBAC.
+
+Business & Logistics Model: Quick commerce for electronics, robotics hardware, and on-demand 3D printing
+and CNC fabrication ("Blinkit for Hardware"). Implements Merchant-Fulfilled Hyperlocal Delivery (MFHD)
+where partner vendors deliver locally, secured by an at-the-door challenge-response OTP verification.
+Customers see one pooled catalog; the backend partitions orders across regional hubs autonomously.
 
 ---
 
@@ -15,17 +16,14 @@ the customer pages. Fabrication is the exception: the customer is booking that s
 
 | | |
 | :--- | :--- |
-| Local production checkout | `D:\spacebornecomm\spacebornecomprod` |
-| Production remote `origin` | `https://github.com/Spaceborn-Beyond-Autonomous/Spaceborn-E-commerce.git` (`main`) |
-| Demo remote `demo` | `https://github.com/GuptaOum/spacebornecomdemo.git` (`main`) |
-| Live demo | `https://spacebornecomdemo-1.onrender.com` (Render service `spacebornecomdemo-1`, free, Virginia, auto-deploy on `demo/main`) |
-| Archive | `D:\spacebornecomm\_backup_Spaceborn-E-commerce` (do not treat as the app) |
+| Local production checkout | `D:\spacebornecomm\spacebornecomprod` (active branch `main`, tracking `personal/main`) |
+| Unified personal remote | `https://github.com/GuptaOum/Spaceborn-E-commerce.git`<br>• `main`: Production & performance codebase<br>• `demo`: Single-port demo gateway |
+| Spaceborn organization remote | `https://github.com/Spaceborn-Beyond-Autonomous/Spaceborn-E-commerce.git`<br>• Wiped clean: Retains only `README.md` and `docs/architecture.svg` |
+| Live demo | `https://spacebornecomdemo-1.onrender.com` (Render service `spacebornecomdemo-1`) |
 
-Push production to `origin main`. The demo is synced separately: merge `main` into `demo-sync`
-and push `demo demo-sync:main` only for demo-level work (UI, copy, bug fixes). The demo stays a
-light showcase. Do not carry heavy production features into it (the at-the-door OTP flow below,
-courier clients, payment webhooks, fleet or dispatch work). The user decides when something is
-demo-worthy.
+Push production work to `personal main`. Sync the demo branch via `personal demo`.
+The demo stays a lightweight showcase (`scripts/render-gateway.mjs` runs storefront, vendor hub, admin panel,
+API, and outbox worker in one container with a demo-only "Hub" switcher pill).
 
 `scripts/render-gateway.mjs` runs the API, the three Next apps, and the outbox worker in one
 container. `?app=store|vendor|admin` (cookie) picks the app. A demo-only "Hub" pill switches
@@ -186,6 +184,20 @@ Production only (not on the demo): the code is minted at the door, not at checko
 BlueDart is not the quick-commerce lane. Their Domestic Priority product is next-business-day air. The storefront lines that mention BlueDart (warranty RMA, contact, about, the sample order in `products.ts`) are the open honesty bugs above, not a shipping integration.
 
 When a real shop cannot carry the parcel itself, a hyperlocal bike can be booked later. Shadowfax Marketplace fits pooled shops (pickup address per order, OTP, geofence, rider GPS webhook). Borzo is the simpler on-demand alternative. Do not build that client until a shop actually needs a rider. The delivery code is minted at the door and the vendor app never receives it, so a courier integration cannot assume a code already exists on the order. Do not promise 10–15 minutes for a booked courier. A Spaceborn rider fleet (KYC, shifts, payouts, live dispatch) waits until a shop has its own rider and dense orders at one hub.
+
+## Future Architectural Extensions: Hyperlocal Geo-RAG Copilot
+
+Designed for academic thesis and post-viva expansion:
+1. **Location-First Retrieval (Geo-RAG)**:
+   - Filters candidate hardware by Haversine distance (`<= 8km`) against live PostgreSQL dark-store inventory before semantic vector re-ranking.
+   - If an item is out of radius, the agent transparently flags split/adjacent-hub fulfillment rather than violating the 15-minute quick-commerce SLA.
+2. **Hardware Compatibility & Kit Assembly**:
+   - Integrates electronics datasheet retrieval (voltage, logic level, pinout).
+   - Proactively inspects customer cart state (e.g. noticing an MCU without a matching power supply or driver) and offers 1-click kit completion.
+3. **Dual Intent Routing**:
+   - Separates general hardware theory (I2C vs SPI, Ohm's law) from transactional shopping actions (`searchCatalog`, `addToCart`, `navigateTo`).
+
+---
 
 ## What not to do
 
