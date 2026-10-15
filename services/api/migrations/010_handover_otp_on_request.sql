@@ -5,10 +5,8 @@ alter table orders
   add column handover_otp_sent_at    timestamptz,
   add column handover_otp_expires_at timestamptz;
 
--- Orders already in flight keep the code the customer was shown at checkout, and it stays
--- valid long enough for the vendor to close them.
+-- Codes minted at checkout must not survive. The vendor asks for a new one at the door.
 update orders
-   set handover_otp_sent_at = now(),
-       handover_otp_expires_at = now() + interval '7 days'
+   set handover_otp = null
  where handover_otp is not null
    and status in ('pending_payment', 'placed', 'accepted', 'packing', 'ready_for_pickup', 'out_for_delivery');

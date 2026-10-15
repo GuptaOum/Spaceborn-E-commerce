@@ -26,14 +26,15 @@ export const vendorRouter = Router();
 vendorRouter.use(requireAuth);
 
 /**
- * Handover codes are short, so the only thing standing between an assigned vendor and marking an
- * order delivered without handing it over is the number of guesses allowed. Keyed per order so one
- * vendor's fumbled code cannot lock out their other deliveries.
+ * Fabrication jobs still use this in-memory cap. Order delivery codes are counted on the order
+ * row instead (`handover_otp_attempts`), because an in-memory key can be reset by changing the
+ * case of the order id and is not shared across API tasks. The id is lowercased so this cap
+ * cannot be sidestepped the same way.
  */
 const handoverLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   limit: 5,
-  keyGenerator: (req) => `${currentUser(req).storeId ?? 'none'}:${req.params.id}`,
+  keyGenerator: (req) => `${currentUser(req).storeId ?? 'none'}:${String(req.params.id ?? '').toLowerCase()}`,
   skipSuccessfulRequests: true,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
@@ -425,14 +426,15 @@ vendorRouter.post('/fab-jobs/:id/transition', requireApprovedStore, handoverLimi
   res.json({ job: await transitionJob({ jobId: parse(uuid, req.params.id), actor: vendorActor(req), ...b }) });
 });
 
-// The vendor is at the door: mint this order's delivery code and send it to the customer.
-vendorRouter.post('/orders/:id/handover-otp', requireApprovedStore, handoverLimiter, async (req, res) => {
+// The vendor is at the door. Sending is throttled in requestHandoverOtp (45s, same code while
+// it is live). Wrong guesses are counted on the order row, not by this router.
+vendorRouter.post('/orders/:id/handover-otp', requireApprovedStore, async (req, res) => {
   const user = currentUser(req);
   const receipt = await requestHandoverOtp(parse(uuid, req.params.id), { role: 'vendor', uid: user.uid, storeId: user.storeId });
   res.json(receipt);
 });
 
-vendorRouter.post('/orders/:id/transition', requireApprovedStore, handoverLimiter, async (req, res) => {
+vendorRouter.post('/orders/:id/transition', requireApprovedStore, async (req, res) => {
   const body = parse(
     z.object({ to: z.enum(ORDER_STATUSES), reason: reason.optional(), otp: z.string().regex(/^\d{4}$/).optional() }),
     req.body,

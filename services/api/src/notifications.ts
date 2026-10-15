@@ -12,6 +12,7 @@ interface OrderMailRow {
   grand_total: string;
   eta_minutes: number;
   handover_otp: string | null;
+  otp_live: boolean;
   cancel_reason: string | null;
   delivery_address: { fullName?: string; line1?: string; city?: string; pincode?: string };
   customer_email: string | null;
@@ -24,7 +25,8 @@ interface OrderMailRow {
 
 async function loadOrder(orderId: string): Promise<OrderMailRow | null> {
   const { rows } = await pool.query<OrderMailRow>(
-    `select o.id, o.order_number, o.status, o.grand_total, o.eta_minutes, o.handover_otp, o.cancel_reason, o.delivery_address,
+    `select o.id, o.order_number, o.status, o.grand_total, o.eta_minutes, o.handover_otp,
+            (o.handover_otp_expires_at > now()) as otp_live, o.cancel_reason, o.delivery_address,
             u.email as customer_email, coalesce(u.full_name, o.delivery_address->>'fullName') as customer_name,
             s.name as store_name, s.phone as store_phone, v.email as vendor_email,
             coalesce((select json_agg(json_build_object('name', oi.name, 'quantity', oi.quantity, 'lineTotal', oi.line_total) order by oi.name)
@@ -114,10 +116,12 @@ export async function notifyOrderStatus(orderId: string, to: OrderStatus) {
   });
 }
 
-// Sent when the vendor at the door asks for the code. The code is for this order only and expires.
-export async function notifyHandoverOtp(orderId: string) {
+// Sent when the vendor at the door asks for the code. The payload carries the code that was
+// current at enqueue time; a later mint or a burnt code makes this job a no-op.
+export async function notifyHandoverOtp(orderId: string, code: string) {
   const o = await loadOrder(orderId);
-  if (!o?.customer_email || !o.handover_otp || o.status !== 'out_for_delivery') return;
+  if (!o?.customer_email || !o.handover_otp || o.status !== 'out_for_delivery' || !o.otp_live) return;
+  if (o.handover_otp !== code) return;
   const ordersUrl = `${config.PUBLIC_ORIGIN}/orders`;
   const lines = [
     h`Hi ${o.customer_name ?? 'there'}, your delivery for order <b>#${o.order_number}</b> has arrived.`,

@@ -547,7 +547,21 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
       const otp = input.otp ?? '';
       const matches =
         otp.length === order.handover_otp.length && crypto.timingSafeEqual(Buffer.from(otp), Buffer.from(order.handover_otp));
-      if (!matches) throw forbidden('Handover code does not match');
+      if (!matches) {
+        // Committed with the rest of this transaction, then reported after commit so a rollback
+        // cannot wipe the guess. Five wrong codes burn it; the vendor must send a new one.
+        const burned = await c.query<{ cleared: boolean }>(
+          `update orders
+              set handover_otp_attempts = handover_otp_attempts + 1,
+                  handover_otp = case when handover_otp_attempts + 1 >= $2 then null else handover_otp end,
+                  handover_otp_expires_at = case when handover_otp_attempts + 1 >= $2 then null else handover_otp_expires_at end,
+                  handover_otp_sent_at = case when handover_otp_attempts + 1 >= $2 then null else handover_otp_sent_at end
+            where id = $1
+            returning (handover_otp is null) as cleared`,
+          [order.id, HANDOVER_OTP_MAX_ATTEMPTS],
+        );
+        return { kind: 'mismatch' as const, cleared: burned.rows[0]?.cleared === true };
+      }
     }
     if (input.to === 'cancelled' && (actor.role === 'vendor' || actor.role === 'admin') && !input.reason) {
       throw unprocessable('reason_required', 'A cancellation reason is required');
@@ -585,16 +599,24 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
       });
     }
     await enqueue(c, 'order.status_changed', { orderId: order.id, from, to: input.to });
-    return order.id as string;
+    return { kind: 'ok' as const, id: order.id as string };
   };
 
-  const orderId = db ? await run(db) : await withTransaction(run);
+  const result = db ? await run(db) : await withTransaction(run);
+  if (result.kind === 'mismatch') {
+    throw forbidden(
+      result.cleared
+        ? 'Too many wrong codes. That code is no longer valid. Send a new one to the customer.'
+        : 'Handover code does not match',
+    );
+  }
   if (input.to === 'cancelled' || input.to === 'expired') void bumpCatalog();
-  return getOrder(db ?? pool, orderId, input.actor);
+  return getOrder(db ?? pool, result.id, input.actor);
 }
 
 export const HANDOVER_OTP_TTL_MINUTES = 10;
 export const HANDOVER_OTP_RESEND_SECONDS = 45;
+export const HANDOVER_OTP_MAX_ATTEMPTS = 5;
 
 export interface HandoverOtpReceipt {
   orderId: string;
@@ -602,19 +624,23 @@ export interface HandoverOtpReceipt {
   expiresAt: string;
 }
 
-// Called by the vendor when they are standing in front of the customer. Mints a fresh 4-digit
-// code for this order only, stores it with a short expiry, and queues the message to the
-// customer. The vendor never sees the code; the customer reads it back to them.
+// Called by the vendor when they are standing in front of the customer. While a code is still
+// live, a resend repeats that same code. A new code is minted only when there is none or it has
+// expired. The vendor never sees the code; the customer reads it back to them.
 export async function requestHandoverOtp(orderId: string, actor: ActorContext): Promise<HandoverOtpReceipt> {
   return withTransaction(async (c) => {
     const { rows } = await c.query<{
       id: string;
       status: OrderStatus;
       store_id: string;
+      handover_otp: string | null;
+      otp_live: boolean;
       sent_at: Date | null;
       resend_in: number | null;
     }>(
-      `select id, status, store_id, handover_otp_sent_at as sent_at,
+      `select id, status, store_id, handover_otp,
+              (handover_otp is not null and handover_otp_expires_at > now()) as otp_live,
+              handover_otp_sent_at as sent_at,
               greatest(0, ceil(extract(epoch from (handover_otp_sent_at + make_interval(secs => $2) - now()))))::int as resend_in
          from orders where id = $1 for update`,
       [orderId, HANDOVER_OTP_RESEND_SECONDS],
@@ -628,17 +654,18 @@ export async function requestHandoverOtp(orderId: string, actor: ActorContext): 
       throw conflict(`A code was just sent. Try again in ${order.resend_in}s`, { retryAfterSeconds: order.resend_in });
     }
 
-    const code = crypto.randomInt(1000, 10000).toString();
+    const code = order.otp_live && order.handover_otp ? order.handover_otp : crypto.randomInt(1000, 10000).toString();
     const stamped = await c.query<{ sent_at: Date; expires_at: Date }>(
       `update orders
           set handover_otp = $2,
               handover_otp_sent_at = now(),
-              handover_otp_expires_at = now() + make_interval(mins => $3)
+              handover_otp_expires_at = case when $4 then handover_otp_expires_at else now() + make_interval(mins => $3) end,
+              handover_otp_attempts = case when $4 then handover_otp_attempts else 0 end
         where id = $1
         returning handover_otp_sent_at as sent_at, handover_otp_expires_at as expires_at`,
-      [order.id, code, HANDOVER_OTP_TTL_MINUTES],
+      [order.id, code, HANDOVER_OTP_TTL_MINUTES, order.otp_live && !!order.handover_otp],
     );
-    await enqueue(c, 'order.handover_otp', { orderId: order.id });
+    await enqueue(c, 'order.handover_otp', { orderId: order.id, code });
     const row = stamped.rows[0]!;
     return { orderId: order.id, sentAt: row.sent_at.toISOString(), expiresAt: row.expires_at.toISOString() };
   });

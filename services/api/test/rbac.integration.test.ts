@@ -186,8 +186,8 @@ describe('order lifecycle across roles', () => {
   it('only the owning store can fulfil, and delivery needs the customer’s code', async () => {
     const placed = await placeOrder('cust-c');
     const orderId = placed.body.order.id;
-    // The code is minted at the door, not at checkout.
-    expect(placed.body.order.handoverOtp).toBeUndefined();
+    // The code is minted at the door, not at checkout. SQL null arrives as null, not a missing key.
+    expect(placed.body.order.handoverOtp ?? null).toBeNull();
 
     expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'accepted' })).status).toBe(409);
 
@@ -228,9 +228,31 @@ describe('order lifecycle across roles', () => {
     const otp: string = customerView.body.order.handoverOtp;
     expect(otp).toMatch(/^\d{4}$/);
 
+    // A resend while the code is live repeats it. The 45s throttle is moved out of the way first.
+    await db.pool.query(`update orders set handover_otp_sent_at = now() - interval '2 minutes' where id = $1`, [orderId]);
+    const resent = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {});
+    expect(resent.status).toBe(200);
+    const stillSame = await call('cust-c:customer', 'GET', `/v1/orders/${orderId}`);
+    expect(stillSame.body.order.handoverOtp).toBe(otp);
+
     const wrongCode = otp === '1234' ? '4321' : '1234';
-    expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp: wrongCode })).status).toBe(403);
-    const delivered = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp });
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const guess = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp: wrongCode });
+      expect(guess.status, `wrong code ${attempt}`).toBe(403);
+    }
+    // The fifth wrong code burns it. The old code, and any other guess, can no longer deliver.
+    expect((await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp })).status).toBe(409);
+    const burned = await call('cust-c:customer', 'GET', `/v1/orders/${orderId}`);
+    expect(burned.body.order.handoverOtp ?? null).toBeNull();
+
+    await db.pool.query(`update orders set handover_otp_sent_at = now() - interval '2 minutes' where id = $1`, [orderId]);
+    const sentAgain = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {});
+    expect(sentAgain.status).toBe(200);
+    const fresh = await call('cust-c:customer', 'GET', `/v1/orders/${orderId}`);
+    expect(fresh.body.order.handoverOtp).toMatch(/^\d{4}$/);
+    expect(fresh.body.order.handoverOtp).not.toBe(otp);
+
+    const delivered = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/transition`, { to: 'delivered', otp: fresh.body.order.handoverOtp });
     expect(delivered.body.order.status).toBe('delivered');
 
     expect((await call('cust-c:customer', 'POST', `/v1/orders/${orderId}/cancel`, {})).status).toBe(409);

@@ -1,8 +1,8 @@
 # Spaceborn — project handoff
 
-Source of truth for the next agent. Last updated 3 Oct 2026, production `main` at `075765a`
-(`feat: backend PostgreSQL persistence for customer reviews`). Demo `main` is the same work
-as merge `6a18665`. Working tree was clean.
+Source of truth for the next agent. Last updated 3 Oct 2026, after the at-the-door delivery
+code hardening (wrong-guess counter, same-code resend, migration `011`). Demo `main` does not
+have that flow. Do not assume the two remotes match.
 
 Quick commerce for electronics and robotics parts, plus on-demand 3D printing and CNC.
 Customers see one pooled catalog. The server picks the nearest shop that can fill each line,
@@ -40,21 +40,36 @@ confirmed green was 59/59, before the review and product-detail commits below.
 
 ---
 
-## Production AWS (not serving traffic)
+## Production AWS (parked, not serving)
 
-Region `ap-south-1`. Terraform is in `terraform/`. Domain in `terraform.tfvars` is
-`elbotrob.me` (gitignored). ACM certs for `elbotrob.me` and `*.elbotrob.me` are issued in
-ap-south-1 and us-east-1. DNS at Namecheap still points at GitHub Pages. Go-live is later,
-on purpose.
+Region `ap-south-1`, account `758530010955`. Terraform is in `terraform/`. Domain in
+`terraform.tfvars` is `elbotrob.me` (gitignored). ACM certs for `elbotrob.me` and
+`*.elbotrob.me` are issued (ap-south-1 for the load balancer, us-east-1 for CloudFront).
 
-CloudFront that already exists, comment `spaceborn-dev`, no aliases:
+Namecheap delegates to Route 53 hosted zone `Z0314973305FH15OZZOWR`. Public resolvers
+already return the four `awsdns` nameservers. Records: `elbotrob.me` and `vendor.elbotrob.me`
+alias to the two CloudFront distributions below; `origin.elbotrob.me` and
+`vendor-origin.elbotrob.me` alias to the public load balancer name from the last apply.
 
-- `d1my794d3ygm15.cloudfront.net` — storefront + API
-- `d2zizda8lkhnw6.cloudfront.net` — vendor hub
+The running stack was destroyed on 3 Oct 2026 to stop the bill (NAT, both load balancers,
+RDS, Redis, ECS, bastion, ECR images). Terraform state for that stack is empty. These were
+kept and cost almost nothing while idle:
 
-Do not run `terraform apply` or `ops/spaceborn.ps1 up`. Do not close or recreate those
-CloudFront distributions. Secrets Manager secret `spaceborn-prod/app` was marked for deletion;
-restore it before a real deploy. `PAYMENTS_ALLOW_MOCK=false` in production.
+- CloudFront `E3IEZ8WD0MTDRH` (`d1my794d3ygm15.cloudfront.net`, storefront + API) and
+  `E239RU5HM1M5VY` (`d2zizda8lkhnw6.cloudfront.net`, vendor hub). Both are **disabled**.
+  Do not delete them. `ops/cloudfront-keep.ps1` adopts them on the next `up`.
+- The Route 53 zone, about $0.50/month, so the nameservers do not have to change again.
+- S3 state bucket and build bucket.
+
+`ops/spaceborn.ps1 up` rebuilds the stack, adopts those distributions, deploys, migrates,
+and reseeds. After `up`, re-enable the two distributions if Terraform does not, and put
+Razorpay keys and the Firebase service-account JSON back into Secrets Manager
+(`spaceborn-prod/app` was deleted with the stack). `PAYMENTS_ALLOW_MOCK=false` in production.
+`RAZORPAY_WEBHOOK_SECRET` was still a placeholder when the stack last ran. Do not run `up`
+unless the user asks.
+
+The database that had been migrated (including `010`) was deleted with no snapshot. The next
+`up` is a fresh database. Migration `011` also clears any checkout-era delivery codes.
 
 Firebase authorized domains still to add: `elbotrob.me`, `vendor.elbotrob.me`,
 `spacebornecomdemo-1.onrender.com`, and the two CloudFront hosts. `localhost` is already there.
@@ -166,16 +181,16 @@ Roles stay `customer`, `vendor`, and `admin` (`user_role` in `migrations/001_ini
 
 The vendor delivers. An order becomes `delivered` only when the vendor submits the customer's `handover_otp`. Admin and customer cannot make that transition (`services/api/src/orders/status.ts`). Do not weaken that check.
 
-Production only (not on the demo): the code is minted at the door, not at checkout (migration `010_handover_otp_on_request.sql`). When the vendor reaches the customer they press "Send delivery code" in the vendor hub (`POST /vendor/orders/:id/handover-otp`, `requestHandoverOtp` in `orders/service.ts`). The server generates a 4-digit code for that order, valid 10 minutes, resend throttled to 45 s, and queues `order.handover_otp` so the worker emails it (`notifyHandoverOtp`). The customer sees it on `/orders` (polls every 5 s while out for delivery) and reads it back. The vendor never sees the code. `delivered` is refused with 409 when no live code exists, 403 when it does not match. Confirmation and placed/out-for-delivery mails no longer contain the code.
+Production only (not on the demo): the code is minted at the door, not at checkout (migration `010_handover_otp_on_request.sql`, guesses in `011_handover_otp_attempts.sql`). When the vendor reaches the customer they press "Send delivery code" in the vendor hub (`POST /vendor/orders/:id/handover-otp`, `requestHandoverOtp` in `orders/service.ts`). The server generates a 4-digit code for that order, valid 10 minutes. A resend inside that window repeats the same code (45 s throttle). A new code is minted only when the previous one is missing or expired, and that resets the guess counter. The outbox payload is `{ orderId, code }`. `notifyHandoverOtp` sends only when that code is still the live one; a retried job for an old code does nothing. Five wrong guesses burn the code (`handover_otp_attempts` on the order row, committed even though the transition rolls back its status change). The customer sees it on `/orders` (polls every 5 s while out for delivery) and reads it back. The vendor never sees the code. `delivered` is refused with 409 when no live code exists, 403 when it does not match. Confirmation and placed/out-for-delivery mails no longer contain the code. Do not move this counter back to the in-memory `handoverLimiter`; that limiter remains for fabrication jobs only, and its key lowercases the id.
 
 BlueDart is not the quick-commerce lane. Their Domestic Priority product is next-business-day air. The storefront lines that mention BlueDart (warranty RMA, contact, about, the sample order in `products.ts`) are the open honesty bugs above, not a shipping integration.
 
-When a real shop cannot carry the parcel itself, book a hyperlocal bike and pass the existing `handover_otp` as that courier's drop OTP. Shadowfax Marketplace fits pooled shops (pickup address per order, OTP, geofence, rider GPS webhook). Borzo is the simpler on-demand alternative. Do not build that client until a shop actually needs a rider. Do not promise 10–15 minutes for a booked courier. A Spaceborn rider fleet (KYC, shifts, payouts, live dispatch) waits until a shop has its own rider and dense orders at one hub.
+When a real shop cannot carry the parcel itself, a hyperlocal bike can be booked later. Shadowfax Marketplace fits pooled shops (pickup address per order, OTP, geofence, rider GPS webhook). Borzo is the simpler on-demand alternative. Do not build that client until a shop actually needs a rider. The delivery code is minted at the door and the vendor app never receives it, so a courier integration cannot assume a code already exists on the order. Do not promise 10–15 minutes for a booked courier. A Spaceborn rider fleet (KYC, shifts, payouts, live dispatch) waits until a shop has its own rider and dense orders at one hub.
 
 ## What not to do
 
 - Do not `terraform apply` or `spaceborn.ps1 up` unless the user asks.
 - Do not commit `.env`, Razorpay keys, or Firebase service-account JSON.
 - Do not store or repeat the user's address.
-- Do not commit unless the user asks. When they do, push `origin` and `demo`.
+- Do not commit unless the user asks. When they do, push `origin` only. Sync the demo (`demo-sync`) only when the user asks, and never for this delivery-code flow.
 - Do not add a delivery-driver role, a rider app, a BlueDart waybill, or a Shadowfax/Borzo client unless the user asks. The OTP close stays vendor-only.

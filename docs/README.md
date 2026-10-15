@@ -45,7 +45,7 @@ Welcome to the **Spaceborn Documentation Hub**. This directory contains the comp
 
 ## 🔑 Where it runs
 
-Current detail is in [`agent-memory/HANDOFF.md`](./agent-memory/HANDOFF.md) (updated 3 Oct 2026, `main` at `075765a`). Production AWS is not serving traffic yet. The live site is the Render demo.
+Current detail is in [`agent-memory/HANDOFF.md`](./agent-memory/HANDOFF.md) (updated 3 Oct 2026). The live site is the Render demo. Production AWS is parked: DNS for `elbotrob.me` is on Route 53, and the CloudFront distributions are disabled until `ops/spaceborn.ps1 up`.
 
 | Surface | Entry | Notes |
 | :--- | :--- | :--- |
@@ -53,4 +53,4 @@ Current detail is in [`agent-memory/HANDOFF.md`](./agent-memory/HANDOFF.md) (upd
 | **Customer (AWS, not live)** | `https://d1my794d3ygm15.cloudfront.net` | Storefront and `/v1`. Do not recreate this distribution. |
 | **Vendor (AWS, not live)** | `https://d2zizda8lkhnw6.cloudfront.net` | Vendor hub. |
 | **Admin (AWS)** | SSM tunnel, then the internal admin ALB | Access is the `admin_members` table. `oumgupta555@gmail.com` is the break-glass owner. |
-| **Domain, later** | `elbotrob.me` | Certificate is issued. DNS is still GitHub Pages. |
+| **Customer (domain)** | `https://elbotrob.me` | Nameservers are Route 53. The site answers only after `ops/spaceborn.ps1 up` re-enables CloudFront. |

@@ -91,7 +91,7 @@ async function handle(row: OutboxRow) {
       await notifyOrderStatus(row.payload.orderId as string, row.payload.to as OrderStatus);
       return;
     case 'order.handover_otp':
-      await notifyHandoverOtp(row.payload.orderId as string);
+      await notifyHandoverOtp(row.payload.orderId as string, String(row.payload.code ?? ''));
       return;
     default:
       logger.warn({ topic: row.topic }, 'unknown outbox topic');
