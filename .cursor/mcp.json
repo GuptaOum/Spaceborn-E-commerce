@@ -1,0 +1,73 @@
+{
+  "mcpServers": {
+    "render": {
+      "type": "sse",
+      "url": "https://mcp.render.com/mcp",
+      "headers": {
+        "Authorization": "Bearer rnd_S4QGpoxcRDbh4NtBqAkeMUmlcDud"
+      }
+    },
+    "render-cli": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.render.com/mcp",
+        "--header",
+        "Authorization: Bearer rnd_S4QGpoxcRDbh4NtBqAkeMUmlcDud"
+      ],
+      "env": {
+        "RENDER_API_KEY": "rnd_S4QGpoxcRDbh4NtBqAkeMUmlcDud"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "apify": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@apify/actors-mcp-server"
+      ],
+      "env": {
+        "APIFY_TOKEN": "${env:APIFY_TOKEN}"
+      }
+    },
+    "ScraplingServer": {
+      "command": "scrapling-mcp"
+    },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "mcp"
+      ]
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@browsermcp/mcp@latest"
+      ]
+    },
+    "supabase": {
+      "type": "sse",
+      "url": "https://mcp.supabase.com/mcp"
+    },
+    "stitch": {
+      "type": "sse",
+      "url": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "${env:STITCH_API_KEY}"
+      }
+    }
+  }
+}

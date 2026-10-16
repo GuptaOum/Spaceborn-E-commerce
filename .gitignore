@@ -55,6 +55,6 @@ tfplan
 .idea/
 CLAUDE.md
 AGENTS.md
-app.log
-.cursor/
-mcp.json
+.cursor/*
+!.cursor/mcp.json
+
