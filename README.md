@@ -207,6 +207,3 @@ The production environment is provisioned with high-availability safeguards:
 
 The platform demo is hosted live on Render:
 - **Live URL**: [https://spacebornecomdemo-1.onrender.com](https://spacebornecomdemo-1.onrender.com)
-
----
-*Built with precision for Spaceborn.*
