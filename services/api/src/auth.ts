@@ -46,8 +46,8 @@ export const firebaseAuth: Auth = getAuth(initFirebase());
 
 const ROLES: Role[] = ['customer', 'vendor', 'admin'];
 const toRole = (value: unknown): Role => (ROLES.includes(value as Role) ? (value as Role) : 'customer');
-// Break-glass owners. They are also seeded into admin_members, so the team can never lock itself out.
-export const DEFAULT_ADMIN_EMAILS = new Set(['oumgupta555@gmail.com']);
+// Break-glass owners from environment configuration.
+export const DEFAULT_ADMIN_EMAILS = new Set<string>(config.ADMIN_EMAILS);
 
 export const normalizeEmail = (email: string | null | undefined) => (email ?? '').trim().toLowerCase();
 

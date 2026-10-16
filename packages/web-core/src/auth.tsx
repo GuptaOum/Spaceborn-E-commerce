@@ -36,7 +36,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const ROLES: Role[] = ['customer', 'vendor', 'admin'];
 
-const DEFAULT_ADMIN_EMAILS = ['oumgupta555@gmail.com'];
+const DEFAULT_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 // Role is display-only on the client. Every permission is enforced again by the API.
 async function toSessionUser(user: User, forceRefresh = false): Promise<SessionUser> {

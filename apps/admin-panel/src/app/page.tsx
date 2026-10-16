@@ -48,7 +48,10 @@ const PILLARS: NavPillar[] = [
   },
 ];
 
-const ADMIN_EMAILS = ['oumgupta555@gmail.com'];
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 const QUEUE_REFRESH_MS = 30_000;
 
 const titleCase = (city: string) => city.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -56,10 +59,14 @@ const titleCase = (city: string) => city.replace(/\b\w/g, (c) => c.toUpperCase()
 export default function AdminHome() {
   const { user, loading, signOut } = useAuth();
   const [tab, setTab] = useState<TabId>('stores');
-  const looksAdmin = !!user && (user.role === 'admin' || (!!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())));
-  // The API decides. It reads the admin team table on every request, so a removed admin is out immediately.
+  // The API decides authoritatively via the admin_members table.
+  const looksAdmin =
+    !!user &&
+    (user.role === 'admin' ||
+      ADMIN_EMAILS.length === 0 ||
+      (!!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())));
   const scope = useLoad<AdminScope | null>(
-    () => (looksAdmin ? api<{ admin: AdminScope }>('/admin/whoami').then((r) => r.admin) : Promise.resolve(null)),
+    () => (looksAdmin ? api<{ admin: AdminScope }>('/admin/whoami').then((r) => r.admin).catch(() => null) : Promise.resolve(null)),
     [looksAdmin, user?.uid],
   );
   const me = scope.data;

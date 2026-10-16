@@ -56,6 +56,15 @@ const schema = z.object({
   CORS_ORIGIN: z.string().optional().transform(unset),
   // Empty locally and on the Render demo: the API serves the catalog straight from Postgres.
   REDIS_URL: z.string().optional().transform(unset),
+  ADMIN_EMAILS: z
+    .string()
+    .default('')
+    .transform((v) =>
+      v
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean),
+    ),
 });
 
 function load() {

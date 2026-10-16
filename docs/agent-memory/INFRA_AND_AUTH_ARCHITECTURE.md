@@ -117,7 +117,7 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
 ┌────────────────────────────────────────────────────────┐
 │ Role Resolution Hierarchy:                             │
 │ 1. `admin_members` row for the token email -> admin    │
-│    (break-glass: oumgupta555@gmail.com is always owner)│
+│    (break-glass: configured in ADMIN_EMAILS)            │
 │ 2. PostgreSQL `users.role` (vendor/customer only;      │
 │    a stale 'admin' here never grants access)           │
 │ 3. Firebase Custom Claim `token.role`                  │
@@ -164,9 +164,8 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
   - Once the application is approved by an Admin, the seller's session gains `role = 'vendor'` and `storeId = '<uuid>'`.
 - **Identity & Fraud-Prevention Rule:**
   - An Admin identity **cannot** operate a Vendor store under the exact same email address (`role = 'admin'` takes precedence).
-  - **Testing as a Vendor:** Developers should sign in with a Gmail alias:
-    `oumgupta555+vendor@gmail.com`
-    All verification emails will still route to your primary `oumgupta555@gmail.com` inbox, but the platform treats it as an independent vendor merchant identity.
+  - **Testing as a Vendor:** Developers should sign in with a dedicated merchant test account.
+    All verification emails will route to that merchant inbox, and the platform treats it as an independent vendor merchant identity.
 - **Capabilities:**
   - Manage product inventory, stock levels, and city pricing.
   - View incoming electronics orders and mark them as packed / dispatched.
@@ -188,16 +187,16 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
   2. The script boots the Bastion EC2 host if stopped and forwards `http://localhost:8080` directly to the private Internal Admin ALB.
   3. Open your browser to `http://localhost:8080`.
 - **Sign-In Method:**
-  - Clicks **Sign in with Google** and selects `oumgupta555@gmail.com`.
+  - Clicks **Sign in with Google** (or email/password) using an authorized administrator account.
 - **Dual-Layer Authorization Engine:**
   To guarantee that administrators are never locked out even if third-party Firebase Admin credentials are unset:
   1. **Frontend Guard (`apps/admin-panel` & `packages/web-core`):**
-     - Contains `DEFAULT_ADMIN_EMAILS = ['oumgupta555@gmail.com']`.
+     - Checks `ADMIN_EMAILS` from environment configuration (`process.env.NEXT_PUBLIC_ADMIN_EMAILS`).
      - Automatically elevates matching sessions to `role = 'admin'`.
   2. **Backend API Guard (`services/api/src/auth.ts`):**
      - `requireAdmin` reads the `admin_members` table (migration 005) by token email on every request, so adding or
        removing a teammate takes effect on their next call. Token claims are never trusted for admin.
-     - `oumgupta555@gmail.com` is the break-glass owner in code and is seeded into `admin_members`.
+     - Root break-glass administrators are configured in code via `ADMIN_EMAILS` and pre-seeded into `admin_members`.
      - Decoupled from `FIREBASE_SERVICE_ACCOUNT_JSON` so it never crashes with credential errors.
 - **Admin team (multi-admin, per-city):**
   - `admin_members(email, regions text[], is_owner)`. `regions` is a list of lower-cased store cities; `null` = all regions.
@@ -225,7 +224,7 @@ Spaceborn uses **Firebase Authentication** on the client side for identity verif
 | **Network Path** | CloudFront CDN / Public ALB | Public ALB Port 8080 | Internal ALB via SSM Tunnel |
 | **Default Port** | `3000` | `3001` (ALB: `8080`) | `3002` (Tunnel: `8080`) |
 | **Auth Provider** | Firebase Auth (Google) | Firebase Auth (Google) | Firebase Auth (Google) |
-| **Primary Identifier**| Any email | Store Owner Email (`+alias` for dev)| `oumgupta555@gmail.com` |
+| **Primary Identifier**| Any email | Store Owner Email | Configured in `ADMIN_EMAILS` |
 | **Authoritative Check**| PostgreSQL `users` | PostgreSQL `stores.owner_id` | PostgreSQL `admin_members` (+ break-glass owner) |
 | **Access Gating** | Open to public | Approved Store required | Admin role + Tunnel required |
 | **Sensitive Routes** | Public `/v1/*` | `/v1/vendor/*` | `/v1/admin/*` (Strictly internal) |

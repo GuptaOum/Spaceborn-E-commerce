@@ -15,9 +15,7 @@ create table admin_members (
 create trigger admin_members_updated_at before update on admin_members
   for each row execute function set_updated_at();
 
--- The founding account also lives in code (DEFAULT_ADMIN_EMAILS) so the team can never lock itself out.
-insert into admin_members (email, is_owner, note) values ('oumgupta555@gmail.com', true, 'Founding owner')
-on conflict (email) do nothing;
+-- Founding owner accounts are provisioned via environment configuration or ops CLI scripts.
 
 -- Anyone promoted by hand in earlier releases keeps access as a global admin.
 insert into admin_members (email, regions, is_owner, note)

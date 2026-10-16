@@ -168,10 +168,10 @@ The catalog uses **PostgreSQL Full-Text Search (FTS)** combined with semantic ve
    - Must be associated with an approved store in `stores`.
    - Access is via Public ALB Port 8080 (`vendor-hub`).
    - Admin and Vendor roles are mutually exclusive on the same email for anti-fraud safety.
-   - **Testing Tip:** Use `oumgupta555+vendor@gmail.com`.
+   - **Testing Tip:** Use a separate merchant email account for store testing.
 3. **Admin:**
-   - Platform superuser (`oumgupta555@gmail.com`).
-   - Dual-gated: Hardcoded in `DEFAULT_ADMIN_EMAILS` on both frontend (`apps/admin-panel/src/app/page.tsx`) and backend (`services/api/src/auth.ts`).
+   - Platform superuser (configured via `ADMIN_EMAILS`).
+   - Dual-gated: Configured in `DEFAULT_ADMIN_EMAILS` on both frontend (`apps/admin-panel`) and backend (`services/api/src/auth.ts`).
    - Decoupled from third-party Firebase Admin server keys.
    - Air-gapped: Only reachable via the AWS SSM Bastion tunnel on `http://localhost:8080`.
 
@@ -241,7 +241,7 @@ Executes `terraform destroy -auto-approve` and deletes all 98 cloud resources.
    - Solution: Attached `spaceborn-dev-bastion` IAM profile, resized to `t4g.micro`, and configured `ops/spaceborn.ps1 tunnel` to auto-detect and auto-boot the instance.
 2. **`grant-admin` Exit Code 1:**
    - Cause: `firebaseAuth.getUserByEmail()` crashed because `FIREBASE_SERVICE_ACCOUNT_JSON` was not in Secrets Manager.
-   - Solution: Decoupled role resolution from Firebase server keys by writing directly to PostgreSQL and adding `DEFAULT_ADMIN_EMAILS = ['oumgupta555@gmail.com']`.
+   - Solution: Decoupled role resolution from Firebase server keys by writing directly to PostgreSQL and supporting `DEFAULT_ADMIN_EMAILS` from environment configuration.
 3. **S3 Bucket Deletion Failures:**
    - Cause: Non-empty versioned S3 bucket blocked `terraform destroy`.
    - Solution: Added `force_destroy = true` to `aws_s3_bucket.uploads` in `terraform/s3.tf`.

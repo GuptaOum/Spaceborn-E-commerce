@@ -156,8 +156,8 @@ If deploying via `render.unified.yaml`, open your Render URL:
    - Once approved, access live store inventory, audio order alerts, and fabrication job quoting.
 
 3. **Admin Flow (Admin Panel):**
-   - The founding email `oumgupta555@gmail.com` is pre-seeded with Owner Admin privileges.
-   - To grant admin access to your personal email, run:
+   - The root administrator email configured via `ADMIN_EMAILS` (or seeded in the database) has Owner Admin privileges.
+   - To grant admin access to any new email, run:
      ```bash
      DATABASE_URL="<YOUR_SUPABASE_URL>" npm run grant-admin -w services/api -- your-email@example.com
      ```

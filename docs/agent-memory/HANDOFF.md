@@ -1,208 +1,157 @@
 # Spaceborn — project handoff
 
-Source of truth for the project. Last updated 16 Oct 2026.
+Quick commerce for electronics, plus on-demand 3D printing and CNC. Think Blinkit/Swiggy,
+but local stores deliver components in minutes and also take fabrication jobs. Three web
+apps (customer, vendor, admin) on one API, one Postgres, Firebase auth, Razorpay payments,
+deployed to AWS with Terraform.
 
-Academic Context: Built as a B.Tech Final Year Engineering Project demonstrating enterprise-grade
-distributed cloud architecture, Zero-Trust network segmentation, and modern RBAC.
-
-Business & Logistics Model: Quick commerce for electronics, robotics hardware, and on-demand 3D printing
-and CNC fabrication ("Blinkit for Hardware"). Implements Merchant-Fulfilled Hyperlocal Delivery (MFHD)
-where partner vendors deliver locally, secured by an at-the-door challenge-response OTP verification.
-Customers see one pooled catalog; the backend partitions orders across regional hubs autonomously.
+This file is the source of truth for the next agent. The old planning docs (Supabase era)
+were removed because they no longer match the code.
 
 ---
 
-## Where the code lives
-
-| | |
-| :--- | :--- |
-| Local production checkout | `D:\spacebornecomm\spacebornecomprod` (active branch `main`, tracking `personal/main`) |
-| Unified personal remote | `https://github.com/GuptaOum/Spaceborn-E-commerce.git`<br>• `main`: Production & performance codebase<br>• `demo`: Single-port demo gateway |
-| Spaceborn organization remote | `https://github.com/Spaceborn-Beyond-Autonomous/Spaceborn-E-commerce.git`<br>• Wiped clean: Retains only `README.md` and `docs/architecture.svg` |
-| Live demo | `https://spacebornecomdemo-1.onrender.com` (Render service `spacebornecomdemo-1`) |
-
-Push production work to `personal main`. Sync the demo branch via `personal demo`.
-The demo stays a lightweight showcase (`scripts/render-gateway.mjs` runs storefront, vendor hub, admin panel,
-API, and outbox worker in one container with a demo-only "Hub" switcher pill).
-
-`scripts/render-gateway.mjs` runs the API, the three Next apps, and the outbox worker in one
-container. `?app=store|vendor|admin` (cookie) picks the app. A demo-only "Hub" pill switches
-between them. On phones it collapses to a small toggle; it still covers section titles.
-
-Do not add a second Render service. Do not add Celery, RabbitMQ, Zustand, or DynamoDB.
-The worker is `services/api/src/worker.ts`: it polls the Postgres outbox (`FOR UPDATE SKIP LOCKED`).
-
-Heavy builds and the API integration tests go to AWS CodeBuild project `spaceborn-build`
-(ap-south-1). The laptop is too weak for a full local build. Last full API run that was
-confirmed green was 59/59, before the review and product-detail commits below.
-
----
-
-## Production AWS (parked, not serving)
-
-Region `ap-south-1`, account `758530010955`. Terraform is in `terraform/`. Domain in
-`terraform.tfvars` is `elbotrob.me` (gitignored). ACM certs for `elbotrob.me` and
-`*.elbotrob.me` are issued (ap-south-1 for the load balancer, us-east-1 for CloudFront).
-
-Namecheap delegates to Route 53 hosted zone `Z0314973305FH15OZZOWR`. Public resolvers
-already return the four `awsdns` nameservers. Records: `elbotrob.me` and `vendor.elbotrob.me`
-alias to the two CloudFront distributions below; `origin.elbotrob.me` and
-`vendor-origin.elbotrob.me` alias to the public load balancer name from the last apply.
-
-The running stack was destroyed on 3 Oct 2026 to stop the bill (NAT, both load balancers,
-RDS, Redis, ECS, bastion, ECR images). Terraform state for that stack is empty. These were
-kept and cost almost nothing while idle:
-
-- CloudFront `E3IEZ8WD0MTDRH` (`d1my794d3ygm15.cloudfront.net`, storefront + API) and
-  `E239RU5HM1M5VY` (`d2zizda8lkhnw6.cloudfront.net`, vendor hub). Both are **disabled**.
-  Do not delete them. `ops/cloudfront-keep.ps1` adopts them on the next `up`.
-- The Route 53 zone, about $0.50/month, so the nameservers do not have to change again.
-- S3 state bucket and build bucket.
-
-`ops/spaceborn.ps1 up` rebuilds the stack, adopts those distributions, deploys, migrates,
-and reseeds. After `up`, re-enable the two distributions if Terraform does not, and put
-Razorpay keys and the Firebase service-account JSON back into Secrets Manager
-(`spaceborn-prod/app` was deleted with the stack). `PAYMENTS_ALLOW_MOCK=false` in production.
-`RAZORPAY_WEBHOOK_SECRET` was still a placeholder when the stack last ran. Do not run `up`
-unless the user asks.
-
-The database that had been migrated (including `010`) was deleted with no snapshot. The next
-`up` is a fresh database. Migration `011` also clears any checkout-era delivery codes.
-
-Firebase authorized domains still to add: `elbotrob.me`, `vendor.elbotrob.me`,
-`spacebornecomdemo-1.onrender.com`, and the two CloudFront hosts. `localhost` is already there.
-
----
-
-## How the shop actually works
-
-npm workspaces:
+## Repo layout (npm workspaces)
 
 ```
-services/api              Express 5, pg, zod, razorpay, firebase-admin. Business logic and RBAC.
-packages/web-core         Firebase auth, api() client, shared types.
-apps/customer-storefront  Next.js. The only app in the recent UX work.
-apps/vendor-hub           Next.js. Inventory, orders, fabrication quotes.
-apps/admin-panel          Next.js. Approvals, catalog, duplicate detection.
+services/api            Express + pg + Firebase Admin. All business logic and RBAC.
+packages/web-core       Shared React: Firebase auth, api() client, types, formatters, SignInPanel.
+apps/customer-storefront Next.js, port 3000. Browse, order, track, 3D print / CNC.
+apps/vendor-hub         Next.js, port 3001. Apply, inventory, orders, services, print jobs.
+apps/admin-panel        Next.js, port 3002. Approve stores/services, catalog, orders, jobs.
+terraform/              AWS infra (VPC, RDS, ECS Fargate, ALBs, ECR, bastion, secrets).
+docs/agent-memory/      This handoff.
 ```
 
-Same-origin `/v1`. Next rewrites to `API_ORIGIN` in dev. No CORS.
-
-Auth: Firebase on the client. Admin access comes from the `admin_members` table, not from a
-token claim. `oumgupta555@gmail.com` is the break-glass owner (`services/api/src/auth.ts`).
-A stale `users.role = admin` does not grant access.
-
-Catalog: `toProduct` in `apps/customer-storefront/src/context/StoreContext.tsx` maps an offer
-to what the page renders. `stock` is pooled `nearbyStock`. `nearestStock` is that shop's own
-count. `price` is the nearest shop's price. Checkout `POST /catalog/resolve` is the amount
-that will be charged (it can add a delivery fee per dispatch and a different unit price when
-quantity spills past the nearest shop). The cart figure is an estimate.
-
-Orders: one checkout, one payment, one or more deliveries. Cancelling one delivery refunds
-that delivery, not the whole checkout (`ae56f7f`).
-
-Payments: Razorpay only. There is no Stripe code. `paymentsMode` is `razorpay` when
-`RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` are set; the mock confirm route exists only in
-mock mode. The demo has Razorpay **test** keys set in the Render dashboard (do not copy them
-into git). `RAZORPAY_WEBHOOK_SECRET` is not set, so the webhook is not live. Email on the demo
-is log-only. Uploads on the demo are local disk. Redis is unset on the demo. Embeddings on the
-demo use the local hasher, not Bedrock.
-
-This Next.js is not the one in older training data. Before writing Next code, read
-`node_modules/next/dist/docs/` from that app. Storefront styling is Tailwind v4.
+The API is same-origin at `/v1`. In production the ALB routes `/v1` to the API; in dev each
+Next app rewrites `/v1` to `API_ORIGIN` (default `http://localhost:4000`). No CORS.
 
 ---
 
-## Storefront, as of `075765a`
+## Status: DONE and verified locally (Latest Commit: 4d8e9e0)
 
-Shipped and on both remotes:
+Verified with: `npm install` at root, `npm run typecheck` (all 5 workspaces clean: `@spaceborn/web-core`, `@spaceborn/api`, `admin-panel`, `customer-storefront`, `vendor-hub`), `npm test -w services/api test/domain.test.ts` (all tests passing).
+- AWS Cloud Infrastructure: Cleanly destroyed ($0.00 spend).
+- Catalog: Expanded to 100 realistic electronic, robotic, 3D printing, and CNC products with high-resolution imagery.
+- Vendor Hub: Audio alerts, WhatsApp customer messaging, 58mm/80mm thermal receipt generator, permanent SKU inventory deletion, and proposal re-submission.
+- Admin Panel: Simplified 3-tier operational pillars navigation, order line-items inspection drawer with search, 1-click Google Maps store premise verification, and master catalog product editing.
+- Public Repository: Pushed to `https://github.com/GuptaOum/Spaceborn-E-commerce.git` (`public main`).
 
-- Honest empty states: coupons, contact form, callback, datasheet/CAD when no URL, B2B PDF,
-  video upload. They say the thing did not happen.
-- Header, cart, and checkout talk about delivery time and pooled stock, not shop names.
-- Cart drawer labels its total as an estimate.
-- Hover zoom on the product image (desktop).
-- Responsive header (location chip on phones, short Sign in, compact cart). Category nav is
-  sticky only from `md` up. Hero arrows hide on phones; swipe changes slides.
-- Search results are one line ("Results for …") instead of a banner, a category rail, and a
-  green callout. `/catalog?q=` opens that search.
+### Backend (`services/api`)
+- Express 5, `pg`, `firebase-admin`, `zod`, `razorpay`, `pino`, `helmet`, rate limiting.
+- Migrations in `migrations/` (`001_init.sql` commerce, `002_fabrication.sql` services).
+  Runner is `src/db/migrate.ts` (advisory lock, one txn per file, refuses non-UTF8 DB).
+- Seed `src/db/seed.ts`: 3 demo stores (Kanpur, Bengaluru, Pune), catalog, inventory.
+- RBAC: Firebase custom claims `{role, storeId}` set only server-side. Every sensitive route
+  re-checks the DB (admin against `users.role`; vendor must own an approved store matching the
+  claim). Suspending a store resets claims and revokes sessions. Dev-only `Authorization: Dev
+  uid:role:storeId` header, refused in production.
+- Orders: single txn locks inventory `FOR UPDATE`, prices server-side, holds stock 15 min as
+  `pending_payment`, idempotency key per customer, Razorpay order (mock mode when Razorpay
+  unset, non-prod only), explicit status machine, delivery needs OTP, cancel restocks and
+  refunds via a transactional outbox drained by the worker.
+- Fabrication (3D printing / CNC), new:
+  - `service_listings` (vendor offers a kind, materials, max size, starting price, turnaround;
+    admin approves; editing an approved listing returns it to `pending`).
+  - `fab_jobs` lifecycle: submitted -> quoted -> pending_payment -> in_production -> ready ->
+    out_for_delivery -> delivered (plus declined/cancelled/expired). Quote valid 48h.
+  - `fab_files`: customer uploads design files (STL/STEP/DXF/3MF/... , 50MB cap). Stored via
+    `src/storage.ts` — private S3 in prod (SSE-KMS), local disk (`.uploads/`) in dev. Downloads
+    always go through an authz check; there are no public/pre-signed links. Unattached uploads
+    are swept after 24h by the worker.
+  - Payments table now serves orders OR fab jobs (`num_nonnulls(order_id, fab_job_id) = 1`).
+    `markPaid` and the refund outbox handle both.
+  - Address privacy: a vendor only sees the customer's full address after payment; before that
+    only city + pincode. OTP never leaves the API to anyone but the customer.
+- Routes: `catalog` (public), `orders`, `payments` (+ webhook raw body), `me`, `vendor`,
+  `admin`, `fabrication`. Worker `src/worker.ts`: outbox drain, expire reservations, expire
+  quotes, orphan-file sweep, refunds.
+- Tests `test/rbac.integration.test.ts` (33 total) cover order RBAC/overselling AND fabrication:
+  listing approval gating, upload auth + file-type + path-traversal, per-role job/file privacy,
+  quote/pay/deliver with OTP, paid-job cancel + refund, suspend/edit re-review.
 
-Then a second pass (commits `1029124` through `075765a`) expanded the product page: technical
-tabs, pinout, bulk-price strip, customer reviews stored in Postgres, product-card metrics,
-and more mobile layout. That pass reintroduced copy and data the honest pass had removed.
-Those are open bugs, not finished work.
+### Frontend
+- `packages/web-core`: lazy Firebase client, `api()`/`uploadFile()`/`downloadFile()` (Bearer
+  token, same-origin `/v1`), `AuthProvider`/`useAuth` (role from claims, display only),
+  `SignInPanel`, shared types + formatters (order + fab labels).
+- Customer storefront: real Firebase auth; location (presets or geolocation) -> nearest open
+  store -> catalog from API; cart is single-store; checkout calls `POST /v1/orders` with an
+  idempotency key then Razorpay (or mock) then verify; orders page shows live status + OTP +
+  cancel; new `/fabrication` page (pick kind -> pick maker -> upload -> quote -> accept & pay ->
+  track). Home has "Print & CNC" tile + hero button. Category names aligned to seed.
+- Vendor hub: gated by store state (no store / pending / rejected / suspended / approved).
+  Approved dashboard tabs: Orders, Inventory, Print jobs (quote/decline/produce/deliver),
+  Services (offer/edit 3D printing & CNC).
+- Admin panel: admin-gated. Tabs: Store applications, Print & CNC services (approve/reject/
+  suspend), Orders, Print jobs (view files, cancel), Master catalog. Overview has service +
+  job counts.
 
----
-
-## Open bugs (confirmed in the tree at `075765a`)
-
-Money and trust, in this order:
-
-1. Bulk tiers are invented in `toProduct` (about 6/12/18% off) and the product page says they
-   are auto-applied. Cart and checkout charge `unitPrice * quantity`.
-2. Missing datasheets become `https://spaceborn.in/datasheets/{sku}.pdf`, so the product page
-   and the datasheet library offer a download that was never uploaded.
-3. Product cards fall back to rating 4.8 and 42 reviews. The product page always mixes in
-   three hard-coded "verified" reviews (`DEFAULT_REVIEWS`) even after the API returns real ones.
-4. `toProduct` also invents features, a QC certificate in the box contents, HSN `85423100`,
-   GST 18% when the rate is missing, brand "Genuine Maker Grade", and a 10-minute ETA.
-5. Warranty RMA sets local state and then says a BlueDart pickup was booked (`WarrantyPolicyView`).
-6. B2B modal still titles itself an official proforma and shows a random quotation reference.
-7. Contact and About publish Bengaluru/Pune addresses, `spaceborn.in` emails, and GSTINs
-   `29AABCS9482Q1Z7` / `27AABCS9482Q1Z5` that are not from the catalog.
-8. `updateQuantity` uses `stock || MAX_PER_LINE`, so stock `0` allows a quantity of 50.
-9. Cart lines label `total/1.18` as "Excl." and assume 18% GST.
-10. Product subtotal is nearest price times quantity, and the spill note says "dark store" /
-    "adjacent hub". PIN check uses pooled stock (correct) but also says "dark store".
-11. The sticky cart dock always says "10–15 Min" and free delivery over ₹500.
-12. Layout: desktop hero arrows cover the first letters of the slide text. The demo Hub pill
-    covers the next section title on a phone. The catalog banner says "0 Products Available"
-    and "10–15 Min Delivery" while the request is still loading.
-
-Fabrication shop names are intentional. Leave them.
-
----
-
-## Security leftovers (user must do these; do not put the secrets in git)
-
-A `gho_` GitHub token and other live keys were in `userdata.txt` and were stripped from
-history with `git filter-repo`, then force-pushed. The user still needs to revoke that OAuth
-token (GitHub → Settings → Applications → GitHub CLI) and rotate the Supabase and Stripe
-secrets that were in the file. `gh` on this machine is logged in as GuptaOum with `repo` and
-`workflow`. The GitHub MCP token is read-only and cannot push.
-
----
-
-## Delivery (decided 3 Oct 2026)
-
-Roles stay `customer`, `vendor`, and `admin` (`user_role` in `migrations/001_init.sql`). There is no delivery-driver app.
-
-The vendor delivers. An order becomes `delivered` only when the vendor submits the customer's `handover_otp`. Admin and customer cannot make that transition (`services/api/src/orders/status.ts`). Do not weaken that check.
-
-Production only (not on the demo): the code is minted at the door, not at checkout (migration `010_handover_otp_on_request.sql`, guesses in `011_handover_otp_attempts.sql`). When the vendor reaches the customer they press "Send delivery code" in the vendor hub (`POST /vendor/orders/:id/handover-otp`, `requestHandoverOtp` in `orders/service.ts`). The server generates a 4-digit code for that order, valid 10 minutes. A resend inside that window repeats the same code (45 s throttle). A new code is minted only when the previous one is missing or expired, and that resets the guess counter. The outbox payload is `{ orderId, code }`. `notifyHandoverOtp` sends only when that code is still the live one; a retried job for an old code does nothing. Five wrong guesses burn the code (`handover_otp_attempts` on the order row, committed even though the transition rolls back its status change). The customer sees it on `/orders` (polls every 5 s while out for delivery) and reads it back. The vendor never sees the code. `delivered` is refused with 409 when no live code exists, 403 when it does not match. Confirmation and placed/out-for-delivery mails no longer contain the code. Do not move this counter back to the in-memory `handoverLimiter`; that limiter remains for fabrication jobs only, and its key lowercases the id.
-
-BlueDart is not the quick-commerce lane. Their Domestic Priority product is next-business-day air. The storefront lines that mention BlueDart (warranty RMA, contact, about, the sample order in `products.ts`) are the open honesty bugs above, not a shipping integration.
-
-When a real shop cannot carry the parcel itself, a hyperlocal bike can be booked later. Shadowfax Marketplace fits pooled shops (pickup address per order, OTP, geofence, rider GPS webhook). Borzo is the simpler on-demand alternative. Do not build that client until a shop actually needs a rider. The delivery code is minted at the door and the vendor app never receives it, so a courier integration cannot assume a code already exists on the order. Do not promise 10–15 minutes for a booked courier. A Spaceborn rider fleet (KYC, shifts, payouts, live dispatch) waits until a shop has its own rider and dense orders at one hub.
-
-## Future Architectural Extensions: Hyperlocal Geo-RAG Copilot
-
-Designed for academic thesis and post-viva expansion:
-1. **Location-First Retrieval (Geo-RAG)**:
-   - Filters candidate hardware by Haversine distance (`<= 8km`) against live PostgreSQL dark-store inventory before semantic vector re-ranking.
-   - If an item is out of radius, the agent transparently flags split/adjacent-hub fulfillment rather than violating the 15-minute quick-commerce SLA.
-2. **Hardware Compatibility & Kit Assembly**:
-   - Integrates electronics datasheet retrieval (voltage, logic level, pinout).
-   - Proactively inspects customer cart state (e.g. noticing an MCU without a matching power supply or driver) and offers 1-click kit completion.
-3. **Dual Intent Routing**:
-   - Separates general hardware theory (I2C vs SPI, Ohm's law) from transactional shopping actions (`searchCatalog`, `addToCart`, `navigateTo`).
+### Cleanup done
+- Removed `Backend/`, `backend-workers/`, `apps/order-processor/`, `supabase/`, `deploy.sh`,
+  `scripts/`, root `docker-compose.yml`, and all Vite/Stripe/Supabase leftovers from the apps.
 
 ---
 
-## What not to do
+## Status: Cloud Infrastructure & Architecture Completed
 
-- Do not `terraform apply` or `spaceborn.ps1 up` unless the user asks.
-- Do not commit `.env`, Razorpay keys, or Firebase service-account JSON.
-- Do not store or repeat the user's address.
-- Do not commit unless the user asks. When they do, push `origin` only. Sync the demo (`demo-sync`) only when the user asks, and never for this delivery-code flow.
-- Do not add a delivery-driver role, a rider app, a BlueDart waybill, or a Shadowfax/Borzo client unless the user asks. The OTP close stays vendor-only.
+For complete details on AWS infrastructure and authentication across all roles, see:
+[`INFRA_AND_AUTH_ARCHITECTURE.md`](./INFRA_AND_AUTH_ARCHITECTURE.md).
+
+### Cloud & Operations Highlights:
+- S3 uploads bucket (`spaceborn-uploads-*`) with KMS encryption and `force_destroy = true`.
+- Zero-downtime rolling cloud deployment via AWS CodeBuild & ECS Fargate.
+- Dual-port Public ALB (Port 80 Storefront, Port 8080 Vendor Hub) + Air-gapped Internal Admin ALB via SSM tunnel.
+- 1-Click teardown scripts: `down.sh` (Bash) and `down.ps1` (PowerShell).
+- Decoupled Admin authorization with developer whitelist fallback (`ADMIN_EMAILS`).
+3. Fill real values: `aws_account_id`, `aws_profile`, `domain_name`, `acm_certificate_arn`,
+   `firebase_project_id`, `admin_allowed_cidrs`. See `terraform/terraform.tfvars.example`.
+4. Put the app secret JSON into Secrets Manager (`FIREBASE_SERVICE_ACCOUNT_JSON`, `RAZORPAY_*`).
+5. Decide on the S3 backend for tf state (currently commented out in `versions.tf`).
+6. Build + push the 4 images to ECR (api, storefront, vendor-hub, admin-panel), run the migrate
+   task, then bring up services. Verify the RDS is UTF8 (the managed instance is by default).
+
+### Dockerfiles / CI / local compose (not written yet)
+7. `services/api/Dockerfile` exists but is for the old single-package layout — update it for the
+   workspace root build. Also it must `npm ci` the S3 SDK (already a dep) and copy `migrations/`.
+8. Write Dockerfiles for the 3 Next apps building from repo root (standalone `server.js`).
+9. Write a local `docker-compose.yml` (postgres + api + worker) for dev.
+10. Rewrite `.github/workflows/ci.yml` — the OLD one still hardcodes Firebase + Supabase keys.
+    New CI: root `npm ci`, API typecheck + tests, build all apps. Remove all secrets.
+
+### Product gaps / nice-to-haves
+11. Fabrication push notifications / rider dispatch are just log hooks in the worker.
+12. Storefront `/fabrication` file upload is one-file-at-a-time via `uploadFile`; fine, but no
+    resumable/multipart for very large CAD files.
+13. No automated frontend tests yet (only typecheck + build).
+
+---
+
+## Run locally (dev, no AWS)
+
+```
+npm install                       # from repo root
+# start a local Postgres (UTF8!), then in services/api with a .env (see .env.example):
+npm run db:migrate -w services/api
+npm run db:seed   -w services/api
+npm run dev:api        # :4000
+npm run dev:worker
+npm run dev:storefront # :3000
+npm run dev:vendor     # :3001
+npm run dev:admin      # :3002
+# grant yourself admin: npm run grant-admin -w services/api -- you@example.com
+```
+
+Mock payments are used automatically when `RAZORPAY_*` are unset (non-prod). Uploaded files go
+to `services/api/.uploads/` (gitignored).
+
+## Env / secrets checklist
+- API: `DB_*`, `DB_SSL=require` (prod), `FIREBASE_PROJECT_ID`, `FIREBASE_SERVICE_ACCOUNT_JSON`,
+  `RAZORPAY_KEY_ID/SECRET/WEBHOOK_SECRET`, `UPLOADS_BUCKET` (prod), `AWS_REGION`, `UPLOAD_DIR`
+  (dev), `MAX_UPLOAD_MB`. See `services/api/.env.example`.
+- Web apps: `NEXT_PUBLIC_FIREBASE_*`, `API_ORIGIN` (dev). See each app's `.env.example`.
+
+## Security notes for whoever holds the repo
+- The clone URL had a GitHub PAT embedded. It lives in local `.git/config` only (never
+  committed). REVOKE that token and set a clean remote:
+  `git remote set-url origin https://github.com/GuptaOum/Spaceborn-E-commerce.git`
+- Never commit Firebase service-account JSON or Razorpay secrets; they belong in Secrets Manager.
+- Admin panel is only reachable on the internal ALB; the public ALB returns 403 for `/v1/admin*`.

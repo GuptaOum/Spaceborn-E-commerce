@@ -20,8 +20,8 @@ Install the following tools before cloning the project:
 - Download and install **Git** from [git-scm.com](https://git-scm.com/).
 - Set your identity:
   ```bash
-  git config --global user.name "GuptaOum"
-  git config --global user.email "oumgupta555@gmail.com"
+  git config --global user.name "Developer"
+  git config --global user.email "developer@example.com"
   ```
 
 ### 1.3 AWS CLI v2
@@ -163,18 +163,18 @@ http://localhost:8080
 
 ### Step 3: Sign In with Google
 - Click **Sign in with Google**.
-- Select **`oumgupta555@gmail.com`**.
+- Select the administrator account configured in `ADMIN_EMAILS`.
 - You will be admitted directly to the Admin Dashboard.
 
 ---
 
-## 6. Testing All 3 Roles with One Gmail Account
+## 6. Testing All 3 Roles in Development
 
 | Role | Portal / URL | Recommended Email | How It Works |
 | :--- | :--- | :--- | :--- |
-| **Customer** | Storefront (`:3000` or CloudFront) | `oumgupta555@gmail.com` | Standard customer account for shopping and ordering. |
-| **Vendor** | Vendor Hub (`:3001` or Port 8080) | `oumgupta555+vendor@gmail.com` | Using a `+` alias ensures fraud-prevention rules don't conflict with your Admin identity. Emails still arrive in your primary inbox! |
-| **Admin** | Admin Panel (`:3002` or `localhost:8080` via tunnel) | `oumgupta555@gmail.com` | Hardcoded in `DEFAULT_ADMIN_EMAILS` across backend and frontend. Instant administrative authorization. |
+| **Customer** | Storefront (`:3000` or CloudFront) | Any user email | Standard customer account for shopping and ordering. |
+| **Vendor** | Vendor Hub (`:3001` or Port 8080) | `vendor@example.com` (or `user+vendor@...`) | Using a separate account ensures fraud-prevention rules don't conflict with your Admin identity. |
+| **Admin** | Admin Panel (`:3002` or `localhost:8080` via tunnel) | Configured Admin Email | Authorized via `ADMIN_EMAILS` or `admin_members` database table. Instant administrative access. |
 
 ---
 
