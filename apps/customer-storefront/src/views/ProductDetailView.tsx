@@ -914,12 +914,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   <div className="p-4 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] flex items-start gap-3">
                     <ShieldCheck className="w-5 h-5 text-[#7a6274] shrink-0 mt-0.5" />
                     <div className="text-xs text-[#34222e] space-y-1">
-                      <p className="font-bold">Verified Purchase Required to Rate</p>
+                      <p className="font-bold">Verified Delivered Purchase Required</p>
                       <p className="text-[#7a6274] leading-relaxed">
-                        You can only rate or review items that you have purchased and are in your order history. If you recently ordered this item, you can also rate it directly from your{' '}
+                        Ratings and reviews are reserved exclusively for customers who have received this component. If your order is currently in transit, you will be able to rate it directly from your{' '}
                         <Link href="/orders" className="font-bold text-[#0c831f] underline hover:text-[#0a701a]">
                           Order History page
-                        </Link>.
+                        </Link>{' '}
+                        as soon as it is delivered.
                       </p>
                     </div>
                   </div>

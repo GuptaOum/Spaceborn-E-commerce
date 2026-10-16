@@ -235,7 +235,7 @@ catalogRouter.get('/catalog/products/:productId/reviews', optionalAuth, async (r
          join orders o on o.id = oi.order_id
         where (oi.product_id = $1 or oi.sku = $2)
           and o.customer_id = $3
-          and o.status not in ('cancelled', 'expired', 'pending_payment')
+          and o.status = 'delivered'
         order by o.created_at desc
         limit 1`,
       [resolved.id, resolved.sku, req.user.uid]
@@ -282,21 +282,21 @@ catalogRouter.post('/catalog/products/:productId/reviews', requireAuth, async (r
     req.body
   );
 
-  // STRICT VERIFICATION: ONLY allow rating if the customer has bought the item and it is in their order history!
+  // STRICT VERIFICATION: ONLY allow rating if the customer has bought and received the item!
   const { rows: orderRows } = await pool.query<{ orderNumber: number }>(
     `select o.order_number as "orderNumber"
        from order_items oi
        join orders o on o.id = oi.order_id
       where (oi.product_id = $1 or oi.sku = $2)
         and o.customer_id = $3
-        and o.status not in ('cancelled', 'expired', 'pending_payment')
+        and o.status = 'delivered'
       order by o.created_at desc
       limit 1`,
     [resolved.id, resolved.sku, user.uid]
   );
 
   if (orderRows.length === 0 || !orderRows[0]) {
-    throw badRequest('You can only rate or review items that you have purchased and are in your order history.');
+    throw badRequest('You can only rate or review items that have been delivered to you in your order history.');
   }
 
   await pool.query(
