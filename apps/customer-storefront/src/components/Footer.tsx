@@ -5,7 +5,6 @@ import {
   Truck, 
   RotateCcw,
   Zap,
-  Phone,
   Mail,
   MapPin
 } from 'lucide-react';
@@ -98,10 +97,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
             <p className="flex items-center space-x-2">
               <Mail className="w-4 h-4 text-[#7a6274] shrink-0" />
               <span>support@spaceborn.in</span>
-            </p>
-            <p className="flex items-center space-x-2">
-              <Phone className="w-4 h-4 text-[#7a6274] shrink-0" />
-              <span>+91 080 4912 8800</span>
             </p>
           </div>
         </div>

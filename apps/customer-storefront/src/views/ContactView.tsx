@@ -1,15 +1,11 @@
 'use client';
 import React, { useState } from 'react';
 import { 
-  PhoneCall, 
   Mail, 
   MapPin, 
   Clock, 
   Send, 
   CheckCircle2, 
-  Building2,
-  Cpu, 
-  ShieldCheck,
   Headphones
 } from 'lucide-react';
 import { AppView } from '../types';
@@ -29,19 +25,10 @@ export const ContactView: React.FC<ContactViewProps> = ({ onNavigate }) => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
-  const [callbackRequested, setCallbackRequested] = useState(false);
-  const [callbackPhone, setCallbackPhone] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-  };
-
-  const handleCallbackSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (callbackPhone) {
-      setCallbackRequested(true);
-    }
   };
 
   return (
@@ -61,13 +48,16 @@ export const ContactView: React.FC<ContactViewProps> = ({ onNavigate }) => {
             </p>
           </div>
 
-          <div className="bg-[#34222e] text-white rounded-2xl p-5 shrink-0 border border-[#34222e] space-y-2 shadow-xs">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shrink-0 border border-[#f9bf8f]/60 space-y-1.5 shadow-xs">
             <div className="flex items-center space-x-2 text-xs text-[#0c831f] font-semibold">
               <span className="w-2 h-2 rounded-full bg-[#0c831f] animate-pulse" />
-              <span>Engineers Live on Technical Desk</span>
+              <span>Technical Desk Active</span>
             </div>
-            <div className="text-lg font-black tracking-tight text-[#f8cb46]">+91 080 4912 8800</div>
-            <p className="text-[#fee9d7]/70 text-[11px]">Mon - Sat: 9:30 AM – 6:30 PM IST</p>
+            <div className="text-sm sm:text-base font-bold text-[#34222e] flex items-center space-x-1.5">
+              <Mail className="w-4 h-4 text-[#e2434b]" />
+              <span>support@spaceborn.in</span>
+            </div>
+            <p className="text-[#7a6274] text-[11px]">Mon – Sat: 9:30 AM – 6:30 PM IST</p>
           </div>
         </div>
 
@@ -215,46 +205,50 @@ export const ContactView: React.FC<ContactViewProps> = ({ onNavigate }) => {
             )}
           </div>
 
-          {/* Right Column: Physical Addresses & Instant Callback */}
+          {/* Right Column: Direct Channels & Hub Locations */}
           <div className="space-y-4 sm:space-y-6">
             
-            {/* Quick 10-Min Callback Card */}
-            <div className="bg-[#34222e] rounded-2xl sm:rounded-3xl p-5 sm:p-6 text-white border border-[#34222e] space-y-3.5 shadow-xs">
-              <div className="flex items-center space-x-2 text-xs font-bold text-[#f8cb46] uppercase tracking-wider">
-                <Clock className="w-4 h-4 text-[#f8cb46]" />
-                <span>Instant 15-Min Engineer Callback</span>
+            {/* Direct Support Card */}
+            <div className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-[#f9bf8f]/60 shadow-xs space-y-3.5 text-[#34222e]">
+              <div className="flex items-center space-x-2 text-xs font-bold text-[#0c831f] uppercase tracking-wider">
+                <Headphones className="w-4 h-4 text-[#0c831f]" />
+                <span>Engineering & Sourcing Desk</span>
               </div>
-              <h4 className="font-bold text-sm sm:text-base text-white">Need immediate component sizing assistance?</h4>
-              <p className="text-[#fee9d7]/70 text-xs leading-relaxed">
-                Enter your phone number. Our senior electrical engineer will call you right away with pinout and voltage guidance.
+              <h4 className="font-bold text-sm sm:text-base text-[#34222e]">Direct Technical Assistance</h4>
+              <p className="text-[#7a6274] text-xs leading-relaxed">
+                For component sizing, custom CNC tolerances, or bulk procurement inquiries, reach our engineering team directly via email or the inquiry form.
               </p>
 
-              {callbackRequested ? (
-                <div className="bg-[#0c831f]/20 border border-[#0c831f]/40 rounded-xl p-3 text-xs text-[#f2fcf4] flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-[#0c831f]" />
-                  <span>Callback requested for {callbackPhone}. An engineer will reach out during lab hours.</span>
-                </div>
-              ) : (
-                <form onSubmit={handleCallbackSubmit} className="space-y-2">
-                  <div className="flex rounded-xl overflow-hidden border border-[#f9bf8f]/30 bg-[#251821]">
-                    <input 
-                      type="tel"
-                      required
-                      value={callbackPhone}
-                      onChange={e => setCallbackPhone(e.target.value)}
-                      placeholder="+91 98450 00000"
-                      className="w-full px-3 py-2 text-xs bg-transparent text-white outline-none placeholder:text-[#fee9d7]/40 font-mono"
-                    />
-                    <button 
-                      type="submit"
-                      className="bg-[#0c831f] hover:bg-[#0a6e1a] text-white px-4 text-xs font-bold transition shrink-0 cursor-pointer"
-                    >
-                      Call Me
-                    </button>
+              <div className="space-y-2 pt-1 text-xs">
+                <div className="p-3 bg-white rounded-xl border border-[#f9bf8f]/50 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#7a6274] block">General & Technical Support</span>
+                    <a href="mailto:support@spaceborn.in" className="font-bold text-[#34222e] hover:text-[#0c831f] transition">
+                      support@spaceborn.in
+                    </a>
                   </div>
-                  <span className="text-[10px] text-[#fee9d7]/60 block">Available 9:30 AM – 6:30 PM IST Mon-Sat</span>
-                </form>
-              )}
+                  <span className="text-[10px] font-semibold text-[#0c831f] bg-[#f2fcf4] px-2 py-0.5 rounded-full border border-[#0c831f]/20">
+                    &lt; 2hr reply
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-[#f9bf8f]/50 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-[#7a6274] block">Institutional & B2B Orders</span>
+                    <a href="mailto:b2b@spaceborn.in" className="font-bold text-[#34222e] hover:text-[#0c831f] transition">
+                      b2b@spaceborn.in
+                    </a>
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#34222e] bg-[#fee9d7] px-2 py-0.5 rounded-full border border-[#f9bf8f]">
+                    Same-day quote
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-1.5 text-[11px] text-[#7a6274] pt-1">
+                <Clock className="w-3.5 h-3.5 text-[#7a6274]" />
+                <span>Desk Active: Mon – Sat, 9:30 AM – 6:30 PM IST</span>
+              </div>
             </div>
 
             {/* Hub Contacts */}
