@@ -202,4 +202,11 @@ The production environment is provisioned with high-availability safeguards:
 - **Immutable Container Tags**: ECR images are pinned and scanned on push using AWS Inspector.
 
 ---
+
+## 🌐 Live Demo
+
+The platform demo is hosted live on Render:
+- **Live URL**: [https://spacebornecomdemo-1.onrender.com](https://spacebornecomdemo-1.onrender.com)
+
+---
 *Built with precision for Spaceborn.*
