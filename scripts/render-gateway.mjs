@@ -184,10 +184,10 @@ function startGateway() {
       return;
     }
 
-    // Portal landing page: /__portal or /_hub
+    // Portal redirect: /__portal or /_hub redirects directly to Storefront
     if (url.pathname === '/__portal' || url.pathname === '/_hub') {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(renderPortalHtml(host));
+      res.writeHead(302, { Location: '/?app=store' });
+      res.end();
       return;
     }
 
@@ -454,7 +454,6 @@ function proxyRequest(req, res, targetPort) {
       <a href="${req.url}" class="btn">Refresh Now</a>
     </div>
     <div style="margin-top: 16px;">
-      <a href="/__portal" style="color: #64748b; font-size: 12px; text-decoration: underline; margin-right: 12px;">App Portal</a>
       <a href="/__status" style="color: #64748b; font-size: 12px; text-decoration: underline;">Live Diagnostics</a>
     </div>
   </div>
@@ -483,7 +482,7 @@ function getBannerHtml() {
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
     box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    padding: 6px 8px 6px 14px;
+    padding: 6px 10px;
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
     font-size: 12px;
@@ -497,36 +496,18 @@ function getBannerHtml() {
     border-color: rgba(255, 255, 255, 0.2);
     box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
-  .hub-brand {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding-right: 4px;
-    user-select: none;
-  }
-  .hub-divider {
-    width: 1px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.12);
-    margin: 0 2px;
-  }
   .hub-link {
     color: #e2e8f0;
     text-decoration: none;
-    padding: 5px 11px;
+    padding: 6px 12px;
     border-radius: 9999px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.06);
     font-weight: 500;
-    font-size: 11.5px;
+    font-size: 12px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .hub-link:hover {
@@ -548,22 +529,13 @@ function getBannerHtml() {
     border-color: rgba(167, 139, 250, 0.4);
     box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
   }
-  .hub-link-portal {
-    color: #94a3b8;
-    background: transparent;
-    border-color: transparent;
-  }
-  .hub-link-portal:hover {
-    color: #e2e8f0;
-    background: rgba(255, 255, 255, 0.08);
-  }
   .hub-close {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid transparent;
     color: #94a3b8;
     cursor: pointer;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -587,8 +559,6 @@ function getBannerHtml() {
       gap: 6px !important;
       font-size: 11px !important;
     }
-    #spaceborn-demo-banner > .hub-brand,
-    #spaceborn-demo-banner > .hub-divider { display: none !important; }
     #spaceborn-demo-banner:not(.open) > a,
     #spaceborn-demo-banner:not(.open) > .hub-close { display: none !important; }
     #spaceborn-demo-banner.open {
@@ -617,109 +587,13 @@ function getBannerHtml() {
   }
 </style>
 <div id="spaceborn-demo-banner">
-  <span class="hub-brand">
-    <span>🚀</span> Spaceborn Hub
-  </span>
-  <div class="hub-divider"></div>
   <a href="/__switch?app=store" class="hub-link hub-link-store"><span>🛍️</span> Storefront</a>
   <a href="/__switch?app=vendor" class="hub-link hub-link-vendor"><span>🏪</span> Vendor Hub</a>
   <a href="/__switch?app=admin" class="hub-link hub-link-admin"><span>🛡️</span> Admin Panel</a>
-  <a href="/__portal" class="hub-link hub-link-portal" title="Full System Hub"><span>📑</span> Portal</a>
-  <button id="spaceborn-demo-banner-toggle" type="button" onclick="document.getElementById('spaceborn-demo-banner').classList.toggle('open')" title="Switch app">🚀 Hub</button>
+  <button id="spaceborn-demo-banner-toggle" type="button" onclick="document.getElementById('spaceborn-demo-banner').classList.toggle('open')" title="Switch app">⚡ Apps</button>
   <button onclick="document.getElementById('spaceborn-demo-banner').style.display='none'" class="hub-close" title="Dismiss">&times;</button>
 </div>
 `;
-}
-
-function renderPortalHtml(host) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spaceborn Demo Hub ($0 Free Tier Model)</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #090d16; color: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
-    .card-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; width: 100%; margin-top: 32px; }
-    .card { background: #131b2e; border: 1px solid #1e293b; border-radius: 14px; padding: 24px; transition: transform 0.2s, border-color 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
-    .card:hover { transform: translateY(-3px); border-color: #3b82f6; }
-    .badge { display: inline-block; padding: 3px 8px; font-size: 11px; font-weight: 700; border-radius: 6px; text-transform: uppercase; margin-bottom: 12px; }
-    .badge-store { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-    .badge-vendor { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-    .badge-admin { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
-    .badge-api { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-    h1 { font-size: 32px; font-weight: 800; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-    p { font-size: 14px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px; }
-    .btn { display: inline-block; text-align: center; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: background 0.15s; }
-    .btn-blue { background: #2563eb; color: #fff; }
-    .btn-blue:hover { background: #1d4ed8; }
-    .btn-green { background: #059669; color: #fff; }
-    .btn-green:hover { background: #047857; }
-    .btn-purple { background: #7c3aed; color: #fff; }
-    .btn-purple:hover { background: #6d28d9; }
-    .btn-amber { background: #d97706; color: #fff; }
-    .btn-amber:hover { background: #b45309; }
-    .meta-box { margin-top: 36px; padding: 18px 24px; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; max-width: 1000px; width: 100%; font-size: 13px; color: #94a3b8; }
-    .meta-box b { color: #f1f5f9; }
-    code { background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #38bdf8; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div style="text-align: center; max-width: 640px;">
-    <h1>Spaceborn Demo Hub</h1>
-    <p style="margin-top: 8px; font-size: 15px;">Zero-Dollar Unified Architecture hosted on Render Free Tier. All 4 microservices running cooperatively behind 1 gateway container.</p>
-  </div>
-
-  <div class="card-container">
-    <div class="card">
-      <div>
-        <span class="badge badge-store">Customer Portal</span>
-        <h2>🛍️ Storefront</h2>
-        <p>Browse electronics catalog, 10-minute quick delivery geolocation, cart & checkout, 3D printing & CNC fabrication ordering.</p>
-      </div>
-      <a href="/__switch?app=store" class="btn btn-blue">Launch Storefront</a>
-    </div>
-
-    <div class="card">
-      <div>
-        <span class="badge badge-vendor">Vendor Portal</span>
-        <h2>🏪 Vendor Hub</h2>
-        <p>Merchant onboarding, real-time inventory management, order dispatch with audio alerts, fabrication quoting & production queue.</p>
-      </div>
-      <a href="/__switch?app=vendor" class="btn btn-green">Launch Vendor Hub</a>
-    </div>
-
-    <div class="card">
-      <div>
-        <span class="badge badge-admin">Operations Pillar</span>
-        <h2>🛡️ Admin Panel</h2>
-        <p>Store approval workflows, premises verification, catalog management, fabrication listings gating, and audit logging.</p>
-      </div>
-      <a href="/__switch?app=admin" class="btn btn-purple">Launch Admin Panel</a>
-    </div>
-
-    <div class="card">
-      <div>
-        <span class="badge badge-api">Backend Core</span>
-        <h2>⚡ Express API</h2>
-        <p>Node.js REST API with RBAC authorization, Supabase PostgreSQL, Firebase Token verification, and outbox event processor.</p>
-      </div>
-      <a href="/v1/health" class="btn btn-amber" target="_blank">Inspect API Health</a>
-    </div>
-  </div>
-
-  <div class="meta-box">
-    <b>Quick Tips:</b>
-    <ul style="margin-left: 20px; margin-top: 8px; line-height: 1.6;">
-      <li>You can jump between apps anytime using the floating pill in the bottom right corner or via <code>?app=store</code>, <code>?app=vendor</code>, and <code>?app=admin</code>.</li>
-      <li>To test RBAC roles, sign in via Firebase Auth in each app. Founding administrator email is seeded in PostgreSQL.</li>
-      <li>Database is powered by free Supabase PostgreSQL with pooled connections on port 6543.</li>
-    </ul>
-  </div>
-</body>
-</html>`;
 }
 
 // 3. Graceful Shutdown
