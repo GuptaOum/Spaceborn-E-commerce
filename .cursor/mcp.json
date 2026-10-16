@@ -58,6 +58,21 @@
         "@browsermcp/mcp@latest"
       ]
     },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "${env:DATABASE_URL}"
+      ]
+    },
     "supabase": {
       "type": "sse",
       "url": "https://mcp.supabase.com/mcp"
