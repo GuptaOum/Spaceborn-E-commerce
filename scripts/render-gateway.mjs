@@ -474,46 +474,142 @@ function getBannerHtml() {
 <style>
   #spaceborn-demo-banner {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
-    z-index: 35;
-    background: rgba(15,23,42,0.92);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 12px;
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
-    padding: 10px 14px;
-    color: #fff;
-    font-family: system-ui,-apple-system,sans-serif;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    padding: 6px 8px 6px 14px;
+    color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
     font-size: 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #spaceborn-demo-banner:hover {
+    background: rgba(15, 23, 42, 0.78);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .hub-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-right: 4px;
+    user-select: none;
+  }
+  .hub-divider {
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 0 2px;
+  }
+  .hub-link {
+    color: #e2e8f0;
+    text-decoration: none;
+    padding: 5px 11px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-weight: 500;
+    font-size: 11.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hub-link:hover {
+    transform: translateY(-1px);
+    color: #fff;
+  }
+  .hub-link-store:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+  }
+  .hub-link-vendor:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(52, 211, 153, 0.4);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+  }
+  .hub-link-admin:hover {
+    background: rgba(139, 92, 246, 0.25);
+    border-color: rgba(167, 139, 250, 0.4);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
+  }
+  .hub-link-portal {
+    color: #94a3b8;
+    background: transparent;
+    border-color: transparent;
+  }
+  .hub-link-portal:hover {
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .hub-close {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    transition: all 0.15s ease;
+    margin-left: 2px;
+  }
+  .hub-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
   }
   @media (max-width: 640px) {
     #spaceborn-demo-banner {
       bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
       left: 12px !important;
       right: auto !important;
-      padding: 5px 10px !important;
+      padding: 6px 12px !important;
       gap: 6px !important;
       font-size: 11px !important;
-      border-radius: 999px !important;
-      z-index: 35 !important;
     }
-    #spaceborn-demo-banner > span:first-child { display: none !important; }
-    #spaceborn-demo-banner:not(.open) > a { display: none !important; }
+    #spaceborn-demo-banner > .hub-brand,
+    #spaceborn-demo-banner > .hub-divider { display: none !important; }
+    #spaceborn-demo-banner:not(.open) > a,
+    #spaceborn-demo-banner:not(.open) > .hub-close { display: none !important; }
     #spaceborn-demo-banner.open {
       flex-wrap: wrap !important;
       justify-content: flex-start !important;
       max-width: calc(100vw - 24px) !important;
-      border-radius: 14px !important;
-      left: 12px !important;
-      right: auto !important;
+      border-radius: 20px !important;
+      padding: 10px 14px !important;
     }
-    #spaceborn-demo-banner-toggle { display: inline-block !important; }
+    #spaceborn-demo-banner-toggle { display: inline-flex !important; }
   }
-  #spaceborn-demo-banner-toggle { display: none; background: none; border: none; color: #38bdf8; font-weight: 700; cursor: pointer; font-size: 11px; padding: 0 2px; }
+  #spaceborn-demo-banner-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: #38bdf8;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0 4px;
+  }
   /* Automatically hide floating demo banner when any modal or cart drawer is open */
   body:has([role="dialog"]) #spaceborn-demo-banner,
   body.modal-open #spaceborn-demo-banner {
@@ -521,15 +617,16 @@ function getBannerHtml() {
   }
 </style>
 <div id="spaceborn-demo-banner">
-  <span style="font-weight:700;letter-spacing:0.5px;color:#38bdf8;display:flex;align-items:center;gap:4px">
-    <span>🚀</span> Spaceborn Hub:
+  <span class="hub-brand">
+    <span>🚀</span> Spaceborn Hub
   </span>
-  <a href="/__switch?app=store" style="color:#f8fafc;text-decoration:none;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.1);font-weight:500;" onmouseover="this.style.background='#3b82f6'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🛍️ Storefront</a>
-  <a href="/__switch?app=vendor" style="color:#f8fafc;text-decoration:none;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.1);font-weight:500;" onmouseover="this.style.background='#10b981'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🏪 Vendor Hub</a>
-  <a href="/__switch?app=admin" style="color:#f8fafc;text-decoration:none;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.1);font-weight:500;" onmouseover="this.style.background='#8b5cf6'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">🛡️ Admin Panel</a>
-  <a href="/__portal" style="color:#94a3b8;text-decoration:none;padding:4px 6px;" title="Full System Hub">📑 Portal</a>
+  <div class="hub-divider"></div>
+  <a href="/__switch?app=store" class="hub-link hub-link-store"><span>🛍️</span> Storefront</a>
+  <a href="/__switch?app=vendor" class="hub-link hub-link-vendor"><span>🏪</span> Vendor Hub</a>
+  <a href="/__switch?app=admin" class="hub-link hub-link-admin"><span>🛡️</span> Admin Panel</a>
+  <a href="/__portal" class="hub-link hub-link-portal" title="Full System Hub"><span>📑</span> Portal</a>
   <button id="spaceborn-demo-banner-toggle" type="button" onclick="document.getElementById('spaceborn-demo-banner').classList.toggle('open')" title="Switch app">🚀 Hub</button>
-  <button onclick="document.getElementById('spaceborn-demo-banner').style.display='none'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:0 4px;" title="Dismiss">&times;</button>
+  <button onclick="document.getElementById('spaceborn-demo-banner').style.display='none'" class="hub-close" title="Dismiss">&times;</button>
 </div>
 `;
 }
