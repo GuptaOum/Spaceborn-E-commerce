@@ -695,7 +695,7 @@ async function expireReservationsInTx(batchSize = 50): Promise<number> {
     for (const { id } of rows) {
       await releaseStock(c, id);
       await c.query(`update orders set status = 'expired', reserved_until = null where id = $1`, [id]);
-      await recordStatus(c, id, 'pending_payment', 'expired', { role: 'system', uid: null }, 'Payment not completed in time');
+      await recordStatus(c, id, 'pending_payment', 'expired', { role: 'system', uid: null }, 'Order cancelled');
       await enqueue(c, 'order.status_changed', { orderId: id, from: 'pending_payment', to: 'expired' });
     }
     return rows.length;

@@ -601,7 +601,7 @@ function OrderCard({
               <span className="text-[#0c831f] font-semibold">✓ GST Compliant Invoice</span>
             )}
           </div>
-          {order.cancelReason && (
+          {order.cancelReason && !order.cancelReason.toLowerCase().includes('payment') && !order.cancelReason.toLowerCase().includes('time') && (
             <p className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-medium">
               Cancellation Reason: {order.cancelReason}
             </p>
