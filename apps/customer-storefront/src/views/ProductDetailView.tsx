@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { api } from '@spaceborn/web-core/api';
+import { useAuth } from '@spaceborn/web-core/auth';
 import { PRODUCT_BADGES, type CatalogOffer, type GeoPoint } from '@spaceborn/web-core/types';
 import { Product, AppView } from '../types';
 import { ProductCard } from '../components/ProductCard';
@@ -9,6 +11,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Check,
+  CheckCircle2,
   ChevronRight,
   Download,
   FileText,
@@ -101,7 +104,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [activeTab, setActiveTab] = useState<TabKey>('description');
 
   // Review System State
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<ReviewItem[]>(DEFAULT_REVIEWS);
+  const [canReview, setCanReview] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [eligibleOrderNumber, setEligibleOrderNumber] = useState<number | null>(null);
+  const [existingUserReview, setExistingUserReview] = useState<{ rating: number; title: string | null; content: string } | null>(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
@@ -134,20 +142,39 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
     const fetchReviews = async () => {
       try {
-        const { reviews: fetched } = await api<{ reviews: any[] }>(`/catalog/products/${product.id}/reviews`);
-        const mapped = fetched.map(r => ({
+        const res = await api<{
+          reviews: any[];
+          canReview?: boolean;
+          hasPurchased?: boolean;
+          eligibleOrderNumber?: number | null;
+          userReview?: { rating: number; title: string | null; content: string } | null;
+        }>(`/catalog/products/${product.id}/reviews`);
+
+        const mapped = (res.reviews || []).map((r: any) => ({
           name: r.authorName,
           org: '',
           date: new Date(r.createdAt).toLocaleDateString(),
           title: r.title || '',
           comment: r.content,
           rating: r.rating,
-          verified: true
+          verified: true,
         }));
         if (mapped.length > 0) {
           setReviews([...mapped, ...DEFAULT_REVIEWS]);
         } else {
           setReviews(DEFAULT_REVIEWS);
+        }
+
+        setCanReview(Boolean(res.canReview));
+        setHasPurchased(Boolean(res.hasPurchased));
+        setEligibleOrderNumber(res.eligibleOrderNumber ?? null);
+        if (res.userReview) {
+          setExistingUserReview(res.userReview);
+          setNewRating(res.userReview.rating);
+          setNewTitle(res.userReview.title || '');
+          setNewComment(res.userReview.content);
+        } else {
+          setExistingUserReview(null);
         }
       } catch (err) {
         console.error('Failed to fetch reviews', err);
@@ -156,7 +183,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     };
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product.id]);
+  }, [product.id, user?.uid]);
 
   const inStock = product.stock > 0;
   const lowStock = inStock && product.stock <= 5;
@@ -244,7 +271,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   const scrollToReviews = (openForm = false) => {
     setActiveTab('reviews');
-    if (openForm) setShowReviewForm(true);
+    if (openForm && hasPurchased) setShowReviewForm(true);
     tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -263,7 +290,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       });
       
       const newRev: ReviewItem = {
-        name: newName.trim() || 'Verified Maker',
+        name: newName.trim() || user?.name || 'Verified Customer',
         org: newOrg.trim() || 'Robotics & Hardware Lab',
         date: 'Just now',
         title: newTitle.trim(),
@@ -272,8 +299,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         verified: true,
       };
 
-      const updated = [newRev, ...reviews];
+      const updated = [newRev, ...reviews.filter((r) => r.name !== (newName.trim() || user?.name || 'Verified Customer'))];
       setReviews(updated);
+      setExistingUserReview({
+        rating: newRating,
+        title: newTitle.trim(),
+        content: newComment.trim(),
+      });
     } catch (err: any) {
       alert(err.message || 'Failed to submit review');
       return;
@@ -283,8 +315,6 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     setTimeout(() => {
       setReviewSubmitted(false);
       setShowReviewForm(false);
-      setNewTitle('');
-      setNewComment('');
     }, 2200);
   };
 
@@ -440,11 +470,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   </button>
 
                   <button
-                    onClick={() => scrollToReviews(true)}
+                    onClick={() => scrollToReviews(hasPurchased)}
                     className="text-xs font-bold text-[#0c831f] hover:underline cursor-pointer flex items-center gap-1"
                   >
                     <MessageSquarePlus className="w-3.5 h-3.5" />
-                    <span>Write a review</span>
+                    <span>{hasPurchased ? (existingUserReview ? 'Edit your review' : 'Write a review') : 'Verified reviews'}</span>
                   </button>
 
                   {badges.map((b) => (
@@ -850,21 +880,75 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => setShowReviewForm(!showReviewForm)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#0c831f] hover:bg-[#0a701a] text-white px-4 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
-                  >
-                    <MessageSquarePlus className="w-4 h-4" />
-                    <span>{showReviewForm ? 'Close Review Form' : 'Write a Review'}</span>
-                  </button>
+                  {hasPurchased ? (
+                    <button
+                      onClick={() => setShowReviewForm(!showReviewForm)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#0c831f] hover:bg-[#0a701a] text-white px-4 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
+                    >
+                      <MessageSquarePlus className="w-4 h-4" />
+                      <span>{showReviewForm ? 'Close Review Form' : existingUserReview ? 'Edit Your Review' : 'Write a Review'}</span>
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fee9d7]/70 text-[#7a6274] text-xs font-semibold border border-[#f9bf8f]/40">
+                      <ShieldCheck className="w-4 h-4 text-[#0c831f]" />
+                      <span>Verified Purchasers Only</span>
+                    </span>
+                  )}
                 </div>
 
-                {/* Review Submission Form */}
-                {showReviewForm && (
+                {/* Verified Purchase Gating Notice */}
+                {!user ? (
+                  <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/70 flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-900 space-y-1">
+                      <p className="font-bold">Verified Buyer Ratings Only</p>
+                      <p className="text-amber-800/90 leading-relaxed">
+                        To maintain authentic bench-test data, ratings and reviews on Spaceborn are restricted to customers who have ordered this component in their order history.
+                      </p>
+                      <Link href={`/auth?next=/product/${product.id}`} className="inline-block mt-1 font-bold text-[#0c831f] hover:underline">
+                        Sign in to check your order history →
+                      </Link>
+                    </div>
+                  </div>
+                ) : !hasPurchased ? (
+                  <div className="p-4 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-[#7a6274] shrink-0 mt-0.5" />
+                    <div className="text-xs text-[#34222e] space-y-1">
+                      <p className="font-bold">Verified Purchase Required to Rate</p>
+                      <p className="text-[#7a6274] leading-relaxed">
+                        You can only rate or review items that you have purchased and are in your order history. If you recently ordered this item, you can also rate it directly from your{' '}
+                        <Link href="/orders" className="font-bold text-[#0c831f] underline hover:text-[#0a701a]">
+                          Order History page
+                        </Link>.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-[#f2fcf4] rounded-xl border border-[#0c831f]/20 flex items-center justify-between text-xs text-[#0c831f]">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span className="font-bold">
+                        Verified Purchaser {eligibleOrderNumber ? `(Order #${eligibleOrderNumber})` : ''}
+                      </span>
+                      <span className="text-[#7a6274] hidden sm:inline">· You purchased this item in your order history and can share your test findings.</span>
+                    </div>
+                    {!showReviewForm && (
+                      <button
+                        onClick={() => setShowReviewForm(true)}
+                        className="text-xs font-bold underline hover:text-[#0a701a] cursor-pointer"
+                      >
+                        {existingUserReview ? 'Edit review' : 'Rate now'}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Review Submission Form - strictly available only if user has purchased */}
+                {hasPurchased && showReviewForm && (
                   <form onSubmit={handleReviewSubmit} className="p-4 sm:p-6 bg-white rounded-2xl border border-[#0c831f]/30 shadow-xs space-y-4 animate-in fade-in duration-200">
                     <div className="flex items-center justify-between border-b border-[#f9bf8f]/40 pb-3">
                       <div>
-                        <h4 className="text-sm font-bold text-[#34222e]">Write a Customer Review</h4>
+                        <h4 className="text-sm font-bold text-[#34222e]">{existingUserReview ? 'Update Your Review' : 'Write a Customer Review'}</h4>
                         <p className="text-xs text-[#7a6274]">Share your real bench-testing, lab results, and feedback with makers across India.</p>
                       </div>
                       <span className="text-[10px] font-bold bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/20 px-2 py-0.5 rounded-full">
@@ -967,7 +1051,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                         type="submit"
                         className="px-5 py-2 text-xs font-bold text-white bg-[#0c831f] hover:bg-[#0a701a] rounded-xl transition cursor-pointer shadow-xs"
                       >
-                        Submit Verified Review
+                        {existingUserReview ? 'Update Verified Review' : 'Submit Verified Review'}
                       </button>
                     </div>
                   </form>

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { currentUser, requireAuth } from '../auth.js';
+import { currentUser, optionalAuth, requireAuth } from '../auth.js';
 import { cacheGet, cacheSet, catalogGeneration } from '../cache.js';
 import { pool } from '../db/pool.js';
 import { badRequest, notFound, parse } from '../errors.js';
@@ -181,49 +181,133 @@ catalogRouter.get('/catalog/products/:productId', async (req, res) => {
   res.json({ product: withEta(rows[0]), offers: offers.rows.map(withEta) });
 });
 
-catalogRouter.get('/catalog/products/:productId/reviews', async (req, res) => {
-  const productId = parse(uuid, req.params.productId);
-  const { rows } = await pool.query(
+async function resolveProductDbId(identifier: string): Promise<{ id: string; sku: string; name: string } | null> {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+  if (isUuid) {
+    const { rows } = await pool.query<{ id: string; sku: string; name: string }>(
+      `select id, sku, name from products where id = $1 limit 1`,
+      [identifier]
+    );
+    if (rows[0]) return rows[0];
+  }
+  const { rows } = await pool.query<{ id: string; sku: string; name: string }>(
+    `select id, sku, name from products where sku = $1 or lower(sku) = lower($1) limit 1`,
+    [identifier]
+  );
+  return rows[0] ?? null;
+}
+
+catalogRouter.get('/catalog/products/:productId/reviews', optionalAuth, async (req, res) => {
+  const rawId = String(req.params.productId);
+  const resolved = await resolveProductDbId(rawId);
+  if (!resolved) {
+    return res.json({ reviews: [], canReview: false, hasPurchased: false });
+  }
+
+  const { rows } = await pool.query<{
+    id: string;
+    rating: number;
+    title: string | null;
+    content: string;
+    createdAt: string;
+    authorName: string;
+    userId: string;
+  }>(
     `select pr.id, pr.rating, pr.title, pr.content, pr.created_at as "createdAt",
-            u.full_name as "authorName"
+            coalesce(u.full_name, 'Verified Purchaser') as "authorName",
+            pr.user_id as "userId"
        from product_reviews pr
        join users u on u.id = pr.user_id
       where pr.product_id = $1
       order by pr.created_at desc`,
-    [productId]
+    [resolved.id]
   );
-  res.json({ reviews: rows });
+
+  let canReview = false;
+  let hasPurchased = false;
+  let eligibleOrderNumber: number | null = null;
+  let userReview: { rating: number; title: string | null; content: string } | null = null;
+
+  if (req.user) {
+    const { rows: orderRows } = await pool.query<{ orderNumber: number; status: string }>(
+      `select o.order_number as "orderNumber", o.status
+         from order_items oi
+         join orders o on o.id = oi.order_id
+        where (oi.product_id = $1 or oi.sku = $2)
+          and o.customer_id = $3
+          and o.status not in ('cancelled', 'expired', 'pending_payment')
+        order by o.created_at desc
+        limit 1`,
+      [resolved.id, resolved.sku, req.user.uid]
+    );
+
+    if (orderRows.length > 0 && orderRows[0]) {
+      hasPurchased = true;
+      canReview = true;
+      eligibleOrderNumber = orderRows[0].orderNumber;
+    }
+
+    const existing = rows.find((r) => r.userId === req.user?.uid);
+    if (existing) {
+      userReview = {
+        rating: existing.rating,
+        title: existing.title,
+        content: existing.content,
+      };
+    }
+  }
+
+  res.json({
+    reviews: rows.map(({ userId: _uid, ...r }) => r),
+    canReview,
+    hasPurchased,
+    eligibleOrderNumber,
+    userReview,
+  });
 });
 
 catalogRouter.post('/catalog/products/:productId/reviews', requireAuth, async (req, res) => {
-  const productId = parse(uuid, req.params.productId);
+  const rawId = String(req.params.productId);
+  const resolved = await resolveProductDbId(rawId);
+  if (!resolved) {
+    throw badRequest('Product not found in catalog');
+  }
   const user = currentUser(req);
   const body = parse(
     z.object({
       rating: z.number().int().min(1).max(5),
-      title: z.string().optional(),
-      content: z.string().min(1)
+      title: z.string().trim().max(200).optional(),
+      content: z.string().trim().min(2, 'Review content is required').max(2000),
     }),
     req.body
   );
-  const { rows: orderRows } = await pool.query(
-    `select 1 from order_items oi
+
+  // STRICT VERIFICATION: ONLY allow rating if the customer has bought the item and it is in their order history!
+  const { rows: orderRows } = await pool.query<{ orderNumber: number }>(
+    `select o.order_number as "orderNumber"
+       from order_items oi
        join orders o on o.id = oi.order_id
-      where oi.product_id = $1 and o.customer_id = $2 and o.status = 'delivered'`,
-    [productId, user.uid]
+      where (oi.product_id = $1 or oi.sku = $2)
+        and o.customer_id = $3
+        and o.status not in ('cancelled', 'expired', 'pending_payment')
+      order by o.created_at desc
+      limit 1`,
+    [resolved.id, resolved.sku, user.uid]
   );
-  if (orderRows.length === 0) {
-    throw badRequest('You can only review products you have bought and received.');
+
+  if (orderRows.length === 0 || !orderRows[0]) {
+    throw badRequest('You can only rate or review items that you have purchased and are in your order history.');
   }
-  
+
   await pool.query(
     `insert into product_reviews (product_id, user_id, rating, title, content)
      values ($1, $2, $3, $4, $5)
      on conflict (product_id, user_id) do update
-     set rating = excluded.rating, title = excluded.title, content = excluded.content`,
-    [productId, user.uid, body.rating, body.title, body.content]
+     set rating = excluded.rating, title = excluded.title, content = excluded.content, updated_at = now()`,
+    [resolved.id, user.uid, body.rating, body.title || null, body.content]
   );
-  res.json({ success: true });
+
+  res.json({ success: true, orderNumber: orderRows[0].orderNumber });
 });
 // Cart preview: which store would fulfil these items from this location, and what it costs.
 catalogRouter.post('/catalog/resolve', async (req, res) => {

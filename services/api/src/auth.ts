@@ -148,6 +148,21 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
   next();
 }
 
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  try {
+    if (req.headers.authorization) {
+      const user = await resolveUser(req.headers.authorization);
+      if (user) {
+        await syncUser(user);
+        req.user = user;
+      }
+    }
+  } catch {
+    // If token is invalid or expired, continue as unauthenticated guest
+  }
+  next();
+}
+
 // Token claims live for up to an hour; membership is read on every request so removal is immediate.
 export async function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   const user = currentUser(req);
