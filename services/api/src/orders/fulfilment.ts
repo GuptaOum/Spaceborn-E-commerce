@@ -35,6 +35,16 @@ export interface Resolution {
   nearbyStores: number;
   /** How many stores will dispatch. More than one means the cart is split, nearest first. */
   deliveries?: number;
+  /** Which shop sends which items, nearest first. Empty until the whole cart can be filled. */
+  dispatches: Dispatch[];
+}
+
+export interface Dispatch {
+  storeName: string;
+  city: string;
+  distanceKm: number;
+  etaMinutes: number;
+  items: { productId: string; quantity: number }[];
 }
 
 export interface SliceLine {
@@ -223,7 +233,7 @@ export async function resolveCart(db: Db, lat: number, lng: number, quantities: 
   const ranked = await rankStores(db, lat, lng, quantities);
   const best = ranked[0];
   if (!best) {
-    return { store: null, lines: [], unavailable: [...quantities.keys()], elsewhere: [], pricing: null, nearbyStores: 0 };
+    return { store: null, lines: [], unavailable: [...quantities.keys()], elsewhere: [], pricing: null, nearbyStores: 0, dispatches: [] };
   }
 
   // Same nearest-first split the order uses, so the total on screen is the total that gets charged.
@@ -274,6 +284,7 @@ export async function resolveCart(db: Db, lat: number, lng: number, quantities: 
     pricing,
     nearbyStores: ranked.length,
     deliveries: 1,
+    dispatches: [],
   };
 }
 
@@ -325,5 +336,12 @@ function resolutionFromSlices(slices: StoreSlice[]): Resolution {
     },
     nearbyStores: slices.length,
     deliveries: slices.length,
+    dispatches: slices.map((slice) => ({
+      storeName: slice.storeName,
+      city: slice.city,
+      distanceKm: Math.round(slice.distanceKm * 10) / 10,
+      etaMinutes: etaMinutes(slice.prepMinutes, slice.distanceKm),
+      items: slice.lines.map((line) => ({ productId: line.productId, quantity: line.quantity })),
+    })),
   };
 }

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, Loader2, Lock, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Loader2, Lock, ShieldCheck, Store } from 'lucide-react';
 import { api, ApiError, newIdempotencyKey } from '@spaceborn/web-core/api';
 import type { CartResolution, CheckoutPayment, Order } from '@spaceborn/web-core/types';
 import { useStore } from '../context/StoreContext';
@@ -245,7 +245,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
           <div>
             <h2 className="mb-1 font-semibold text-[#34222e]">Delivery details</h2>
             <p className="mb-3 text-xs text-[#7a6274]">
-              The rider is sent to the pin in the header ({location.label}), not to a street we look up. City and PIN should match that pin. Delivering near <b>{location.area}</b>
+              The rider is sent to the pin in the header ({location.label}), not to a street we look up. City and PIN should match that pin. Delivering to <b>{location.area}</b>
               {resolution?.store
                 ? ` · about ${resolution.store.etaMinutes} min${(resolution.deliveries ?? 1) > 1 ? `, ${resolution.deliveries} deliveries` : ''}`
                 : resolving
@@ -297,6 +297,36 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
 
         <aside className="h-fit w-full space-y-4 md:w-80">
           <div className="rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-5 shadow-sm">
+            {resolution?.dispatches && resolution.dispatches.length > 0 && canOrder && (
+              <div className="mb-4 space-y-2">
+                <h2 className="font-bold text-[#34222e]">Delivered from</h2>
+                {resolution.dispatches.map((dispatch, i) => (
+                  <div key={`${dispatch.storeName}-${i}`} className="rounded-xl border border-[#f9bf8f]/50 bg-white p-2.5 text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="flex items-start gap-1 font-bold text-[#34222e]">
+                        <Store className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#059669]" />
+                        {dispatch.storeName}, {dispatch.city}
+                      </span>
+                      <span className="shrink-0 text-[#7a6274]">
+                        {dispatch.distanceKm} km · ~{dispatch.etaMinutes} min
+                      </span>
+                    </div>
+                    <ul className="mt-1 space-y-0.5 pl-5 text-[#7a6274]">
+                      {dispatch.items.map((it) => (
+                        <li key={it.productId} className="truncate">
+                          {it.quantity}x {cart.find((c) => c.product.id === it.productId)?.product.name ?? 'Item'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                {resolution.dispatches.length > 1 && (
+                  <p className="text-[11px] text-[#7a6274]">
+                    The nearest shop did not have everything, so the rest comes from the next closest one.
+                  </p>
+                )}
+              </div>
+            )}
             <h2 className="mb-3 font-bold text-[#34222e]">Order Summary</h2>
             <div className="mb-4 max-h-56 space-y-2.5 overflow-y-auto">
               {cart.map((item) => {

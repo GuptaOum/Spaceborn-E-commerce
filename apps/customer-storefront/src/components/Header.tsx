@@ -69,7 +69,9 @@ export const Header: React.FC<HeaderProps> = ({
     catalogStatus === 'loading'
       ? 'Checking delivery here…'
       : serviceArea.etaMinutes
-        ? `Delivery in about ${serviceArea.etaMinutes} mins`
+        ? `Delivery in about ${serviceArea.etaMinutes} mins${
+            serviceArea.nearbyStores > 1 ? ` · ${serviceArea.nearbyStores} shops nearby` : ''
+          }`
         : 'Not serviceable here yet';
 
   const submitPlace = async () => {
@@ -209,7 +211,10 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex items-center space-x-1 text-xs text-[#34222e]/80 font-medium">
                 <MapPin className="w-3.5 h-3.5 text-[#e2434b]" />
-                <span className="truncate max-w-[170px]">{location.area}</span>
+                <span className="truncate max-w-[200px]">
+                  <span className="text-[#7a6274]">Deliver to </span>
+                  {location.area}
+                </span>
                 <ChevronDown className="w-3.5 h-3.5 text-[#34222e]/60 group-hover:translate-y-0.5 transition-transform" />
               </div>
             </div>
@@ -439,7 +444,10 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex w-full items-center gap-1 text-left cursor-pointer min-w-0 py-0.5"
           >
             <MapPin className="w-3.5 h-3.5 text-[#e2434b] shrink-0" />
-            <span className="text-xs font-bold text-[#34222e] truncate max-w-[45%]">{location.area}</span>
+            <span className="text-xs font-bold text-[#34222e] truncate max-w-[45%]">
+              <span className="font-medium text-[#7a6274]">To </span>
+              {location.area}
+            </span>
             <ChevronDown className="w-3 h-3 text-[#34222e]/60 shrink-0" />
             <span className="ml-auto text-[10.5px] font-bold text-[#059669] truncate shrink-0 max-w-[50%]">{deliveryLabel}</span>
           </button>
@@ -546,10 +554,11 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <h3 className="text-base font-bold text-[#34222e] mb-1">
-              Select delivery location
+              Where should we deliver?
             </h3>
             <p className="text-xs text-[#7a6274] mb-4">
-              We show everything in stock at stores around you and pick the fastest one for each order.
+              This is your address, not a shop. Every shop that delivers here is pooled into one catalog, and each order goes to
+              the nearest shop that has the items. Checkout shows which shop sends what.
             </p>
 
             <button
@@ -629,7 +638,7 @@ export const Header: React.FC<HeaderProps> = ({
                         <span className="text-xs font-bold text-[#34222e]">{preset.label}</span>
                         <span className="text-[10px] bg-[#fee9d7] px-1.5 py-0.5 rounded text-[#34222e]">{preset.pincode}</span>
                       </div>
-                      <p className="text-xs text-[#7a6274] mt-0.5">{preset.area}</p>
+                      <p className="text-xs text-[#7a6274] mt-0.5">Your delivery pin. Shops nearby are chosen at checkout.</p>
                     </div>
                   </div>
                 </div>

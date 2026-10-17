@@ -81,6 +81,14 @@ export interface CartResolution {
   pricing: { itemsTotal: number; deliveryFee: number; platformFee: number; grandTotal: number } | null;
   nearbyStores: number;
   deliveries?: number;
+  /** Which shop sends which items, nearest first. Empty until the whole cart can be filled. */
+  dispatches?: {
+    storeName: string;
+    city: string;
+    distanceKm: number;
+    etaMinutes: number;
+    items: { productId: string; quantity: number }[];
+  }[];
 }
 
 export interface GeoPoint {

@@ -110,7 +110,7 @@ describe('location-first catalog', () => {
     expect((await call(null, 'GET', `/v1/catalog/products/${productA}?lat=${NOWHERE.latitude}&lng=${NOWHERE.longitude}`)).status).toBe(404);
   });
 
-  it('resolve previews a nearest-first split without naming the shops', async () => {
+  it('resolve previews a nearest-first split and says which shop sends what', async () => {
     const both = await call(null, 'POST', '/v1/catalog/resolve', {
       ...{ lat: KANPUR.latitude, lng: KANPUR.longitude },
       items: [{ productId: productA, quantity: 1 }, { productId: productB, quantity: 1 }],
@@ -121,6 +121,14 @@ describe('location-first catalog', () => {
     expect(both.body.store).toEqual({ distanceKm: expect.any(Number), etaMinutes: expect.any(Number) });
     expect(both.body.unavailable).toHaveLength(0);
     expect(both.body.pricing.grandTotal).toBeGreaterThan(0);
+    expect(both.body.dispatches).toHaveLength(2);
+    expect(both.body.dispatches[0]).toMatchObject({
+      storeName: 'Swaroop Nagar Electronics',
+      items: [{ productId: productA, quantity: 1 }],
+    });
+    expect(both.body.dispatches[0].distanceKm).toBeLessThan(both.body.dispatches[1].distanceKm);
+    expect(both.body.dispatches[1].items).toEqual([{ productId: productB, quantity: 1 }]);
+    expect(both.body.dispatches[0].storeId).toBeUndefined();
 
     const onlyA = await call(null, 'POST', '/v1/catalog/resolve', {
       lat: KANPUR.latitude, lng: KANPUR.longitude, items: [{ productId: productA, quantity: 2 }],
