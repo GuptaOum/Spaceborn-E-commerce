@@ -15,9 +15,9 @@ export interface DeliveryLocation {
 }
 
 export const LOCATION_PRESETS: DeliveryLocation[] = [
-  { label: 'Kanpur', area: 'Kanpur', pincode: '208001', latitude: 26.4499, longitude: 80.3319 },
-  { label: 'Bengaluru', area: 'Bengaluru', pincode: '560034', latitude: 12.9352, longitude: 77.6245 },
-  { label: 'Chennai', area: 'Chennai', pincode: '600001', latitude: 13.0827, longitude: 80.2707 },
+  { label: 'Kanpur', area: 'Kanpur', pincode: '208001', latitude: 26.467, longitude: 80.346 },
+  { label: 'Bengaluru', area: 'Bengaluru', pincode: '560034', latitude: 12.9279, longitude: 77.6271 },
+  { label: 'Chennai', area: 'Chennai', pincode: '600001', latitude: 13.095, longitude: 80.285 },
   { label: 'Pune', area: 'Pune', pincode: '411005', latitude: 18.5308, longitude: 73.8475 },
   { label: 'Delhi', area: 'Delhi', pincode: '110001', latitude: 28.6315, longitude: 77.2167 },
 ];
@@ -211,7 +211,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const savedLocation = readJson<DeliveryLocation>(KEYS.location);
     if (savedLocation) {
       const preset = LOCATION_PRESETS.find(
-        (item) => item.latitude === savedLocation.latitude && item.longitude === savedLocation.longitude,
+        (item) => item.label === savedLocation.label && item.pincode === savedLocation.pincode,
       );
       setLocationState(preset ?? savedLocation);
     }
