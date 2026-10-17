@@ -57,7 +57,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
               Technical Datasheets & 3D STEP CAD Library
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-              Verified mechanical dimensional drawings, electrical timing waveforms, KiCad schematic footprints, and Arduino / ESP-IDF drivers for rapid hardware development.
+              Datasheets and CAD models for parts in the catalog, where the seller or manufacturer has provided one.
             </p>
           </div>
 
@@ -109,9 +109,6 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
                     {product.sku}
-                  </span>
-                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                    QC Waveform Verified
                   </span>
                 </div>
 

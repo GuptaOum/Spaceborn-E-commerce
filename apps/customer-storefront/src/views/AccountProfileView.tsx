@@ -356,7 +356,7 @@ export function AccountProfileView({
                 </div>
                 <h3 className="text-sm font-bold text-[#34222e]">Electronics Catalog</h3>
                 <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
-                  Browse microcontrollers, sensors, motors, batteries, and robotics kits with 10-15 minute local dispatch.
+                  Browse microcontrollers, sensors, motors, batteries, and robotics kits in stock at shops near you.
                 </p>
               </div>
               <button

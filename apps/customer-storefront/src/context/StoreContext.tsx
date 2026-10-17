@@ -19,7 +19,6 @@ export const LOCATION_PRESETS: DeliveryLocation[] = [
   { label: 'Bengaluru', area: 'Bengaluru', pincode: '560034', latitude: 12.9279, longitude: 77.6271 },
   { label: 'Chennai', area: 'Chennai', pincode: '600001', latitude: 13.095, longitude: 80.285 },
   { label: 'Pune', area: 'Pune', pincode: '411005', latitude: 18.5308, longitude: 73.8475 },
-  { label: 'Delhi', area: 'Delhi', pincode: '110001', latitude: 28.6315, longitude: 77.2167 },
 ];
 
 export type CatalogStatus = 'loading' | 'ready' | 'unserviceable' | 'error';
@@ -120,34 +119,24 @@ export function toProduct(p: CatalogOffer): Product {
     hsn: seed?.hsn || '85423100',
     gstRate: p.gstRate || 18,
     stock: p.nearbyStock ?? p.stock,
-    rating: seed?.rating || 0,
-    reviewsCount: seed?.reviewsCount || 0,
+    rating: 0,
+    reviewsCount: 0,
     image: p.imageUrl ?? seed?.image ?? PLACEHOLDER_IMAGE,
     gallery: seed?.gallery && seed.gallery.length > 0 ? seed.gallery : p.imageUrl ? [p.imageUrl] : [PLACEHOLDER_IMAGE],
     description: p.description || seed?.description || '',
-    features: (seed?.features && seed.features.length > 0) ? seed.features : [
-      'Industrial-grade electronic component with high thermal tolerance',
-      'Standard 2.54mm breadboard & perfboard compatible footprint',
-      'Low power consumption optimized for embedded and battery designs',
-      '100% QA inspected and ESD shielded package'
-    ],
-    brand: p.brand ?? seed?.brand ?? 'Genuine Maker Grade',
+    features: seed?.features ?? [],
+    brand: p.brand ?? seed?.brand ?? '',
     voltage: seed?.voltage,
     rpm: seed?.rpm,
     shaftType: seed?.shaftType,
     encoder: seed?.encoder,
-    packageIncludes: (seed?.packageIncludes && seed.packageIncludes.length > 0) ? seed.packageIncludes : [
-      `1 x ${p.name}`,
-      '1 x Anti-Static ESD Protective Shield Bag',
-      '1 x Spaceborn QC Verification Certificate'
-    ],
+    packageIncludes: (seed?.packageIncludes && seed.packageIncludes.length > 0) ? seed.packageIncludes : [`1 x ${p.name}`],
     tierPricing: undefined,
     specifications: {
       ...(seed?.specifications || {}),
       ...(p.specs || {}),
       'GST Rate': `${p.gstRate || 18}%`,
       'HSN Code': seed?.hsn || '85423100',
-      'Authentication': 'Spaceborn Genuine 100%',
     },
     pinout: seed?.pinout,
     datasheetUrl: seed?.datasheetUrl,

@@ -1,6 +1,7 @@
 'use client';
 import React from 'react';
 import { CartItem } from '../types';
+import { FREE_DELIVERY_THRESHOLD } from '../lib/pricing';
 import { ShoppingBag, Zap, ArrowRight } from 'lucide-react';
 
 interface StickyCartDockProps {
@@ -31,10 +32,6 @@ export const StickyCartDock: React.FC<StickyCartDockProps> = ({
     }
   }, [totalItems]);
 
-  // Free delivery threshold: ₹500
-  const freeDeliveryThreshold = 500;
-  const remainingForFree = Math.max(0, freeDeliveryThreshold - subtotal);
-
   if (totalItems === 0 || currentView === 'cart' || currentView === 'checkout' || currentView.startsWith('product') || currentView.startsWith('orders')) {
     return null;
   }
@@ -63,9 +60,7 @@ export const StickyCartDock: React.FC<StickyCartDockProps> = ({
               </span>
             </div>
             <p className="text-[10px] sm:text-[10.5px] text-white/90 font-medium flex items-center gap-1 truncate">
-              <span>⚡ 10-15 Min</span>
-              <span className="text-white/60">•</span>
-              <span className="truncate">{remainingForFree === 0 ? 'Free Delivery' : `Add ₹${remainingForFree}`}</span>
+              <span className="truncate">Free delivery above ₹{FREE_DELIVERY_THRESHOLD} per shop</span>
             </p>
           </div>
         </div>

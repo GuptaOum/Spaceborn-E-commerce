@@ -66,7 +66,7 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
             </div>
             <h3 className="text-lg font-bold text-slate-900">Your Wishlist is Empty</h3>
             <p className="text-slate-500 text-xs max-w-md mx-auto">
-              Explore our catalog of 15,000+ precision motors, LiDAR sensors, microcontrollers, and batteries, and click the heart icon on any component to save it here.
+              Browse motors, sensors, microcontrollers and batteries in stock near you, and tap the heart on any part to save it here.
             </p>
             <div className="pt-2">
               <button

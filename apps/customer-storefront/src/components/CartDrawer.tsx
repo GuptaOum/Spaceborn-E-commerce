@@ -163,7 +163,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
               <h3 className="text-sm font-bold text-[#34222e]">Your cart is empty</h3>
               <p className="text-xs text-[#7a6274] max-w-xs mx-auto">
-                Explore high-precision motors, sensors, microcontrollers, and robotics hardware delivered in 10-15 mins.
+                Explore high-precision motors, sensors, microcontrollers, and robotics hardware from shops near you.
               </p>
               <button
                 onClick={onClose}

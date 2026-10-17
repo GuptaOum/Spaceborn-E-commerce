@@ -101,7 +101,7 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             <div className="flex items-center justify-between text-xs text-[#7a6274] pt-2 border-t border-[#f9bf8f]/40">
               <span className="flex items-center space-x-1 font-medium text-[#0c831f]">
                 <ShieldCheck className="w-4 h-4 text-[#0c831f]" />
-                <span>100% Genuine Part</span>
+                <span>Sold by an approved local shop</span>
               </span>
               <span>SKU: {product.sku}</span>
             </div>

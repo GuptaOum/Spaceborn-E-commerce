@@ -28,9 +28,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
               <Zap className="w-5 h-5 fill-current" />
             </div>
             <div>
-              <h4 className="font-bold text-[#34222e] text-sm">10-15 Min Delivery</h4>
+              <h4 className="font-bold text-[#34222e] text-sm">Nearest Shop Delivers</h4>
               <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
-                Superfast local delivery for urgent components and prototype testing.
+                Each order goes to the closest shop with stock, and the ETA is shown before you pay.
               </p>
             </div>
           </div>
@@ -40,9 +40,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-[#34222e] text-sm">Genuine Components</h4>
+              <h4 className="font-bold text-[#34222e] text-sm">Approved Local Shops</h4>
               <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
-                Direct procurement from verified manufacturers and tested parts.
+                Every seller is reviewed by our team before their shop goes live, and you see which shop sends your order.
               </p>
             </div>
           </div>
@@ -54,7 +54,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
             <div>
               <h4 className="font-bold text-[#34222e] text-sm">Free Delivery Available</h4>
               <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
-                Enjoy zero delivery fees on orders above ₹500 across active cities.
+                No delivery fee when a shop&apos;s part of your order is ₹499 or more.
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
           <div className="space-y-1.5 text-xs text-[#7a6274] pt-2">
             <p className="flex items-center space-x-2">
               <MapPin className="w-4 h-4 text-[#e2434b] shrink-0" />
-              <span>Kanpur • Bengaluru • Noida • Pune • Chennai • Delhi</span>
+              <span>Kanpur • Bengaluru • Chennai • Pune</span>
             </p>
             <p className="flex items-center space-x-2">
               <Mail className="w-4 h-4 text-[#7a6274] shrink-0" />

@@ -273,7 +273,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <div className="px-4 py-1.5 text-[11px] font-bold text-[#7a6274] border-b border-[#f9bf8f]/30 flex items-center justify-between">
                   <span>Search Suggestions</span>
-                  <span className="text-[#0c831f] font-semibold">10-15 Min Delivery</span>
+                  <span className="text-[#0c831f] font-semibold">In stock near you</span>
                 </div>
                 {searchResults.map(p => (
                   <div
@@ -484,7 +484,7 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <div className="px-3 py-1 text-[10.5px] font-bold text-[#7a6274] border-b border-[#f9bf8f]/30 flex items-center justify-between">
                   <span>Search Suggestions</span>
-                  <span className="text-[#0c831f] font-semibold">10-15 Min Delivery</span>
+                  <span className="text-[#0c831f] font-semibold">In stock near you</span>
                 </div>
                 {searchResults.map(p => (
                   <div

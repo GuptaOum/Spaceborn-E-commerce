@@ -65,7 +65,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
             </div>
             <h2 className="text-xl font-bold text-slate-800">Your Cart is Currently Empty</h2>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              You have no components in your cart. Browse our catalog of over 15,000 electronics and robotics supplies.
+              You have no components in your cart. Browse parts in stock at shops near you.
             </p>
             <button
               onClick={onContinueShopping}

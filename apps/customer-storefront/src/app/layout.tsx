@@ -7,15 +7,15 @@ import { StoreProvider } from '../context/StoreContext';
 import { NextAppShell } from '../components/NextAppShell';
 
 export const metadata: Metadata = {
-  title: 'Spaceborn Express | 10-Minute Electronics & Robotics Dispatch',
-  description: 'Ultra-fast electronics quick commerce. High-grade microcontrollers, sensors, motors, batteries, and robotics kits delivered in 10-15 minutes across Kanpur, Bengaluru, Noida, Pune, Delhi & Chennai.',
+  title: 'Spaceborn | Electronics from shops near you',
+  description: 'Hyperlocal electronics marketplace. Microcontrollers, sensors, motors and robotics parts sent by the nearest local shop with stock, in Kanpur, Bengaluru, Chennai and Pune.',
   keywords: ['electronics', 'robotics', 'arduino', 'raspberry pi', 'esp32', 'sensors', 'quick commerce', 'blinkit for electronics'],
   icons: {
     icon: '/spaceborn-logo.svg',
   },
   openGraph: {
-    title: 'Spaceborn Express - 10-Minute Electronics & Robotics Dispatch',
-    description: 'Genuine maker components delivered to your lab or workbench in 10-15 minutes.',
+    title: 'Spaceborn - Electronics from shops near you',
+    description: 'Maker and robotics parts delivered by the nearest local shop that has them in stock.',
     url: 'https://spaceborn.in',
     siteName: 'Spaceborn Express',
     images: [

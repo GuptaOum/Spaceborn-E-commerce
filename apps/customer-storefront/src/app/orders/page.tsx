@@ -990,7 +990,7 @@ export default function OrdersPage() {
           <div className="space-y-1">
             <h3 className="text-base font-extrabold text-[#34222e]">You haven't placed any hardware orders yet</h3>
             <p className="text-xs text-[#7a6274] max-w-md mx-auto">
-              Get genuine microcontrollers, LiDAR sensors, gear motors, and lab essentials delivered to your bench in under 15 minutes.
+              Microcontrollers, sensors, gear motors and lab essentials, sent by the nearest shop that has them.
             </p>
           </div>
           <button

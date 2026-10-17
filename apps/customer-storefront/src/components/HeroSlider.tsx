@@ -45,10 +45,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
       titlePrefix: 'Precision ',
       titleHighlight: '3D Printing & CNC Machining',
       highlightColor: 'text-[#0284c7]',
-      subtitle: 'Upload STL/STEP files for instant auto-slicing quotes. Industrial SLA resin, nylon FDM, and CNC aluminum milling across Kanpur, Bengaluru & Chennai.',
+      subtitle: 'Upload your design file and a local maker with the right machine sends you a quote. You pay only if you accept it.',
       ctaText: 'Start 3D Print / CNC Order',
       action: () => onNavigate('fabrication'),
-      badge: '24-48 HR DISPATCH',
+      badge: 'QUOTES FROM LOCAL MAKERS',
       bgGradient: 'from-[#fffbf7] via-[#fef7ee] to-[#f0f9ff]',
       cardBorder: 'border-[#f9bf8f]/60',
       image: 'https://robu-prod-media.s3.ap-south-1.amazonaws.com/theme/16/QRTZ1n9FqJpexURRjj346cRuDgh8CIXmACjH2W21.webp',
@@ -57,7 +57,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
     },
     {
       id: 'laser-cnc',
-      tag: 'INDUSTRIAL FABRICATION LAB',
+      tag: 'LASER & CNC HARDWARE',
       tagBg: 'bg-[#fef2f2]',
       tagColor: 'text-[#e2434b]',
       titlePrefix: 'AtomStack ',
@@ -66,7 +66,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
       subtitle: 'High-power optical laser modules, honeycomb beds, and precision desktop gantry kits for fast maker prototyping and custom lab enclosures.',
       ctaText: 'Explore CNC & Lasers',
       action: () => onSelectCategory('3D Printing & CNC'),
-      badge: 'OFFICIAL DISTRIBUTOR',
+      badge: 'FROM SHOPS NEAR YOU',
       bgGradient: 'from-[#fffbf7] via-[#fff5f5] to-[#fef2f2]',
       cardBorder: 'border-[#f9bf8f]/60',
       image: 'https://robu-prod-media.s3.ap-south-1.amazonaws.com/theme/16/TuNlwhjy7hrjVgrc35BW4CoxkD1BKLCoIExes2rM.webp',
@@ -81,10 +81,10 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
       titlePrefix: 'Raspberry Pi 5 & ',
       titleHighlight: 'Edge AI Compute Kits',
       highlightColor: 'text-[#0284c7]',
-      subtitle: 'Broadcom BCM2712 quad-core 2.4GHz Cortex-A76, PCIe 2.0 interface, dual 4K HDMI, and official active coolers with GST tax invoice.',
+      subtitle: 'Broadcom BCM2712 quad-core 2.4GHz Cortex-A76, PCIe 2.0 interface, dual 4K HDMI, and active coolers, stocked by local electronics shops.',
       ctaText: 'Explore Dev Boards',
       action: () => onSelectCategory('Development Boards'),
-      badge: '100% GENUINE OEM',
+      badge: 'LIVE LOCAL STOCK',
       bgGradient: 'from-[#fffbf7] via-[#f0f9ff] to-[#e0f2fe]/50',
       cardBorder: 'border-[#0284c7]/30',
       image: 'https://robu-prod-media.s3.ap-south-1.amazonaws.com/theme/16/iwKr8PucqQv18bbgVPs2Pq56jydYwpR2JIZ0eQ3q.webp',
@@ -93,16 +93,16 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
     },
     {
       id: 'express',
-      tag: '10-15 MINUTE LOCAL DISPATCH',
+      tag: 'NEAREST-SHOP DELIVERY',
       tagBg: 'bg-[#ecfdf5]',
       tagColor: 'text-[#0c831f]',
       titlePrefix: 'Arduino UNO, ESP32 & ',
       titleHighlight: 'Sensors at Hyper-Speed',
       highlightColor: 'text-[#0c831f]',
-      subtitle: 'LiDAR, IMUs, environmental sensors, load cells, and jumper wires delivered straight to your workbench within minutes.',
+      subtitle: 'LiDAR, IMUs, environmental sensors, load cells, and jumper wires sent by the nearest shop that has them, with the ETA shown before you pay.',
       ctaText: 'Shop Instant Catalog',
       action: () => onNavigate('catalog'),
-      badge: 'FREE DELIVERY ₹500+',
+      badge: 'FREE DELIVERY ₹499+',
       bgGradient: 'from-[#fffbf7] via-[#f2fcf4] to-[#ecfdf5]',
       cardBorder: 'border-[#10b981]/30',
       image: 'https://robu-prod-media.s3.ap-south-1.amazonaws.com/theme/16/u9XlzD9ZM45DD7v7fUZ4vpVUt67ZdPmISg6BlCd1.webp',
@@ -120,7 +120,7 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
       subtitle: 'Sunnysky, planetary gearboxes, stepper motors, and high-discharge LiPo packs ready for autonomous robotics and drone flights.',
       ctaText: 'View Motors & Drivers',
       action: () => onSelectCategory('Motors & Drivers'),
-      badge: 'BULK LAB PRICING',
+      badge: 'COMPARE ACROSS SHOPS',
       bgGradient: 'from-[#fffbf7] via-[#fefce8] to-[#fef9c3]/50',
       cardBorder: 'border-[#f9bf8f]/60',
       image: 'https://robu-prod-media.s3.ap-south-1.amazonaws.com/theme/16/IOwkD9oyO090Cu2A7W0HAkQWsKLZj8GtO216E1jv.webp',
@@ -356,8 +356,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ onNavigate, onSelectCate
             <Zap className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs font-bold text-[#34222e] leading-none mb-0.5">10-15 Min Dispatch</p>
-            <p className="text-[10px] text-[#7a6274] leading-tight">Kanpur, Blr, Chennai</p>
+            <p className="text-xs font-bold text-[#34222e] leading-none mb-0.5">Nearest-shop delivery</p>
+            <p className="text-[10px] text-[#7a6274] leading-tight">Kanpur, Blr, Chennai, Pune</p>
           </div>
         </button>
       </div>

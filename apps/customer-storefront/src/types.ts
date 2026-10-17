@@ -56,26 +56,6 @@ export interface Product {
   videoUrl?: string; // product demo video
 }
 
-export interface ProductVideoReel {
-  id: string;
-  title: string;
-  videoUrl: string;
-  thumbnailUrl: string;
-  creatorName: string;
-  creatorAvatar: string;
-  creatorTag: string; // e.g., 'Spaceborn Robotics Lab' or 'Community Verified'
-  likes: number;
-  views: string;
-  productId: string;
-  productName: string;
-  productPrice: number;
-  productOriginalPrice?: number;
-  productImage: string;
-  discountPercent?: number;
-  deliveryMinutes: number;
-  highlights: string[];
-}
-
 export interface CartItem {
   product: Product;
   quantity: number;

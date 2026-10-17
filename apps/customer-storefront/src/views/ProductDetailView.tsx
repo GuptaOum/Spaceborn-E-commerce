@@ -174,11 +174,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const packageIncludes =
     product.packageIncludes && product.packageIncludes.length > 0
       ? product.packageIncludes
-      : [
-          `1 x ${product.name}`,
-          '1 x Anti-Static ESD Protective Shield Bag',
-          '1 x Spaceborn QC Verification Certificate',
-        ];
+      : [`1 x ${product.name}`];
 
   const totalReviewsCount = reviews.length;
   const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / (totalReviewsCount || 1)).toFixed(1);
@@ -375,7 +371,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                 <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">100% Genuine</span>
+                  <span className="font-semibold text-[#34222e] text-[11px]">Approved local shop</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
                   <Receipt className="w-4 h-4 text-[#0c831f] shrink-0" />
@@ -383,7 +379,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </div>
                 <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
                   <Truck className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">10-15 Min Delivery</span>
+                  <span className="font-semibold text-[#34222e] text-[11px]">ETA shown before you pay</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
                   <RotateCcw className="w-4 h-4 text-[#0c831f] shrink-0" />

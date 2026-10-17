@@ -327,15 +327,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center space-x-2 text-xs font-bold text-[#0c831f] mb-1">
-                <span>⚡ 10-15 Min Delivery</span>
+                <span>⚡ Delivered by the nearest shop</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-[#34222e]">
                 {selectedCategory === 'All Categories' ? 'All Products' : selectedCategory}
               </h1>
               <p className="text-xs text-[#7a6274] mt-1 max-w-2xl leading-relaxed">
                 {selectedCategory === 'All Categories'
-                  ? 'Explore genuine microcontrollers, sensors, motors, tools, and accessories ready for fast dispatch.'
-                  : `High-reliability ${selectedCategory.toLowerCase()} available for instant lab dispatch.`}
+                  ? 'Microcontrollers, sensors, motors, tools and accessories in stock at shops near you.'
+                  : `${selectedCategory} in stock at shops near you.`}
               </p>
             </div>
 
