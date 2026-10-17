@@ -97,12 +97,12 @@ export function LiveDelivery({ orderId, status, onStatusChange }: { orderId: str
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="flex items-center gap-1.5 font-semibold text-[#34222e]">
-          <Bike className="w-3.5 h-3.5 text-[#0c831f]" />
+        <span className="flex items-center gap-1.5 font-semibold text-sb-ink">
+          <Bike className="w-3.5 h-3.5 text-sb-brand" />
           <span>{line}</span>
         </span>
         {onRoad && (
-          <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${connected ? 'text-[#0c831f]' : 'text-[#7a6274]'}`}>
+          <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${connected ? 'text-sb-brand' : 'text-sb-muted'}`}>
             <RadioTower className="w-3 h-3" />
             {connected ? 'Live' : 'Reconnecting\u2026'}
             {staleSeconds != null && staleSeconds > 60 ? ` \u00b7 last seen ${Math.round(staleSeconds / 60)} min ago` : ''}
@@ -110,9 +110,9 @@ export function LiveDelivery({ orderId, status, onStatusChange }: { orderId: str
         )}
       </div>
       {markers.length > 0 && status !== 'delivered' && (
-        <GeoMap markers={markers} path={snapshot.rider ? ['rider', 'home'] : ['store', 'home']} className="h-56 w-full overflow-hidden rounded-xl border border-[#f9bf8f]/60" />
+        <GeoMap markers={markers} path={snapshot.rider ? ['rider', 'home'] : ['store', 'home']} className="h-56 w-full overflow-hidden rounded-xl border border-sb-line/60" />
       )}
-      <p className="text-[11px] text-[#7a6274]">
+      <p className="text-[11px] text-sb-muted">
         Delivered by the store&rsquo;s own rider, not a third-party courier. Location is shared only while your order is on the road.
       </p>
     </div>

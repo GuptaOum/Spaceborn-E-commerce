@@ -190,10 +190,10 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   if (!cart.length) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
-        <h2 className="mb-4 text-xl font-bold text-[#34222e]">Your cart is empty</h2>
+        <h2 className="mb-4 text-xl font-bold text-sb-ink">Your cart is empty</h2>
         <button
           onClick={() => navigateTo('catalog')}
-          className="rounded-lg bg-[#0c831f] px-6 py-2.5 font-medium text-white shadow-sm transition hover:bg-[#096618]"
+          className="rounded-lg bg-sb-brand px-6 py-2.5 font-medium text-white shadow-sm transition hover:bg-sb-brand-strong"
         >
           Browse Components
         </button>
@@ -202,35 +202,35 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   }
 
   const fieldClass =
-    'mt-1.5 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2 sm:py-2.5 text-sm text-[#34222e] outline-none transition focus:border-[#0c831f] focus:ring-2 focus:ring-[#0c831f]/10';
+    'mt-1.5 w-full rounded-lg border border-sb-line/70 bg-white px-3 py-2 sm:py-2.5 text-sm text-sb-ink outline-none transition focus:border-sb-brand focus:ring-2 focus:ring-sb-brand/10';
 
   const field = (label: string, key: keyof AddressForm, props: React.InputHTMLAttributes<HTMLInputElement> = {}, wide = false) => (
-    <label className={`text-xs font-semibold text-[#7a6274] ${wide ? 'sm:col-span-2' : ''}`}>
+    <label className={`text-xs font-semibold text-sb-muted ${wide ? 'sm:col-span-2' : ''}`}>
       {label}
       <input className={fieldClass} value={address[key]} onChange={(e) => update(key, e.target.value)} {...props} />
     </label>
   );
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] py-4 sm:py-8">
+    <div className="min-h-screen bg-sb-canvas py-4 sm:py-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 sm:gap-6 px-3 sm:px-4 md:flex-row">
-        <form onSubmit={handlePayment} className="flex-1 space-y-4 sm:space-y-5 rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-6 shadow-sm">
+        <form onSubmit={handlePayment} className="flex-1 space-y-4 sm:space-y-5 rounded-2xl sm:rounded-3xl border border-sb-line/60 bg-sb-card p-4 sm:p-6 shadow-sm">
           <button
             type="button"
             onClick={() => navigateTo('cart')}
-            className="flex items-center gap-2 text-sm font-medium text-[#7a6274] transition hover:text-[#34222e]"
+            className="flex items-center gap-2 text-sm font-medium text-sb-muted transition hover:text-sb-ink"
           >
             <ArrowLeft className="h-4 w-4" /> Back to cart
           </button>
 
-          <h1 className="flex items-center gap-2 text-xl font-bold text-[#34222e]">
-            <Lock className="h-5 w-5 text-[#0c831f]" /> Secure Checkout
+          <h1 className="flex items-center gap-2 text-xl font-bold text-sb-ink">
+            <Lock className="h-5 w-5 text-sb-brand" /> Secure Checkout
           </h1>
 
           {!authLoading && !currentUser && (
-            <div className="rounded-lg border border-[#f9bf8f] bg-white p-3 text-sm text-[#34222e]">
+            <div className="rounded-lg border border-sb-line bg-white p-3 text-sm text-sb-ink">
               You need to{' '}
-              <button type="button" onClick={() => router.push('/auth?next=/checkout')} className="font-bold text-[#0c831f] underline">
+              <button type="button" onClick={() => router.push('/auth?next=/checkout')} className="font-bold text-sb-brand underline">
                 sign in
               </button>{' '}
               before placing an order.
@@ -245,8 +245,8 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
           )}
 
           <div>
-            <h2 className="mb-1 font-semibold text-[#34222e]">Delivery details</h2>
-            <p className="mb-3 text-xs text-[#7a6274]">
+            <h2 className="mb-1 font-semibold text-sb-ink">Delivery details</h2>
+            <p className="mb-3 text-xs text-sb-muted">
               The rider is sent to the pin in the header ({location.label}), not to a street we look up. City and PIN should match that pin. Delivering to <b>{location.label}</b>
               {resolution?.store
                 ? ` · about ${resolution.store.etaMinutes} min${(resolution.deliveries ?? 1) > 1 ? `, ${resolution.deliveries} deliveries` : ''}`
@@ -266,11 +266,11 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#0c831f]/20 bg-[#f2fcf4] p-4 text-xs text-[#0c831f]">
+          <div className="rounded-2xl border border-sb-brand/20 bg-sb-brand-soft p-4 text-xs text-sb-brand">
             <div className="flex items-start gap-2.5">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
               <div>
-                <p className="font-semibold text-[#0c831f]">Pay securely via Razorpay</p>
+                <p className="font-semibold text-sb-brand">Pay securely via Razorpay</p>
                 <p className="mt-0.5 text-slate-600">
                   UPI, cards, net banking and wallets. Prices and stock are confirmed the moment you pay; card details never touch
                   Spaceborn servers.
@@ -282,7 +282,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
           <button
             type="submit"
             disabled={isProcessing || catalogStatus !== 'ready' || resolving || !canOrder}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0c831f] px-4 py-3.5 font-bold text-white shadow-sm transition hover:bg-[#096618] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-sb-brand px-4 py-3.5 font-bold text-white shadow-sm transition hover:bg-sb-brand-strong disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             {isProcessing ? (
               <>
@@ -298,27 +298,27 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
         </form>
 
         <aside className="h-fit w-full space-y-4 md:w-80">
-          <div className="rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-5 shadow-sm">
+          <div className="rounded-2xl sm:rounded-3xl border border-sb-line/60 bg-sb-card p-4 sm:p-5 shadow-sm">
             {resolution?.dispatches && resolution.dispatches.length > 0 && canOrder && (
               <div className="mb-4 space-y-2">
-                <h2 className="font-bold text-[#34222e]">Delivered from</h2>
+                <h2 className="font-bold text-sb-ink">Delivered from</h2>
                 {resolution.dispatches.map((dispatch, i) => (
-                  <div key={`${dispatch.storeName}-${i}`} className="rounded-xl border border-[#f9bf8f]/50 bg-white p-2.5 text-xs">
+                  <div key={`${dispatch.storeName}-${i}`} className="rounded-xl border border-sb-line/50 bg-white p-2.5 text-xs">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="flex items-start gap-1 text-[#34222e]">
+                      <span className="flex items-start gap-1 text-sb-ink">
                         <Store className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#059669]" />
                         <span>
                           <span className="block font-bold">{dispatch.storeName}</span>
-                          <span className="block text-[#7a6274]">
+                          <span className="block text-sb-muted">
                             {[dispatch.addressLine, dispatch.city, dispatch.pincode].filter(Boolean).join(', ')}
                           </span>
                         </span>
                       </span>
-                      <span className="shrink-0 text-[#7a6274]">
+                      <span className="shrink-0 text-sb-muted">
                         {dispatch.distanceKm} km · ~{dispatch.etaMinutes} min
                       </span>
                     </div>
-                    <ul className="mt-1 space-y-0.5 pl-5 text-[#7a6274]">
+                    <ul className="mt-1 space-y-0.5 pl-5 text-sb-muted">
                       {dispatch.items.map((it) => (
                         <li key={it.productId} className="truncate">
                           {it.quantity}x {cart.find((c) => c.product.id === it.productId)?.product.name ?? 'Item'}
@@ -328,13 +328,13 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
                   </div>
                 ))}
                 {resolution.dispatches.length > 1 && (
-                  <p className="text-[11px] text-[#7a6274]">
+                  <p className="text-[11px] text-sb-muted">
                     The nearest shop did not have everything, so the rest comes from the next closest one.
                   </p>
                 )}
               </div>
             )}
-            <h2 className="mb-3 font-bold text-[#34222e]">Order Summary</h2>
+            <h2 className="mb-3 font-bold text-sb-ink">Order Summary</h2>
             <div className="mb-4 max-h-56 space-y-2.5 overflow-y-auto">
               {cart.map((item) => {
                 const line = resolution?.lines.find((l) => l.productId === item.product.id);
@@ -344,10 +344,10 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
                 return (
                   <div key={item.product.id} className="text-sm">
                     <div className="flex justify-between gap-3">
-                      <span className={`truncate ${missing ? 'text-[#e2434b] line-through' : 'text-[#7a6274]'}`}>
+                      <span className={`truncate ${missing ? 'text-[#e2434b] line-through' : 'text-sb-muted'}`}>
                         {item.quantity}x {item.product.name}
                       </span>
-                      <span className="font-semibold text-[#34222e]">₹{(price * item.quantity).toLocaleString('en-IN')}</span>
+                      <span className="font-semibold text-sb-ink">₹{(price * item.quantity).toLocaleString('en-IN')}</span>
                     </div>
                     {missing && (
                       <button
@@ -366,37 +366,37 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
                 );
               })}
             </div>
-            <div className="space-y-1.5 border-t border-[#f9bf8f]/40 pt-3 text-sm">
+            <div className="space-y-1.5 border-t border-sb-line/40 pt-3 text-sm">
               {resolution?.pricing ? (
                 <>
-                  <div className="flex justify-between text-[#7a6274]">
+                  <div className="flex justify-between text-sb-muted">
                     <span>Items</span>
                     <span>₹{resolution.pricing.itemsTotal.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between text-[#7a6274]">
+                  <div className="flex justify-between text-sb-muted">
                     <span>Delivery{(resolution.deliveries ?? 1) > 1 ? ` · ${resolution.deliveries} dispatches` : ''}</span>
                     <span>{resolution.pricing.deliveryFee === 0 ? 'Free' : `₹${resolution.pricing.deliveryFee.toLocaleString('en-IN')}`}</span>
                   </div>
-                  <div className="flex justify-between text-[#7a6274]">
+                  <div className="flex justify-between text-sb-muted">
                     <span>Platform fee</span>
                     <span>₹{resolution.pricing.platformFee.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between border-t border-[#f9bf8f]/40 pt-2 font-bold text-[#34222e]">
+                  <div className="flex justify-between border-t border-sb-line/40 pt-2 font-bold text-sb-ink">
                     <span>To pay</span>
                     <span>₹{resolution.pricing.grandTotal.toLocaleString('en-IN')}</span>
                   </div>
                 </>
               ) : (
-                <div className="flex justify-between font-bold text-[#34222e]">
+                <div className="flex justify-between font-bold text-sb-ink">
                   <span>Items</span>
                   <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
               )}
-              <p className="pt-1 text-xs text-[#7a6274]">
+              <p className="pt-1 text-xs text-sb-muted">
                 Delivery is free above ₹499 per dispatch. When your items are stocked at more than one place near you, each part is
                 sent separately and the fee above is the sum. The platform fee is charged once.
                 {resolution && (resolution.deliveries ?? 1) > 1 && (
-                  <span className="mt-1 block font-semibold text-[#34222e]">This order will arrive as {resolution.deliveries} deliveries, filled from the stock nearest to you.</span>
+                  <span className="mt-1 block font-semibold text-sb-ink">This order will arrive as {resolution.deliveries} deliveries, filled from the stock nearest to you.</span>
                 )}
               </p>
             </div>

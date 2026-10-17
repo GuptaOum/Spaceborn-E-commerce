@@ -290,28 +290,28 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-3 sm:py-6">
+    <div className="min-h-screen bg-sb-canvas text-sb-ink py-3 sm:py-6">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 space-y-4 sm:space-y-6">
         {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="flex items-center justify-between gap-3 text-xs text-[#7a6274]">
+        <nav aria-label="Breadcrumb" className="flex items-center justify-between gap-3 text-xs text-sb-muted">
           <ol className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap">
             <li>
-              <button onClick={() => onNavigate('home')} className="hover:text-[#34222e] cursor-pointer">
+              <button onClick={() => onNavigate('home')} className="hover:text-sb-ink cursor-pointer">
                 Home
               </button>
             </li>
             <ChevronRight className="w-3 h-3 shrink-0" />
             <li>
-              <button onClick={() => onNavigate('catalog')} className="hover:text-[#34222e] cursor-pointer">
+              <button onClick={() => onNavigate('catalog')} className="hover:text-sb-ink cursor-pointer">
                 {product.category}
               </button>
             </li>
             <ChevronRight className="w-3 h-3 shrink-0" />
-            <li className="truncate max-w-[14rem] sm:max-w-md text-[#34222e] font-semibold">{product.name}</li>
+            <li className="truncate max-w-[14rem] sm:max-w-md text-sb-ink font-semibold">{product.name}</li>
           </ol>
           <button
             onClick={() => void handleShare()}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#f9bf8f]/60 bg-[#fffbf7] px-2.5 py-1.5 hover:text-[#34222e] cursor-pointer text-xs font-medium shadow-2xs"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-sb-line/60 bg-sb-card px-2.5 py-1.5 hover:text-sb-ink cursor-pointer text-xs font-medium shadow-2xs"
           >
             <Share2 className="w-3.5 h-3.5" />
             {copied ? 'Link copied!' : 'Share'}
@@ -319,12 +319,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </nav>
 
         {/* Main Product Hero (Robu-Style Two Column Layout) */}
-        <section className="rounded-2xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-4 sm:p-6 lg:p-7 shadow-xs">
+        <section className="rounded-2xl border border-sb-line/60 bg-sb-card p-4 sm:p-6 lg:p-7 shadow-xs">
           <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
             {/* Left: Gallery & Trust Highlights */}
             <div className="lg:col-span-5 space-y-3.5 lg:sticky lg:top-24 self-start">
               <div
-                className="relative flex h-72 sm:h-88 items-center justify-center overflow-hidden rounded-2xl border border-[#f9bf8f]/50 bg-white p-4 lg:cursor-zoom-in shadow-2xs"
+                className="relative flex h-72 sm:h-88 items-center justify-center overflow-hidden rounded-2xl border border-sb-line/50 bg-white p-4 lg:cursor-zoom-in shadow-2xs"
                 onMouseMove={trackZoom}
                 onMouseLeave={() => setZoomAt(null)}
               >
@@ -341,19 +341,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   }}
                 />
 
-                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-[#f2fcf4] text-[#0c831f] text-[10px] font-bold border border-[#0c831f]/20 flex items-center gap-1 shadow-2xs">
-                  <Zap className="w-3 h-3 fill-[#0c831f]" />
+                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-sb-brand-soft text-sb-brand text-[10px] font-bold border border-sb-brand/20 flex items-center gap-1 shadow-2xs">
+                  <Zap className="w-3 h-3 fill-sb-brand" />
                   <span>{product.deliveryMins || 10} MIN DISPATCH</span>
                 </span>
 
                 {!zoomAt && (
-                  <span className="pointer-events-none absolute bottom-3 right-3 hidden rounded-md bg-white/90 px-2 py-1 text-[11px] font-medium text-[#7a6274] shadow-sm lg:block">
+                  <span className="pointer-events-none absolute bottom-3 right-3 hidden rounded-md bg-white/90 px-2 py-1 text-[11px] font-medium text-sb-muted shadow-sm lg:block">
                     Hover to zoom
                   </span>
                 )}
 
                 {!inStock && (
-                  <span className="absolute right-3 top-3 rounded-md bg-[#34222e] px-2 py-1 text-xs font-semibold text-white">
+                  <span className="absolute right-3 top-3 rounded-md bg-sb-ink px-2 py-1 text-xs font-semibold text-white">
                     Out of stock
                   </span>
                 )}
@@ -368,8 +368,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       onClick={() => setSelectedImage(img)}
                       className={`h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-white p-1 cursor-pointer transition-all ${
                         selectedImage === img
-                          ? 'border-[#0c831f] ring-2 ring-[#0c831f]/20'
-                          : 'border-[#f9bf8f]/50 hover:border-[#0c831f]/50'
+                          ? 'border-sb-brand ring-2 ring-sb-brand/20'
+                          : 'border-sb-line/50 hover:border-sb-brand/50'
                       }`}
                     >
                       <img src={img} alt="" className="h-full w-full object-contain" />
@@ -380,21 +380,21 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
               {/* Clean Trust Strip */}
               <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">Approved local shop</span>
+                <div className="p-2.5 rounded-xl bg-white border border-sb-line/50 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-sb-brand shrink-0" />
+                  <span className="font-semibold text-sb-ink text-[11px]">Approved local shop</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
-                  <Receipt className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">Price includes GST</span>
+                <div className="p-2.5 rounded-xl bg-white border border-sb-line/50 flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-sb-brand shrink-0" />
+                  <span className="font-semibold text-sb-ink text-[11px]">Price includes GST</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">ETA shown before you pay</span>
+                <div className="p-2.5 rounded-xl bg-white border border-sb-line/50 flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-sb-brand shrink-0" />
+                  <span className="font-semibold text-sb-ink text-[11px]">ETA shown before you pay</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
-                  <RotateCcw className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">7-Day Replacement</span>
+                <div className="p-2.5 rounded-xl bg-white border border-sb-line/50 flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-sb-brand shrink-0" />
+                  <span className="font-semibold text-sb-ink text-[11px]">7-Day Replacement</span>
                 </div>
               </div>
             </div>
@@ -403,9 +403,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             <div className="lg:col-span-7 space-y-4">
               {/* Product Header */}
               <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-[#7a6274]">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-sb-muted">
                   {product.brand && (
-                    <span className="font-bold text-[#0c831f] bg-[#f2fcf4] px-2 py-0.5 rounded-md border border-[#0c831f]/20">
+                    <span className="font-bold text-sb-brand bg-sb-brand-soft px-2 py-0.5 rounded-md border border-sb-brand/20">
                       Brand: {product.brand}
                     </span>
                   )}
@@ -413,7 +413,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   {product.hsn && <span>| HSN: {product.hsn}</span>}
                 </div>
 
-                <h1 className="text-xl sm:text-2xl lg:text-[1.75rem] font-bold leading-snug text-[#34222e]">
+                <h1 className="text-xl sm:text-2xl lg:text-[1.75rem] font-bold leading-snug text-sb-ink">
                   {product.name}
                 </h1>
 
@@ -434,9 +434,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                         />
                       ))}
                     </div>
-                    <span className="text-xs font-bold text-[#34222e]">{totalReviewsCount ? avgRating : 'No reviews yet'}</span>
+                    <span className="text-xs font-bold text-sb-ink">{totalReviewsCount ? avgRating : 'No reviews yet'}</span>
                     {totalReviewsCount > 0 && (
-                    <span className="text-xs text-[#7a6274] group-hover:text-[#0c831f] group-hover:underline">
+                    <span className="text-xs text-sb-muted group-hover:text-sb-brand group-hover:underline">
                       ({totalReviewsCount} Reviews)
                     </span>
                     )}
@@ -444,7 +444,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                   <button
                     onClick={() => scrollToReviews(hasPurchased)}
-                    className="text-xs font-bold text-[#0c831f] hover:underline cursor-pointer flex items-center gap-1"
+                    className="text-xs font-bold text-sb-brand hover:underline cursor-pointer flex items-center gap-1"
                   >
                     <MessageSquarePlus className="w-3.5 h-3.5" />
                     <span>{hasPurchased ? (existingUserReview ? 'Edit your review' : 'Write a review') : 'Verified reviews'}</span>
@@ -454,7 +454,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <span
                       key={b}
                       title={PRODUCT_BADGES[b]?.hint}
-                      className="inline-flex items-center gap-1 rounded-md bg-[#34222e] px-2 py-0.5 text-[11px] font-semibold text-white"
+                      className="inline-flex items-center gap-1 rounded-md bg-sb-ink px-2 py-0.5 text-[11px] font-semibold text-white"
                     >
                       <BadgeCheck className="w-3 h-3 text-[#f8cb46]" />
                       {PRODUCT_BADGES[b]?.label ?? b}
@@ -464,27 +464,27 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               </div>
 
               {/* Price & GST */}
-              <div className="space-y-1 rounded-xl bg-white border border-[#f9bf8f]/60 p-3 sm:p-4">
+              <div className="space-y-1 rounded-xl bg-white border border-sb-line/60 p-3 sm:p-4">
                 <div className="flex flex-wrap items-baseline gap-2.5">
-                  <span className="text-2xl sm:text-3xl font-black text-[#34222e] tracking-tight">
+                  <span className="text-2xl sm:text-3xl font-black text-sb-ink tracking-tight">
                     {inr(product.price)}
                   </span>
                   {discount > 0 && product.originalPrice && (
                     <>
-                      <span className="text-sm text-[#7a6274] line-through font-medium">
+                      <span className="text-sm text-sb-muted line-through font-medium">
                         MRP {inr(product.originalPrice)}
                       </span>
-                      <span className="rounded-md bg-[#0c831f] px-1.5 py-0.5 text-xs font-bold text-white">
+                      <span className="rounded-md bg-sb-brand px-1.5 py-0.5 text-xs font-bold text-white">
                         {discount}% OFF
                       </span>
                     </>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-[#7a6274]">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-sb-muted">
                   <span>(Incl. of all taxes / {product.gstRate || 18}% GST)</span>
                   <span>•</span>
                   {inStock ? (
-                    <span className={`font-bold ${lowStock ? 'text-[#e2434b]' : 'text-[#0c831f]'}`}>
+                    <span className={`font-bold ${lowStock ? 'text-[#e2434b]' : 'text-sb-brand'}`}>
                       {lowStock
                         ? `Only ${product.stock} units left near you`
                         : `✓ In stock (${product.stock} units available)`}
@@ -497,11 +497,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
               {/* Key Features Bullets (Robu-style concise highlights) */}
               <div className="space-y-1.5 py-1">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#34222e]">Key Features:</h3>
-                <ul className="space-y-1 text-xs text-[#5f4a58]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-sb-ink">Key Features:</h3>
+                <ul className="space-y-1 text-xs text-sb-ink/80">
                   {features.slice(0, 4).map((f, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-[#0c831f] font-bold shrink-0 mt-0.5">•</span>
+                      <span className="text-sb-brand font-bold shrink-0 mt-0.5">•</span>
                       <span className="leading-snug">{f}</span>
                     </li>
                   ))}
@@ -510,10 +510,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
               {/* Optional Tier Pricing (Compact & Clean Robu-style wholesale strip) */}
               {product.tierPricing && product.tierPricing.length > 0 && (
-                <div className="rounded-xl border border-[#f9bf8f]/60 bg-[#fee9d7]/30 p-2.5 text-xs">
-                  <div className="font-semibold text-[#34222e] mb-1.5 flex items-center justify-between">
+                <div className="rounded-xl border border-sb-line/60 bg-sb-canvas/30 p-2.5 text-xs">
+                  <div className="font-semibold text-sb-ink mb-1.5 flex items-center justify-between">
                     <span>Bulk / Maker Lab Pricing</span>
-                    <span className="text-[10px] text-[#7a6274] font-bold">Listed price is what you pay</span>
+                    <span className="text-[10px] text-sb-muted font-bold">Listed price is what you pay</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">
                     {product.tierPricing.map((tier, idx) => (
@@ -521,15 +521,15 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                         key={idx}
                         className={`p-1.5 rounded-lg border text-xs ${
                           quantity >= tier.minQty && (!tier.maxQty || quantity <= tier.maxQty)
-                            ? 'border-[#0c831f] bg-[#f2fcf4] font-bold ring-1 ring-[#0c831f]/30'
-                            : 'border-[#f9bf8f]/50 bg-white'
+                            ? 'border-sb-brand bg-sb-brand-soft font-bold ring-1 ring-sb-brand/30'
+                            : 'border-sb-line/50 bg-white'
                         }`}
                       >
-                        <div className="text-[10px] text-[#7a6274]">
+                        <div className="text-[10px] text-sb-muted">
                           {tier.maxQty ? `${tier.minQty}-${tier.maxQty} pcs` : `${tier.minQty}+ pcs`}
                         </div>
-                        <div className="font-extrabold text-[#34222e]">{inr(tier.price)}</div>
-                        <div className="text-[9px] text-[#0c831f]">{tier.savings}</div>
+                        <div className="font-extrabold text-sb-ink">{inr(tier.price)}</div>
+                        <div className="text-[9px] text-sb-brand">{tier.savings}</div>
                       </div>
                     ))}
                   </div>
@@ -537,17 +537,17 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               )}
 
               {/* Quantity Stepper & Action Buttons */}
-              <div className="space-y-3 rounded-2xl border border-[#f9bf8f]/60 bg-white p-3.5 sm:p-4 shadow-2xs">
+              <div className="space-y-3 rounded-2xl border border-sb-line/60 bg-white p-3.5 sm:p-4 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="inline-flex items-center rounded-xl border border-[#f9bf8f] bg-[#fffbf7]">
+                  <div className="inline-flex items-center rounded-xl border border-sb-line bg-sb-card">
                     <button
                       type="button"
                       aria-label="Decrease quantity"
                       onClick={() => setQty(quantity - 1)}
                       disabled={!inStock || quantity <= 1}
-                      className="flex h-9 w-9 items-center justify-center hover:bg-[#fee9d7] disabled:opacity-40 cursor-pointer transition-colors"
+                      className="flex h-9 w-9 items-center justify-center hover:bg-sb-canvas disabled:opacity-40 cursor-pointer transition-colors"
                     >
-                      <Minus className="w-3.5 h-3.5 text-[#34222e]" />
+                      <Minus className="w-3.5 h-3.5 text-sb-ink" />
                     </button>
                     <input
                       type="number"
@@ -556,30 +556,30 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       value={quantity}
                       onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
                       disabled={!inStock}
-                      className="h-9 w-12 border-x border-[#f9bf8f] bg-white text-center text-xs font-bold text-[#34222e] outline-none"
+                      className="h-9 w-12 border-x border-sb-line bg-white text-center text-xs font-bold text-sb-ink outline-none"
                     />
                     <button
                       type="button"
                       aria-label="Increase quantity"
                       onClick={() => setQty(quantity + 1)}
                       disabled={!inStock || quantity >= lineCap}
-                      className="flex h-9 w-9 items-center justify-center hover:bg-[#fee9d7] disabled:opacity-40 cursor-pointer transition-colors"
+                      className="flex h-9 w-9 items-center justify-center hover:bg-sb-canvas disabled:opacity-40 cursor-pointer transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[#34222e]" />
+                      <Plus className="w-3.5 h-3.5 text-sb-ink" />
                     </button>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[11px] text-[#7a6274] block">Subtotal</span>
-                    <span className="text-lg sm:text-xl font-black text-[#34222e]">{inr(total)}</span>
+                    <span className="text-[11px] text-sb-muted block">Subtotal</span>
+                    <span className="text-lg sm:text-xl font-black text-sb-ink">{inr(total)}</span>
                   </div>
                 </div>
                 {product.stock > 50 && (
-                  <p className="text-[11px] text-[#7a6274]">One order can include at most 50 of this part.</p>
+                  <p className="text-[11px] text-sb-muted">One order can include at most 50 of this part.</p>
                 )}
 
                 {spillsOver && (
-                  <p className="text-[11px] text-[#7a6274] bg-[#fee9d7]/50 p-2 rounded-lg border border-[#f9bf8f]/40">
+                  <p className="text-[11px] text-sb-muted bg-sb-canvas/50 p-2 rounded-lg border border-sb-line/40">
                     {product.nearestStock} units at the nearest store. The rest, if any, comes from another store near you and may be a separate delivery.
                   </p>
                 )}
@@ -589,7 +589,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     onClick={handleAdd}
                     disabled={!inStock}
                     className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl text-xs font-bold text-white transition-all cursor-pointer shadow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${
-                      added ? 'bg-[#0a701a]' : 'bg-[#0c831f] hover:bg-[#0a701a]'
+                      added ? 'bg-sb-brand-strong' : 'bg-sb-brand hover:bg-sb-brand-strong'
                     }`}
                   >
                     {added ? <Check className="w-4 h-4 stroke-[2.5]" /> : <ShoppingCart className="w-4 h-4" />}
@@ -599,7 +599,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   <button
                     onClick={() => onBuyNow(product, quantity)}
                     disabled={!inStock}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#34222e] text-xs font-bold text-white hover:bg-[#20151c] transition-all cursor-pointer shadow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sb-ink text-xs font-bold text-white hover:bg-[#20151c] transition-all cursor-pointer shadow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Lock className="w-3.5 h-3.5 text-[#f8cb46]" />
                     <span>Buy Now</span>
@@ -609,11 +609,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 {/* Delivery PIN Code Checker */}
                 <form
                   onSubmit={(e) => void checkPin(e)}
-                  className="flex flex-wrap sm:flex-nowrap items-center gap-2 border-t border-[#f9bf8f]/40 pt-2.5 text-xs"
+                  className="flex flex-wrap sm:flex-nowrap items-center gap-2 border-t border-sb-line/40 pt-2.5 text-xs"
                 >
                   <div className="flex items-center gap-1.5 w-full sm:w-auto">
-                    <MapPin className="w-3.5 h-3.5 text-[#0c831f] shrink-0" />
-                    <label htmlFor="pin-check" className="text-[#34222e] font-semibold shrink-0">
+                    <MapPin className="w-3.5 h-3.5 text-sb-brand shrink-0" />
+                    <label htmlFor="pin-check" className="text-sb-ink font-semibold shrink-0">
                       Delivery to:
                     </label>
                   </div>
@@ -625,11 +625,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       value={pincode}
                       onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
                       placeholder="Enter 6-digit PIN"
-                      className="h-8 flex-1 sm:w-32 min-w-0 rounded-lg border border-[#f9bf8f] px-2.5 text-xs outline-none focus:border-[#0c831f] bg-[#fffbf7]"
+                      className="h-8 flex-1 sm:w-32 min-w-0 rounded-lg border border-sb-line px-2.5 text-xs outline-none focus:border-sb-brand bg-sb-card"
                     />
                     <button
                       type="submit"
-                      className="h-8 shrink-0 rounded-lg bg-[#34222e] text-white px-3 text-xs font-bold hover:bg-[#20151c] transition cursor-pointer"
+                      className="h-8 shrink-0 rounded-lg bg-sb-ink text-white px-3 text-xs font-bold hover:bg-[#20151c] transition cursor-pointer"
                     >
                       Check
                     </button>
@@ -638,10 +638,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <p
                       className={`basis-full text-xs font-semibold ${
                         pinStatus.tone === 'ok'
-                          ? 'text-[#0c831f]'
+                          ? 'text-sb-brand'
                           : pinStatus.tone === 'warn'
                           ? 'text-[#e2434b]'
-                          : 'text-[#7a6274]'
+                          : 'text-sb-muted'
                       }`}
                     >
                       {pinStatus.text}
@@ -654,15 +654,15 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         </section>
 
         {/* Clean 3-Tab Section (Robu.in Standard: Description, Documents, Reviews) */}
-        <section ref={tabsRef} className="rounded-2xl border border-[#f9bf8f]/60 bg-[#fffbf7] overflow-hidden shadow-xs">
+        <section ref={tabsRef} className="rounded-2xl border border-sb-line/60 bg-sb-card overflow-hidden shadow-xs">
           {/* Tab Navigation Bar */}
-          <div className="flex items-center gap-1 border-b border-[#f9bf8f]/60 bg-[#fee9d7]/40 px-3 pt-2">
+          <div className="flex items-center gap-1 border-b border-sb-line/60 bg-sb-canvas/40 px-3 pt-2">
             <button
               onClick={() => setActiveTab('description')}
               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs sm:text-sm font-bold border-t border-x cursor-pointer transition-colors ${
                 activeTab === 'description'
-                  ? 'bg-[#fffbf7] border-[#f9bf8f]/60 text-[#0c831f] -mb-px'
-                  : 'border-transparent text-[#7a6274] hover:text-[#34222e]'
+                  ? 'bg-sb-card border-sb-line/60 text-sb-brand -mb-px'
+                  : 'border-transparent text-sb-muted hover:text-sb-ink'
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -673,8 +673,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               onClick={() => setActiveTab('documents')}
               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs sm:text-sm font-bold border-t border-x cursor-pointer transition-colors ${
                 activeTab === 'documents'
-                  ? 'bg-[#fffbf7] border-[#f9bf8f]/60 text-[#0c831f] -mb-px'
-                  : 'border-transparent text-[#7a6274] hover:text-[#34222e]'
+                  ? 'bg-sb-card border-sb-line/60 text-sb-brand -mb-px'
+                  : 'border-transparent text-sb-muted hover:text-sb-ink'
               }`}
             >
               <Download className="w-3.5 h-3.5" />
@@ -685,8 +685,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               onClick={() => setActiveTab('reviews')}
               className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-xs sm:text-sm font-bold border-t border-x cursor-pointer transition-colors ${
                 activeTab === 'reviews'
-                  ? 'bg-[#fffbf7] border-[#f9bf8f]/60 text-[#0c831f] -mb-px'
-                  : 'border-transparent text-[#7a6274] hover:text-[#34222e]'
+                  ? 'bg-sb-card border-sb-line/60 text-sb-brand -mb-px'
+                  : 'border-transparent text-sb-muted hover:text-sb-ink'
               }`}
             >
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -701,8 +701,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <div className="space-y-6">
                 {/* Product Overview Narrative */}
                 <div>
-                  <h3 className="text-sm font-bold text-[#34222e] uppercase tracking-wider mb-2">Product Overview</h3>
-                  <p className="whitespace-pre-line text-xs sm:text-sm leading-relaxed text-[#5f4a58]">
+                  <h3 className="text-sm font-bold text-sb-ink uppercase tracking-wider mb-2">Product Overview</h3>
+                  <p className="whitespace-pre-line text-xs sm:text-sm leading-relaxed text-sb-ink/80">
                     {product.description ||
                       `${product.name} is a high-grade electronic component engineered for robotics, embedded systems, and maker prototyping. Tested for high performance and stability across demanding operating conditions.`}
                   </p>
@@ -710,11 +710,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                 {/* Features List */}
                 <div>
-                  <h3 className="text-sm font-bold text-[#34222e] uppercase tracking-wider mb-2.5">Features:</h3>
-                  <ul className="space-y-1.5 text-xs sm:text-sm text-[#5f4a58]">
+                  <h3 className="text-sm font-bold text-sb-ink uppercase tracking-wider mb-2.5">Features:</h3>
+                  <ul className="space-y-1.5 text-xs sm:text-sm text-sb-ink/80">
                     {features.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#0c831f] font-bold shrink-0 mt-0.5">•</span>
+                        <span className="text-sb-brand font-bold shrink-0 mt-0.5">•</span>
                         <span className="leading-snug">{feat}</span>
                       </li>
                     ))}
@@ -723,35 +723,35 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                 {/* Specifications Table (Robu Two-Column Clean Striped Table) */}
                 <div>
-                  <h3 className="text-sm font-bold text-[#34222e] uppercase tracking-wider mb-2.5">Specifications:</h3>
-                  <div className="overflow-hidden rounded-xl border border-[#f9bf8f]/60 bg-white">
+                  <h3 className="text-sm font-bold text-sb-ink uppercase tracking-wider mb-2.5">Specifications:</h3>
+                  <div className="overflow-hidden rounded-xl border border-sb-line/60 bg-white">
                     <table className="w-full text-xs sm:text-sm text-left">
-                      <thead className="bg-[#fee9d7] text-[#34222e] font-bold border-b border-[#f9bf8f]/60">
+                      <thead className="bg-sb-canvas text-sb-ink font-bold border-b border-sb-line/60">
                         <tr>
                           <th className="px-4 py-2.5 w-1/3">Specification</th>
                           <th className="px-4 py-2.5">Value</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#f9bf8f]/30">
+                      <tbody className="divide-y divide-sb-line/30">
                         {specs.map(([key, value], i) => (
-                          <tr key={key} className={i % 2 === 0 ? 'bg-[#fffbf7]' : 'bg-white'}>
-                            <td className="px-4 py-2.5 font-bold text-[#34222e]">{key}</td>
-                            <td className="px-4 py-2.5 text-[#5f4a58]">{value}</td>
+                          <tr key={key} className={i % 2 === 0 ? 'bg-sb-card' : 'bg-white'}>
+                            <td className="px-4 py-2.5 font-bold text-sb-ink">{key}</td>
+                            <td className="px-4 py-2.5 text-sb-ink/80">{value}</td>
                           </tr>
                         ))}
                         {product.brand && (
-                          <tr className={specs.length % 2 === 0 ? 'bg-[#fffbf7]' : 'bg-white'}>
-                            <td className="px-4 py-2.5 font-bold text-[#34222e]">Brand / Manufacturer</td>
-                            <td className="px-4 py-2.5 text-[#5f4a58]">{product.brand}</td>
+                          <tr className={specs.length % 2 === 0 ? 'bg-sb-card' : 'bg-white'}>
+                            <td className="px-4 py-2.5 font-bold text-sb-ink">Brand / Manufacturer</td>
+                            <td className="px-4 py-2.5 text-sb-ink/80">{product.brand}</td>
                           </tr>
                         )}
-                        <tr className={(specs.length + 1) % 2 === 0 ? 'bg-[#fffbf7]' : 'bg-white'}>
-                          <td className="px-4 py-2.5 font-bold text-[#34222e]">HSN Code</td>
-                          <td className="px-4 py-2.5 text-[#5f4a58]">{product.hsn || '85423100'}</td>
+                        <tr className={(specs.length + 1) % 2 === 0 ? 'bg-sb-card' : 'bg-white'}>
+                          <td className="px-4 py-2.5 font-bold text-sb-ink">HSN Code</td>
+                          <td className="px-4 py-2.5 text-sb-ink/80">{product.hsn || '85423100'}</td>
                         </tr>
-                        <tr className={(specs.length + 2) % 2 === 0 ? 'bg-[#fffbf7]' : 'bg-white'}>
-                          <td className="px-4 py-2.5 font-bold text-[#34222e]">Tax Slab</td>
-                          <td className="px-4 py-2.5 text-[#5f4a58]">{product.gstRate || 18}% GST</td>
+                        <tr className={(specs.length + 2) % 2 === 0 ? 'bg-sb-card' : 'bg-white'}>
+                          <td className="px-4 py-2.5 font-bold text-sb-ink">Tax Slab</td>
+                          <td className="px-4 py-2.5 text-sb-ink/80">{product.gstRate || 18}% GST</td>
                         </tr>
                       </tbody>
                     </table>
@@ -760,11 +760,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                 {/* Package Includes */}
                 <div>
-                  <h3 className="text-sm font-bold text-[#34222e] uppercase tracking-wider mb-2.5">Package Includes:</h3>
-                  <ul className="space-y-1.5 text-xs sm:text-sm text-[#5f4a58]">
+                  <h3 className="text-sm font-bold text-sb-ink uppercase tracking-wider mb-2.5">Package Includes:</h3>
+                  <ul className="space-y-1.5 text-xs sm:text-sm text-sb-ink/80">
                     {packageIncludes.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#0c831f] font-bold shrink-0 mt-0.5">•</span>
+                        <span className="text-sb-brand font-bold shrink-0 mt-0.5">•</span>
                         <span className="leading-snug">{item}</span>
                       </li>
                     ))}
@@ -777,10 +777,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             {activeTab === 'documents' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-sm font-bold text-[#34222e] uppercase tracking-wider mb-1">
+                  <h3 className="text-sm font-bold text-sb-ink uppercase tracking-wider mb-1">
                     Attachments & Datasheets
                   </h3>
-                  <p className="text-xs text-[#7a6274]">Download official engineering documentation and pin diagrams.</p>
+                  <p className="text-xs text-sb-muted">Download official engineering documentation and pin diagrams.</p>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
@@ -789,13 +789,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     href={product.datasheetUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-xs font-bold text-white bg-[#0c831f] hover:bg-[#0a701a] px-4 py-2.5 rounded-xl transition cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-white bg-sb-brand hover:bg-sb-brand-strong px-4 py-2.5 rounded-xl transition cursor-pointer shadow-xs"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download Datasheet (PDF)</span>
                   </a>
                   ) : (
-                    <p className="text-xs text-[#7a6274]">No datasheet has been uploaded for this part.</p>
+                    <p className="text-xs text-sb-muted">No datasheet has been uploaded for this part.</p>
                   )}
 
                   {product.cadModelUrl && (
@@ -803,7 +803,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       href={product.cadModelUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-xs font-bold text-[#34222e] bg-[#fee9d7] hover:bg-[#fbd3b2] px-4 py-2.5 rounded-xl transition cursor-pointer border border-[#f9bf8f]/60"
+                      className="inline-flex items-center gap-2 text-xs font-bold text-sb-ink bg-sb-canvas hover:bg-[#fbd3b2] px-4 py-2.5 rounded-xl transition cursor-pointer border border-sb-line/60"
                     >
                       <Download className="w-4 h-4" />
                       <span>Download 3D CAD (STEP)</span>
@@ -814,10 +814,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 {/* Pinout Table if available */}
                 {product.pinout && product.pinout.length > 0 && (
                   <div className="space-y-2 pt-2">
-                    <h4 className="text-xs font-bold text-[#34222e] uppercase tracking-wider">Pin Configuration</h4>
-                    <div className="overflow-hidden rounded-xl border border-[#f9bf8f]/60 bg-white">
+                    <h4 className="text-xs font-bold text-sb-ink uppercase tracking-wider">Pin Configuration</h4>
+                    <div className="overflow-hidden rounded-xl border border-sb-line/60 bg-white">
                       <table className="w-full text-xs text-left">
-                        <thead className="bg-[#fee9d7] text-[#34222e] font-bold border-b border-[#f9bf8f]/60">
+                        <thead className="bg-sb-canvas text-sb-ink font-bold border-b border-sb-line/60">
                           <tr>
                             <th className="px-4 py-2.5">Pin</th>
                             <th className="px-4 py-2.5">Color</th>
@@ -825,12 +825,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                             <th className="px-4 py-2.5">Description</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#f9bf8f]/30 text-[#5f4a58]">
+                        <tbody className="divide-y divide-sb-line/30 text-sb-ink/80">
                           {product.pinout.map((p, idx) => (
-                            <tr key={idx} className={idx % 2 === 0 ? 'bg-[#fffbf7]' : 'bg-white'}>
-                              <td className="px-4 py-2.5 font-bold text-[#34222e]">{p.pin}</td>
+                            <tr key={idx} className={idx % 2 === 0 ? 'bg-sb-card' : 'bg-white'}>
+                              <td className="px-4 py-2.5 font-bold text-sb-ink">{p.pin}</td>
                               <td className="px-4 py-2.5">{p.color}</td>
-                              <td className="px-4 py-2.5 font-mono font-bold text-[#0c831f]">{p.function}</td>
+                              <td className="px-4 py-2.5 font-mono font-bold text-sb-brand">{p.function}</td>
                               <td className="px-4 py-2.5">{p.description}</td>
                             </tr>
                           ))}
@@ -845,16 +845,16 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             {/* TAB 3: REVIEWS WITH CUSTOMER SUBMISSION */}
             {activeTab === 'reviews' && (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white rounded-xl border border-[#f9bf8f]/60">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white rounded-xl border border-sb-line/60">
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl font-black text-[#34222e]">{totalReviewsCount ? avgRating : '—'}</span>
+                    <span className="text-4xl font-black text-sb-ink">{totalReviewsCount ? avgRating : '—'}</span>
                     <div>
                       <div className="flex text-amber-400">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className={`w-4 h-4 ${i < Math.floor(Number(avgRating)) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
                         ))}
                       </div>
-                      <span className="text-xs text-[#7a6274] font-medium block mt-0.5">
+                      <span className="text-xs text-sb-muted font-medium block mt-0.5">
                         {totalReviewsCount ? `Based on ${totalReviewsCount} customer reviews` : 'No reviews yet'}
                       </span>
                     </div>
@@ -863,14 +863,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   {hasPurchased ? (
                     <button
                       onClick={() => setShowReviewForm(!showReviewForm)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#0c831f] hover:bg-[#0a701a] text-white px-4 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-2 rounded-xl bg-sb-brand hover:bg-sb-brand-strong text-white px-4 py-2 text-xs font-bold transition cursor-pointer shadow-xs"
                     >
                       <MessageSquarePlus className="w-4 h-4" />
                       <span>{showReviewForm ? 'Close Review Form' : existingUserReview ? 'Edit Your Review' : 'Write a Review'}</span>
                     </button>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fee9d7]/70 text-[#7a6274] text-xs font-semibold border border-[#f9bf8f]/40">
-                      <ShieldCheck className="w-4 h-4 text-[#0c831f]" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sb-canvas/70 text-sb-muted text-xs font-semibold border border-sb-line/40">
+                      <ShieldCheck className="w-4 h-4 text-sb-brand" />
                       <span>Verified Purchasers Only</span>
                     </span>
                   )}
@@ -885,19 +885,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       <p className="text-amber-800/90 leading-relaxed">
                         To maintain authentic bench-test data, ratings and reviews on Spaceborn are restricted to customers who have ordered this component in their order history.
                       </p>
-                      <Link href={`/auth?next=/product/${product.id}`} className="inline-block mt-1 font-bold text-[#0c831f] hover:underline">
+                      <Link href={`/auth?next=/product/${product.id}`} className="inline-block mt-1 font-bold text-sb-brand hover:underline">
                         Sign in to check your order history →
                       </Link>
                     </div>
                   </div>
                 ) : !hasPurchased ? (
-                  <div className="p-4 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] flex items-start gap-3">
-                    <ShieldCheck className="w-5 h-5 text-[#7a6274] shrink-0 mt-0.5" />
-                    <div className="text-xs text-[#34222e] space-y-1">
+                  <div className="p-4 rounded-xl border border-sb-line/60 bg-sb-card flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-sb-muted shrink-0 mt-0.5" />
+                    <div className="text-xs text-sb-ink space-y-1">
                       <p className="font-bold">Verified Delivered Purchase Required</p>
-                      <p className="text-[#7a6274] leading-relaxed">
+                      <p className="text-sb-muted leading-relaxed">
                         Ratings and reviews are reserved exclusively for customers who have received this component. If your order is currently in transit, you will be able to rate it directly from your{' '}
-                        <Link href="/orders" className="font-bold text-[#0c831f] underline hover:text-[#0a701a]">
+                        <Link href="/orders" className="font-bold text-sb-brand underline hover:text-sb-brand-strong">
                           Order History page
                         </Link>{' '}
                         as soon as it is delivered.
@@ -905,18 +905,18 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 bg-[#f2fcf4] rounded-xl border border-[#0c831f]/20 flex items-center justify-between text-xs text-[#0c831f]">
+                  <div className="p-3 bg-sb-brand-soft rounded-xl border border-sb-brand/20 flex items-center justify-between text-xs text-sb-brand">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 shrink-0" />
                       <span className="font-bold">
                         Verified Purchaser {eligibleOrderNumber ? `(Order #${eligibleOrderNumber})` : ''}
                       </span>
-                      <span className="text-[#7a6274] hidden sm:inline">· You purchased this item in your order history and can share your test findings.</span>
+                      <span className="text-sb-muted hidden sm:inline">· You purchased this item in your order history and can share your test findings.</span>
                     </div>
                     {!showReviewForm && (
                       <button
                         onClick={() => setShowReviewForm(true)}
-                        className="text-xs font-bold underline hover:text-[#0a701a] cursor-pointer"
+                        className="text-xs font-bold underline hover:text-sb-brand-strong cursor-pointer"
                       >
                         {existingUserReview ? 'Edit review' : 'Rate now'}
                       </button>
@@ -926,19 +926,19 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                 {/* Review Submission Form - strictly available only if user has purchased */}
                 {hasPurchased && showReviewForm && (
-                  <form onSubmit={handleReviewSubmit} className="p-4 sm:p-6 bg-white rounded-2xl border border-[#0c831f]/30 shadow-xs space-y-4 animate-in fade-in duration-200">
-                    <div className="flex items-center justify-between border-b border-[#f9bf8f]/40 pb-3">
+                  <form onSubmit={handleReviewSubmit} className="p-4 sm:p-6 bg-white rounded-2xl border border-sb-brand/30 shadow-xs space-y-4 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between border-b border-sb-line/40 pb-3">
                       <div>
-                        <h4 className="text-sm font-bold text-[#34222e]">{existingUserReview ? 'Update Your Review' : 'Write a Customer Review'}</h4>
-                        <p className="text-xs text-[#7a6274]">Share your real bench-testing, lab results, and feedback with makers across India.</p>
+                        <h4 className="text-sm font-bold text-sb-ink">{existingUserReview ? 'Update Your Review' : 'Write a Customer Review'}</h4>
+                        <p className="text-xs text-sb-muted">Share your real bench-testing, lab results, and feedback with makers across India.</p>
                       </div>
-                      <span className="text-[10px] font-bold bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/20 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold bg-sb-brand-soft text-sb-brand border border-sb-brand/20 px-2 py-0.5 rounded-full">
                         ✓ Verified Purchaser
                       </span>
                     </div>
 
                     {reviewSubmitted && (
-                      <div className="p-3 bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/20 rounded-xl text-xs font-bold flex items-center gap-2">
+                      <div className="p-3 bg-sb-brand-soft text-sb-brand border border-sb-brand/20 rounded-xl text-xs font-bold flex items-center gap-2">
                         <Check className="w-4 h-4" />
                         <span>Thank you! Your verified maker review has been posted.</span>
                       </div>
@@ -946,7 +946,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                     {/* Star Rating Picker */}
                     <div>
-                      <label className="text-xs font-bold text-[#34222e] block mb-1.5">Rating (1 to 5 Stars):</label>
+                      <label className="text-xs font-bold text-sb-ink block mb-1.5">Rating (1 to 5 Stars):</label>
                       <div className="flex items-center gap-1">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
@@ -966,7 +966,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                             />
                           </button>
                         ))}
-                        <span className="ml-2 text-xs font-semibold text-[#7a6274]">
+                        <span className="ml-2 text-xs font-semibold text-sb-muted">
                           {hoverRating || newRating} / 5 Stars
                         </span>
                       </div>
@@ -974,49 +974,49 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
                     <div className="grid sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-bold text-[#34222e] block mb-1">Your Name:</label>
+                        <label className="text-xs font-bold text-sb-ink block mb-1">Your Name:</label>
                         <input
                           type="text"
                           required
                           value={newName}
                           onChange={(e) => setNewName(e.target.value)}
                           placeholder="e.g. Rahul Sharma"
-                          className="w-full h-9 rounded-xl border border-[#f9bf8f]/70 px-3 text-xs outline-none focus:border-[#0c831f] bg-[#fffbf7]"
+                          className="w-full h-9 rounded-xl border border-sb-line/70 px-3 text-xs outline-none focus:border-sb-brand bg-sb-card"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-[#34222e] block mb-1">Lab / College / Org (Optional):</label>
+                        <label className="text-xs font-bold text-sb-ink block mb-1">Lab / College / Org (Optional):</label>
                         <input
                           type="text"
                           value={newOrg}
                           onChange={(e) => setNewOrg(e.target.value)}
                           placeholder="e.g. Robotics Club, IIT Bombay"
-                          className="w-full h-9 rounded-xl border border-[#f9bf8f]/70 px-3 text-xs outline-none focus:border-[#0c831f] bg-[#fffbf7]"
+                          className="w-full h-9 rounded-xl border border-sb-line/70 px-3 text-xs outline-none focus:border-sb-brand bg-sb-card"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-[#34222e] block mb-1">Review Headline / Title:</label>
+                      <label className="text-xs font-bold text-sb-ink block mb-1">Review Headline / Title:</label>
                       <input
                         type="text"
                         required
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
                         placeholder="e.g. Solid build quality, exact specs as documented"
-                        className="w-full h-9 rounded-xl border border-[#f9bf8f]/70 px-3 text-xs outline-none focus:border-[#0c831f] bg-[#fffbf7]"
+                        className="w-full h-9 rounded-xl border border-sb-line/70 px-3 text-xs outline-none focus:border-sb-brand bg-sb-card"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-[#34222e] block mb-1">Review Comment & Bench Test Findings:</label>
+                      <label className="text-xs font-bold text-sb-ink block mb-1">Review Comment & Bench Test Findings:</label>
                       <textarea
                         required
                         rows={3}
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         placeholder="Tell other makers how this component performed in your circuit or mechanical chassis..."
-                        className="w-full rounded-xl border border-[#f9bf8f]/70 p-3 text-xs outline-none focus:border-[#0c831f] bg-[#fffbf7]"
+                        className="w-full rounded-xl border border-sb-line/70 p-3 text-xs outline-none focus:border-sb-brand bg-sb-card"
                       />
                     </div>
 
@@ -1024,13 +1024,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowReviewForm(false)}
-                        className="px-4 py-2 text-xs font-semibold text-[#7a6274] hover:text-[#34222e] cursor-pointer"
+                        className="px-4 py-2 text-xs font-semibold text-sb-muted hover:text-sb-ink cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-5 py-2 text-xs font-bold text-white bg-[#0c831f] hover:bg-[#0a701a] rounded-xl transition cursor-pointer shadow-xs"
+                        className="px-5 py-2 text-xs font-bold text-white bg-sb-brand hover:bg-sb-brand-strong rounded-xl transition cursor-pointer shadow-xs"
                       >
                         {existingUserReview ? 'Update Verified Review' : 'Submit Verified Review'}
                       </button>
@@ -1041,14 +1041,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 {/* Reviews List */}
                 <div className="space-y-3">
                   {reviews.map((rev, idx) => (
-                    <div key={idx} className="p-3.5 sm:p-4 rounded-xl border border-[#f9bf8f]/50 bg-white space-y-1.5 shadow-2xs">
+                    <div key={idx} className="p-3.5 sm:p-4 rounded-xl border border-sb-line/50 bg-white space-y-1.5 shadow-2xs">
                       <div className="flex items-center justify-between text-xs">
                         <div>
-                          <span className="font-bold text-[#34222e]">{rev.name}</span>
-                          {rev.org && <span className="text-[11px] text-[#7a6274] ml-2">({rev.org})</span>}
+                          <span className="font-bold text-sb-ink">{rev.name}</span>
+                          {rev.org && <span className="text-[11px] text-sb-muted ml-2">({rev.org})</span>}
                         </div>
                         {rev.verified && (
-                          <span className="text-[10px] bg-[#f2fcf4] text-[#0c831f] font-bold px-2 py-0.5 rounded-md border border-[#0c831f]/20">
+                          <span className="text-[10px] bg-sb-brand-soft text-sb-brand font-bold px-2 py-0.5 rounded-md border border-sb-brand/20">
                             Verified Buyer
                           </span>
                         )}
@@ -1058,9 +1058,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                           <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         ))}
                       </div>
-                      <h5 className="text-xs font-bold text-[#34222e]">{rev.title}</h5>
-                      <p className="text-xs text-[#5f4a58] leading-relaxed">{rev.comment}</p>
-                      <span className="text-[#7a6274] text-[10px] block pt-0.5">{rev.date}</span>
+                      <h5 className="text-xs font-bold text-sb-ink">{rev.title}</h5>
+                      <p className="text-xs text-sb-ink/80 leading-relaxed">{rev.comment}</p>
+                      <span className="text-sb-muted text-[10px] block pt-0.5">{rev.date}</span>
                     </div>
                   ))}
                 </div>
@@ -1074,12 +1074,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           <section className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-[#34222e]">Related Products</h3>
-                <p className="text-xs text-[#7a6274]">Frequently bought together in {product.category}</p>
+                <h3 className="text-base sm:text-lg font-bold text-sb-ink">Related Products</h3>
+                <p className="text-xs text-sb-muted">Frequently bought together in {product.category}</p>
               </div>
               <button
                 onClick={() => onNavigate('catalog')}
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#0c831f] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-sb-brand hover:underline cursor-pointer"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3.5 h-3.5" />

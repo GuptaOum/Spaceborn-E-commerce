@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { SpacebornLogo } from './SpacebornLogo';
 import { AppView } from '../types';
+import { useStorefront } from '../context/StorefrontConfig';
 
 interface FooterProps {
   onNavigate: (view: AppView) => void;
@@ -17,55 +18,56 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) => {
+  const { categories } = useStorefront();
   return (
-    <footer className="bg-[#fffbf7] text-[#34222e] border-t border-[#f9bf8f]/60 text-xs">
+    <footer className="bg-sb-card text-sb-ink border-t border-sb-line/60 text-xs">
       
       {/* Value Assurance Strip */}
-      <div className="border-b border-[#f9bf8f]/40 bg-[#fee9d7]/40">
+      <div className="border-b border-sb-line/40 bg-sb-canvas/40">
         <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="flex items-start space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#f9bf8f]/60 flex items-center justify-center text-[#e2434b] shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-white border border-sb-line/60 flex items-center justify-center text-[#e2434b] shrink-0 shadow-xs">
               <Zap className="w-5 h-5 fill-current" />
             </div>
             <div>
-              <h4 className="font-bold text-[#34222e] text-sm">Nearest Shop Delivers</h4>
-              <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
+              <h4 className="font-bold text-sb-ink text-sm">Nearest Shop Delivers</h4>
+              <p className="text-sb-muted text-xs mt-0.5 leading-relaxed">
                 Each order goes to the closest shop with stock, and the ETA is shown before you pay.
               </p>
             </div>
           </div>
 
           <div className="flex items-start space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#f9bf8f]/60 flex items-center justify-center text-[#0c831f] shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-white border border-sb-line/60 flex items-center justify-center text-sb-brand shrink-0 shadow-xs">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-[#34222e] text-sm">Approved Local Shops</h4>
-              <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
+              <h4 className="font-bold text-sb-ink text-sm">Approved Local Shops</h4>
+              <p className="text-sb-muted text-xs mt-0.5 leading-relaxed">
                 Every seller is reviewed by our team before their shop goes live, and you see which shop sends your order.
               </p>
             </div>
           </div>
 
           <div className="flex items-start space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#f9bf8f]/60 flex items-center justify-center text-[#e2434b] shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-white border border-sb-line/60 flex items-center justify-center text-[#e2434b] shrink-0 shadow-xs">
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-[#34222e] text-sm">Free Delivery Available</h4>
-              <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
+              <h4 className="font-bold text-sb-ink text-sm">Free Delivery Available</h4>
+              <p className="text-sb-muted text-xs mt-0.5 leading-relaxed">
                 No delivery fee when a shop&apos;s part of your order is ₹499 or more.
               </p>
             </div>
           </div>
 
           <div className="flex items-start space-x-3.5">
-            <div className="w-10 h-10 rounded-xl bg-white border border-[#f9bf8f]/60 flex items-center justify-center text-[#0c831f] shrink-0 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-white border border-sb-line/60 flex items-center justify-center text-sb-brand shrink-0 shadow-xs">
               <RotateCcw className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="font-bold text-[#34222e] text-sm">Easy Returns & Replacements</h4>
-              <p className="text-[#7a6274] text-xs mt-0.5 leading-relaxed">
+              <h4 className="font-bold text-sb-ink text-sm">Easy Returns & Replacements</h4>
+              <p className="text-sb-muted text-xs mt-0.5 leading-relaxed">
                 Prompt resolution and replacements if any component arrives defective.
               </p>
             </div>
@@ -85,17 +87,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
             <SpacebornLogo size="md" subtitle={false} />
           </div>
 
-          <p className="text-[#7a6274] text-xs leading-relaxed max-w-sm">
+          <p className="text-sb-muted text-xs leading-relaxed max-w-sm">
             Quick commerce platform for electronics, microcontrollers, robotics, and maker hardware delivered in minutes.
           </p>
 
-          <div className="space-y-1.5 text-xs text-[#7a6274] pt-2">
+          <div className="space-y-1.5 text-xs text-sb-muted pt-2">
             <p className="flex items-center space-x-2">
               <MapPin className="w-4 h-4 text-[#e2434b] shrink-0" />
               <span>Kanpur • Bengaluru • Chennai • Pune</span>
             </p>
             <p className="flex items-center space-x-2">
-              <Mail className="w-4 h-4 text-[#7a6274] shrink-0" />
+              <Mail className="w-4 h-4 text-sb-muted shrink-0" />
               <span>support@spaceborn.in</span>
             </p>
           </div>
@@ -103,40 +105,22 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
 
         {/* Categories */}
         <div className="space-y-2.5">
-          <h5 className="font-bold text-[#34222e] text-xs uppercase tracking-wider">Categories</h5>
-          <ul className="space-y-1.5 text-xs text-[#7a6274]">
-            <li>
-              <button onClick={() => { onSelectCategory('Development Boards'); onNavigate('catalog'); }} className="hover:text-[#e2434b] transition cursor-pointer text-left">
-                Development Boards
-              </button>
-            </li>
-            <li>
-              <button onClick={() => { onSelectCategory('Motors & Drivers'); onNavigate('catalog'); }} className="hover:text-[#e2434b] transition cursor-pointer text-left">
-                Motors & Drivers
-              </button>
-            </li>
-            <li>
-              <button onClick={() => { onSelectCategory('Sensors & Modules'); onNavigate('catalog'); }} className="hover:text-[#e2434b] transition cursor-pointer text-left">
-                Sensors & Modules
-              </button>
-            </li>
-            <li>
-              <button onClick={() => { onSelectCategory('Batteries & Chargers'); onNavigate('catalog'); }} className="hover:text-[#e2434b] transition cursor-pointer text-left">
-                Batteries & Power
-              </button>
-            </li>
-            <li>
-              <button onClick={() => { onSelectCategory('Tools & Soldering'); onNavigate('catalog'); }} className="hover:text-[#e2434b] transition cursor-pointer text-left">
-                Tools & Soldering
-              </button>
-            </li>
+          <h5 className="font-bold text-sb-ink text-xs uppercase tracking-wider">Categories</h5>
+          <ul className="space-y-1.5 text-xs text-sb-muted">
+            {categories.slice(0, 6).map((cat) => (
+              <li key={cat.id}>
+                <button onClick={() => { onSelectCategory(cat.name); onNavigate('catalog'); }} className="hover:text-[#e2434b] transition cursor-pointer text-left">
+                  {cat.name}
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
 
         {/* Quick Links */}
         <div className="space-y-2.5">
-          <h5 className="font-bold text-[#34222e] text-xs uppercase tracking-wider">Quick Links</h5>
-          <ul className="space-y-1.5 text-xs text-[#7a6274]">
+          <h5 className="font-bold text-sb-ink text-xs uppercase tracking-wider">Quick Links</h5>
+          <ul className="space-y-1.5 text-xs text-sb-muted">
             <li>
               <button onClick={() => onNavigate('orders')} className="hover:text-[#e2434b] transition cursor-pointer text-left">
                 My Orders
@@ -158,7 +142,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
               </button>
             </li>
             <li>
-              <button onClick={() => onNavigate('vendor')} className="hover:text-[#0c831f] text-[#0c831f] font-semibold transition cursor-pointer text-left flex items-center gap-1">
+              <button onClick={() => onNavigate('vendor')} className="hover:text-sb-brand text-sb-brand font-semibold transition cursor-pointer text-left flex items-center gap-1">
                 <span>Become a Seller / Supplier Hub</span>
               </button>
             </li>
@@ -167,8 +151,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
 
         {/* Customer Care */}
         <div className="space-y-2.5">
-          <h5 className="font-bold text-[#34222e] text-xs uppercase tracking-wider">Help & Legal</h5>
-          <ul className="space-y-1.5 text-xs text-[#7a6274]">
+          <h5 className="font-bold text-sb-ink text-xs uppercase tracking-wider">Help & Legal</h5>
+          <ul className="space-y-1.5 text-xs text-sb-muted">
             <li>
               <button onClick={() => onNavigate('about')} className="hover:text-[#e2434b] transition cursor-pointer text-left">
                 About Us
@@ -187,17 +171,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
           </ul>
 
           <div className="pt-3">
-            <span className="text-[10px] text-[#7a6274] block mb-1 font-semibold uppercase tracking-wider">
+            <span className="text-[10px] text-sb-muted block mb-1 font-semibold uppercase tracking-wider">
               Payments Accepted
             </span>
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="bg-white border border-[#f9bf8f]/60 px-2 py-0.5 rounded text-[#34222e] font-semibold text-[11px]">
+              <span className="bg-white border border-sb-line/60 px-2 py-0.5 rounded text-sb-ink font-semibold text-[11px]">
                 UPI
               </span>
-              <span className="bg-white border border-[#f9bf8f]/60 px-2 py-0.5 rounded text-[#34222e] font-semibold text-[11px]">
+              <span className="bg-white border border-sb-line/60 px-2 py-0.5 rounded text-sb-ink font-semibold text-[11px]">
                 Cards
               </span>
-              <span className="bg-white border border-[#f9bf8f]/60 px-2 py-0.5 rounded text-[#34222e] font-semibold text-[11px]">
+              <span className="bg-white border border-sb-line/60 px-2 py-0.5 rounded text-sb-ink font-semibold text-[11px]">
                 Net Banking
               </span>
             </div>
@@ -208,7 +192,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onSelectCategory }) 
       </div>
 
       {/* Copyright Sub-bar */}
-      <div className="border-t border-[#f9bf8f]/40 bg-[#fee9d7]/50 py-4 px-4 text-center text-[#7a6274] text-xs">
+      <div className="border-t border-sb-line/40 bg-sb-canvas/50 py-4 px-4 text-center text-sb-muted text-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© 2026 Spaceborn Technologies. Electronics Quick Commerce.</p>
           <div className="flex items-center space-x-4">

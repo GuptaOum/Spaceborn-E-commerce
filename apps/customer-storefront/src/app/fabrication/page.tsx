@@ -27,8 +27,8 @@ const FORMAT_SPECS: Record<ServiceKind, { extensions: string[]; accept: string; 
 };
 
 const ACTIVE: FabStatus[] = ['submitted', 'quoted', 'pending_payment', 'in_production', 'ready', 'out_for_delivery'];
-const card = 'rounded-3xl border border-[#f9bf8f]/60 bg-[#fffbf7] p-5 shadow-sm';
-const input = 'mt-1 w-full rounded-lg border border-[#f9bf8f]/70 bg-white px-3 py-2 text-sm text-[#34222e] outline-none focus:border-[#0c831f]';
+const card = 'rounded-3xl border border-sb-line/60 bg-sb-card p-5 shadow-sm';
+const input = 'mt-1 w-full rounded-lg border border-sb-line/70 bg-white px-3 py-2 text-sm text-sb-ink outline-none focus:border-sb-brand';
 const normalizePhone = (v: string) => v.replace(/\D/g, '').slice(-10);
 
 function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDone: () => void; onCancel: () => void }) {
@@ -123,23 +123,23 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
     <form onSubmit={submit} className={`${card} space-y-3`}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-bold text-[#0c831f]">{SERVICE_KIND_LABEL[service.kind]}</p>
-          <h2 className="font-bold text-[#34222e]">{service.title}</h2>
-          <p className="text-xs text-[#7a6274]">{service.storeName} {service.city ? `· 📍 ${service.city}` : ''}</p>
+          <p className="text-xs font-bold text-sb-brand">{SERVICE_KIND_LABEL[service.kind]}</p>
+          <h2 className="font-bold text-sb-ink">{service.title}</h2>
+          <p className="text-xs text-sb-muted">{service.storeName} {service.city ? `· 📍 ${service.city}` : ''}</p>
         </div>
-        <button type="button" onClick={onCancel} className="text-xs font-semibold text-[#7a6274] underline">
+        <button type="button" onClick={onCancel} className="text-xs font-semibold text-sb-muted underline">
           Back
         </button>
       </div>
       {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">{error}</p>}
 
       {/* Format specification section */}
-      <div className="rounded-2xl border border-[#f9bf8f]/60 bg-white p-3 space-y-1.5">
+      <div className="rounded-2xl border border-sb-line/60 bg-white p-3 space-y-1.5">
         <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
-          <label htmlFor="cad-format-select" className="font-semibold text-[#34222e]">
+          <label htmlFor="cad-format-select" className="font-semibold text-sb-ink">
             Select CAD / Design File Format:
           </label>
-          <span className="text-[11px] text-[#0c831f] font-semibold">Accepted: {spec.description}</span>
+          <span className="text-[11px] text-sb-brand font-semibold">Accepted: {spec.description}</span>
         </div>
         <select
           id="cad-format-select"
@@ -151,25 +151,25 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
             <option key={f} value={f}>{f}</option>
           ))}
         </select>
-        <p className="text-[11px] text-[#7a6274]">
+        <p className="text-[11px] text-sb-muted">
           Ensure your uploaded design files match the selected format. The vendor will download and inspect this file before providing your quote.
         </p>
       </div>
 
-      <label className="block rounded-2xl border-2 border-dashed border-[#f9bf8f] bg-white p-4 text-center text-sm text-[#7a6274] cursor-pointer hover:border-[#0c831f] transition-colors">
+      <label className="block rounded-2xl border-2 border-dashed border-sb-line bg-white p-4 text-center text-sm text-sb-muted cursor-pointer hover:border-sb-brand transition-colors">
         {uploading ? 'Uploading…' : `Tap to upload design files (${spec.description})`}
         <input type="file" multiple accept={spec.accept} className="hidden" disabled={uploading} onChange={(e) => onFiles(e.target.files)} />
       </label>
       {files.map((f) => {
         const ext = f.fileName.split('.').pop()?.toUpperCase() || 'FILE';
         return (
-          <div key={f.id} className="flex items-center justify-between rounded-xl border border-[#f9bf8f]/40 bg-white px-3 py-2 text-xs text-[#34222e]">
+          <div key={f.id} className="flex items-center justify-between rounded-xl border border-sb-line/40 bg-white px-3 py-2 text-xs text-sb-ink">
             <span className="flex items-center gap-2 truncate">
               <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">{ext}</span>
               <span className="truncate font-medium">{f.fileName}</span>
             </span>
             <span className="flex items-center gap-2.5 ml-2">
-              <span className="text-[#7a6274]">{formatBytes(f.sizeBytes)}</span>
+              <span className="text-sb-muted">{formatBytes(f.sizeBytes)}</span>
               <button type="button" onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))} className="text-[#e2434b] font-semibold">
                 Remove
               </button>
@@ -179,7 +179,7 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
       })}
 
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-xs font-semibold text-[#7a6274]">
+        <label className="text-xs font-semibold text-sb-muted">
           Material
           <select value={form.material} onChange={set('material')} className={input}>
             {service.materials.map((m) => (
@@ -187,46 +187,46 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
             ))}
           </select>
         </label>
-        <label className="text-xs font-semibold text-[#7a6274]">
+        <label className="text-xs font-semibold text-sb-muted">
           Quantity
           <input type="number" min="1" max="100" required value={form.quantity} onChange={set('quantity')} className={input} />
         </label>
       </div>
-      <label className="block text-xs font-semibold text-[#7a6274]">
+      <label className="block text-xs font-semibold text-sb-muted">
         Notes for the maker
         <textarea rows={2} maxLength={2000} value={form.notes} onChange={set('notes')} placeholder="Infill, tolerance, finish…" className={input} />
       </label>
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-xs font-semibold text-[#7a6274]">
+        <label className="text-xs font-semibold text-sb-muted">
           Name
           <input required minLength={2} value={form.fullName} onChange={set('fullName')} className={input} />
         </label>
-        <label className="text-xs font-semibold text-[#7a6274]">
+        <label className="text-xs font-semibold text-sb-muted">
           Mobile
           <input required type="tel" value={form.phone} onChange={set('phone')} className={input} />
         </label>
       </div>
-      <label className="block text-xs font-semibold text-[#7a6274]">
+      <label className="block text-xs font-semibold text-sb-muted">
         Delivery address
         <input required minLength={3} value={form.line1} onChange={set('line1')} placeholder="Flat, building, street" className={input} />
       </label>
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-xs font-semibold text-[#7a6274]">
+        <label className="text-xs font-semibold text-sb-muted">
           City
           <input required value={form.city} onChange={set('city')} className={input} />
         </label>
-        <label className="text-xs font-semibold text-[#7a6274]">
+        <label className="text-xs font-semibold text-sb-muted">
           PIN code
           <input required inputMode="numeric" pattern="[1-9][0-9]{5}" maxLength={6} value={form.pincode} onChange={set('pincode')} className={input} />
         </label>
       </div>
       <button
         disabled={submitting || uploading}
-        className="w-full rounded-xl bg-[#0c831f] py-3 text-sm font-bold text-white disabled:opacity-50"
+        className="w-full rounded-xl bg-sb-brand py-3 text-sm font-bold text-white disabled:opacity-50"
       >
         {submitting ? 'Sending…' : 'Get a quote'}
       </button>
-      <p className="text-center text-[11px] text-[#7a6274]">You pay only after you accept the maker’s quote.</p>
+      <p className="text-center text-[11px] text-sb-muted">You pay only after you accept the maker’s quote.</p>
     </form>
   );
 }
@@ -270,14 +270,14 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
     <article className={card}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-bold text-[#34222e]">
+          <p className="text-sm font-bold text-sb-ink">
             #{job.jobNumber} · {SERVICE_KIND_LABEL[job.kind]}
           </p>
-          <p className="text-xs text-[#7a6274]">
+          <p className="text-xs text-sb-muted">
             {job.storeName} · {job.quantity} × {job.material} · {formatDateTime(job.createdAt)}
           </p>
         </div>
-        <span className="rounded-full bg-[#f2fcf4] px-3 py-1 text-xs font-bold text-[#0c831f]">{FAB_STATUS_LABEL[job.status]}</span>
+        <span className="rounded-full bg-sb-brand-soft px-3 py-1 text-xs font-bold text-sb-brand">{FAB_STATUS_LABEL[job.status]}</span>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
@@ -287,7 +287,7 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
             <button
               key={f.id}
               onClick={() => downloadFile(`/fabrication/jobs/${job.id}/files/${f.id}`, f.fileName).catch((e: Error) => alert(e.message))}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-[#f9bf8f]/60 px-2.5 py-1 text-[11px] text-[#34222e] hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-sb-line/60 px-2.5 py-1 text-[11px] text-sb-ink hover:bg-emerald-50 transition-colors"
             >
               <span className="rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-800">
                 {ext}
@@ -298,7 +298,7 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
         })}
       </div>
       {job.files.some((f) => f.analysis?.status === 'done') && (
-        <ul className="mt-1.5 space-y-0.5 text-[11px] text-[#7a6274]">
+        <ul className="mt-1.5 space-y-0.5 text-[11px] text-sb-muted">
           {job.files.map((f) => {
             const m = f.analysis?.status === 'done' ? f.analysis.metrics : null;
             if (!m) return null;
@@ -314,33 +314,33 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
       )}
 
       {job.quoteAmount == null && job.instantEstimateInr != null && job.status === 'submitted' && (
-        <div className="mt-3 rounded-2xl border border-dashed border-[#0c831f]/40 bg-[#f2fcf4] p-3 text-sm text-[#34222e]">
+        <div className="mt-3 rounded-2xl border border-dashed border-sb-brand/40 bg-sb-brand-soft p-3 text-sm text-sb-ink">
           <p>
             Instant estimate: <b>about {formatInr(job.instantEstimateInr)}</b> for all {job.quantity}
             {job.instantEstimatePartial ? ' (for the files we could measure)' : ''}
           </p>
-          <p className="text-xs text-[#7a6274]">
+          <p className="text-xs text-sb-muted">
             Worked out from your files in seconds. The maker confirms the final price; you pay nothing until you accept their quote.
           </p>
         </div>
       )}
 
       {job.quoteAmount != null && (
-        <div className="mt-3 rounded-2xl bg-white p-3 text-sm text-[#34222e]">
+        <div className="mt-3 rounded-2xl bg-white p-3 text-sm text-sb-ink">
           <p>
             Quote: <b>{formatInr(job.quoteAmount)}</b>
             {job.readyInHours ? ` · ready in ~${job.readyInHours}h` : ''}
           </p>
-          {job.quoteNote && <p className="text-xs text-[#7a6274]">“{job.quoteNote}”</p>}
-          {job.grandTotal != null && <p className="text-xs text-[#7a6274]">Total with delivery & fees: {formatInr(job.grandTotal)}</p>}
+          {job.quoteNote && <p className="text-xs text-sb-muted">“{job.quoteNote}”</p>}
+          {job.grandTotal != null && <p className="text-xs text-sb-muted">Total with delivery & fees: {formatInr(job.grandTotal)}</p>}
           {job.status === 'quoted' && job.quoteExpiresAt && (
-            <p className="text-xs text-[#7a6274]">Valid until {formatDateTime(job.quoteExpiresAt)}</p>
+            <p className="text-xs text-sb-muted">Valid until {formatDateTime(job.quoteExpiresAt)}</p>
           )}
         </div>
       )}
 
       {job.handoverOtp && job.status === 'out_for_delivery' && (
-        <p className="mt-3 rounded-xl bg-[#34222e] px-4 py-3 text-sm text-[#fee9d7]">
+        <p className="mt-3 rounded-xl bg-sb-ink px-4 py-3 text-sm text-sb-canvas">
           Delivery code: <b className="font-mono text-lg tracking-widest">{job.handoverOtp}</b>
         </p>
       )}
@@ -348,7 +348,7 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
 
       <div className="mt-3 flex gap-2">
         {(job.status === 'quoted' || job.status === 'pending_payment') && (
-          <button onClick={acceptAndPay} disabled={busy} className="rounded-xl bg-[#0c831f] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
+          <button onClick={acceptAndPay} disabled={busy} className="rounded-xl bg-sb-brand px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
             {job.status === 'quoted' ? 'Accept & pay' : 'Complete payment'}
           </button>
         )}
@@ -417,8 +417,8 @@ export default function FabricationPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-8">
       <div>
-        <h1 className="text-xl font-bold text-[#34222e]">Print & machine near you</h1>
-        <p className="text-sm text-[#7a6274]">Upload your design, get a quote from a local maker, pay, and get it delivered.</p>
+        <h1 className="text-xl font-bold text-sb-ink">Print & machine near you</h1>
+        <p className="text-sm text-sb-muted">Upload your design, get a quote from a local maker, pay, and get it delivered.</p>
       </div>
 
       <div className="flex gap-2">
@@ -429,7 +429,7 @@ export default function FabricationPage() {
               setKind(k);
               setSelected(null);
             }}
-            className={`rounded-full px-4 py-2 text-sm font-bold ${kind === k ? 'bg-[#0c831f] text-white' : 'bg-white text-[#34222e]'}`}
+            className={`rounded-full px-4 py-2 text-sm font-bold ${kind === k ? 'bg-sb-brand text-white' : 'bg-white text-sb-ink'}`}
           >
             {SERVICE_KIND_LABEL[k]}
           </button>
@@ -448,16 +448,16 @@ export default function FabricationPage() {
         />
       ) : (
         <section className="space-y-3">
-          {services.loading && !services.data && <p className="text-sm text-[#7a6274]">Finding makers near {location.area}…</p>}
+          {services.loading && !services.data && <p className="text-sm text-sb-muted">Finding makers near {location.area}…</p>}
           {services.error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{services.error}</p>}
           {services.data?.length === 0 && (
-            <div className={`${card} space-y-3 text-sm text-[#7a6274]`}>
+            <div className={`${card} space-y-3 text-sm text-sb-muted`}>
               <p className="text-center">
                 No {SERVICE_KIND_LABEL[kind]} makers deliver to <b>{location.area}</b> yet.
               </p>
               {outOfRange.length > 0 && (
                 <div className="rounded-2xl bg-white/70 p-3 text-xs">
-                  <p className="font-semibold text-[#34222e]">Makers nearby that do not reach this address:</p>
+                  <p className="font-semibold text-sb-ink">Makers nearby that do not reach this address:</p>
                   <ul className="mt-1 space-y-1">
                     {outOfRange.map((s) => (
                       <li key={s.id}>
@@ -471,7 +471,7 @@ export default function FabricationPage() {
                 <button
                   onClick={useMyLocation}
                   disabled={locating}
-                  className="rounded-xl bg-[#0c831f] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+                  className="rounded-xl bg-sb-brand px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
                 >
                   {locating ? 'Locating…' : 'Use my current location'}
                 </button>
@@ -481,24 +481,24 @@ export default function FabricationPage() {
             </div>
           )}
           {services.data?.map((s) => (
-            <button key={s.id} onClick={() => choose(s)} className={`${card} block w-full text-left hover:border-[#0c831f] transition-all`}>
+            <button key={s.id} onClick={() => choose(s)} className={`${card} block w-full text-left hover:border-sb-brand transition-all`}>
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-bold text-[#34222e]">{s.title}</p>
+                    <p className="font-bold text-sb-ink">{s.title}</p>
                     {s.city && (
                       <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                         📍 {s.city}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#7a6274]">
+                  <p className="text-xs text-sb-muted">
                     {s.storeName} · {s.city ? `${s.city} · ` : ''}{s.distanceKm} km · ready in ~{s.turnaroundHours}h
                   </p>
                 </div>
-                <span className="text-sm font-bold text-[#34222e]">from {formatInr(s.startingPrice)}</span>
+                <span className="text-sm font-bold text-sb-ink">from {formatInr(s.startingPrice)}</span>
               </div>
-              <p className="mt-2 text-xs text-[#7a6274]">
+              <p className="mt-2 text-xs text-sb-muted">
                 {s.materials.join(' · ')} · max {s.maxXmm}×{s.maxYmm}×{s.maxZmm} mm
               </p>
             </button>
@@ -507,10 +507,10 @@ export default function FabricationPage() {
       )}
 
       <div ref={jobsRef} className="space-y-3">
-        <h2 className="text-lg font-bold text-[#34222e]">My print jobs</h2>
-        {!loading && !user && <p className="text-sm text-[#7a6274]">Sign in to see your jobs.</p>}
+        <h2 className="text-lg font-bold text-sb-ink">My print jobs</h2>
+        {!loading && !user && <p className="text-sm text-sb-muted">Sign in to see your jobs.</p>}
         {jobs.error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{jobs.error}</p>}
-        {user && jobs.data?.length === 0 && <p className="text-sm text-[#7a6274]">No jobs yet.</p>}
+        {user && jobs.data?.length === 0 && <p className="text-sm text-sb-muted">No jobs yet.</p>}
         {jobs.data?.map((job) => <JobCard key={job.id} job={job} onChange={jobs.reload} />)}
       </div>
     </div>

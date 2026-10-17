@@ -13,9 +13,11 @@ import { listAllOrders, orderCity, transitionOrder } from '../orders/service.js'
 import { getJobFile, jobCity, listAllJobs, transitionJob } from '../fabrication/service.js';
 import { LISTING_COLUMNS, streamFile } from './fabrication.js';
 import { escapeLike, fabStatusList, pagination, productBadges, reason, statusList, uuid } from './schemas.js';
+import { storefrontAdminRouter } from './storefront-admin.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireAdmin);
+adminRouter.use(storefrontAdminRouter);
 
 // Every regional query uses the same predicate; `cities` is null for admins who see all regions.
 const CITY = (param: string) => `(${param}::text[] is null or lower(btrim(s.city)) = any(${param}))`;

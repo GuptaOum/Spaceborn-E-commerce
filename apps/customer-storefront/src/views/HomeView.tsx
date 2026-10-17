@@ -1,23 +1,13 @@
 'use client';
 
 import React from 'react';
+import type { HomeSection } from '@spaceborn/web-core/storefront';
 import { Product, AppView } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { HeroSlider } from '../components/HeroSlider';
-import { matchCategory } from '../data/products';
-import { 
-  ArrowRight, 
-  ChevronRight,
-  Zap,
-  Cog,
-  Cpu,
-  Radio,
-  BatteryCharging,
-  Wrench,
-  Bot,
-  Cable,
-  Package
-} from 'lucide-react';
+import { CategoryIcon } from '../components/CategoryIcon';
+import { useStorefront } from '../context/StorefrontConfig';
+import { ArrowRight, ChevronRight, Cable, Package } from 'lucide-react';
 
 interface HomeViewProps {
   products: Product[];
@@ -29,16 +19,19 @@ interface HomeViewProps {
   cart: { product: Product; quantity: number }[];
 }
 
-// Clean Blinkit-style category aisles with crisp Lucide icons
-const QUICK_CATEGORIES = [
-  { name: 'Dev Boards', icon: Cpu, color: '#0369a1', category: 'Dev Boards & MCUs', bg: '#E0F2FE' },
-  { name: 'Sensors', icon: Radio, color: '#047857', category: 'Sensors & Modules', bg: '#ECFDF5' },
-  { name: 'Motors', icon: Cog, color: '#b45309', category: 'Motors & Drivers', bg: '#FEF3C7' },
-  { name: 'Batteries', icon: BatteryCharging, color: '#b91c1c', category: 'Batteries & Power', bg: '#FEE2E2' },
-  { name: 'Tools', icon: Wrench, color: '#6d28d9', category: 'Tools & Accessories', bg: '#EDE9FE' },
-  { name: 'Mechanical', icon: Bot, color: '#c2410c', category: 'Mechanical & Frames', bg: '#FFEDD5' },
-  { name: 'All Items', icon: Package, color: '#be185d', category: 'All Categories', bg: '#FCE7F3' },
+// Tile colours cycle by position so any set of categories reads as a varied, tidy grid.
+const TILE_COLOURS = [
+  { color: '#0369a1', bg: '#E0F2FE' },
+  { color: '#047857', bg: '#ECFDF5' },
+  { color: '#b45309', bg: '#FEF3C7' },
+  { color: '#b91c1c', bg: '#FEE2E2' },
+  { color: '#6d28d9', bg: '#EDE9FE' },
+  { color: '#c2410c', bg: '#FFEDD5' },
+  { color: '#be185d', bg: '#FCE7F3' },
+  { color: '#0f766e', bg: '#CCFBF1' },
 ];
+
+const SECTION_CARD = 'bg-sb-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-sb-line/60';
 
 export const HomeView: React.FC<HomeViewProps> = ({
   products,
@@ -49,24 +42,46 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onNavigate,
   cart,
 }) => {
-  const trendingProducts = products.slice(0, 16);
-  const devBoards = products.filter(p => matchCategory(p.category, 'Dev Boards & MCUs')).slice(0, 8);
-  const sensorsAndMotors = products.filter(p => matchCategory(p.category, 'Sensors & Modules') || matchCategory(p.category, 'Motors & Drivers')).slice(0, 8);
+  const { settings, categories, inCategory } = useStorefront();
+  const sections = settings?.home.sections.filter((s) => s.visible) ?? [];
 
-  return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] pb-24">
-      
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3 sm:pt-6 space-y-4 sm:space-y-6">
+  const productGrid = (list: Product[]) => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      {list.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onSelect={onSelectProduct}
+          onAddToCart={onAddToCart}
+          onQuickView={onQuickView}
+          cartQuantity={cart.find((item) => item.product.id === product.id)?.quantity || 0}
+        />
+      ))}
+    </div>
+  );
 
-        {/* Robu-Style Sliding Advertisement & Services Hero Banner */}
-        <HeroSlider onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
+  const sectionHeader = (section: HomeSection, linkLabel: string, onClick: () => void) => (
+    <div className="flex items-center justify-between mb-4">
+      <div>
+        <h2 className="text-base sm:text-lg font-bold text-sb-ink">{section.title}</h2>
+        {section.subtitle && <p className="text-xs text-sb-muted mt-0.5">{section.subtitle}</p>}
+      </div>
+      <button
+        onClick={onClick}
+        className="text-xs font-bold text-[#e2434b] hover:text-[#c7323a] flex items-center space-x-1 cursor-pointer shrink-0"
+      >
+        <span>{linkLabel}</span>
+        <ArrowRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
 
-        {/* Categories Grid */}
-        <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
+  const renderSection = (section: HomeSection) => {
+    if (section.type === 'categories') {
+      return (
+        <section key={section.id} className={SECTION_CARD}>
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
-              Shop by Category
-            </h2>
+            <h2 className="text-base sm:text-lg font-bold text-sb-ink">{section.title || 'Shop by Category'}</h2>
             <button
               onClick={() => onNavigate('catalog')}
               className="text-xs font-bold text-[#e2434b] hover:text-[#c7323a] flex items-center space-x-1 cursor-pointer"
@@ -76,167 +91,82 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-1.5 sm:gap-3">
-            {QUICK_CATEGORIES.map((cat, index) => {
-              const Icon = cat.icon;
+          <div className="grid grid-cols-4 md:grid-cols-7 gap-1.5 sm:gap-3">
+            {categories.map((cat, index) => {
+              const tile = TILE_COLOURS[index % TILE_COLOURS.length]!;
               return (
-                <div
-                  key={index}
-                  onClick={() => {
-                    onSelectCategory(cat.category);
-                    onNavigate('catalog');
-                  }}
-                  className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => onSelectCategory(cat.name)}
+                  className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-sb-canvas/40 border border-transparent hover:border-sb-line/50 transition-all cursor-pointer"
                 >
-                  <div 
-                    style={{ backgroundColor: cat.bg }}
+                  <div
+                    style={{ backgroundColor: tile.bg }}
                     className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl border border-black/5 flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-1.5 sm:mb-2"
                   >
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: cat.color }} />
+                    <CategoryIcon icon={cat.icon} className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: tile.color }} />
                   </div>
-                  <span className="text-[10px] sm:text-xs font-medium text-[#34222e] leading-tight group-hover:text-[#e2434b] transition-colors line-clamp-2 break-words">
+                  <span className="text-[10px] sm:text-xs font-medium text-sb-ink leading-tight group-hover:text-[#e2434b] transition-colors line-clamp-2 break-words">
                     {cat.name}
                   </span>
-                </div>
+                </button>
               );
             })}
-            <div
-              onClick={() => onNavigate('fabrication')}
-              className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-[#fee9d7]/40 border border-transparent hover:border-[#f9bf8f]/50 transition-all cursor-pointer"
+            <button
+              type="button"
+              onClick={() => onNavigate('catalog')}
+              className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-sb-canvas/40 border border-transparent hover:border-sb-line/50 transition-all cursor-pointer"
             >
-              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl border border-black/5 bg-[#34222e] flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-1.5 sm:mb-2">
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl border border-black/5 bg-[#FCE7F3] flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-1.5 sm:mb-2">
+                <Package className="w-5 h-5 sm:w-6 sm:h-6 text-[#be185d]" />
+              </div>
+              <span className="text-[10px] sm:text-xs font-medium text-sb-ink leading-tight line-clamp-2">All Items</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('fabrication')}
+              className="group flex flex-col items-center text-center p-1 sm:p-2 rounded-2xl hover:bg-sb-canvas/40 border border-transparent hover:border-sb-line/50 transition-all cursor-pointer"
+            >
+              <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl border border-black/5 bg-sb-ink flex items-center justify-center group-hover:scale-105 transition-all shadow-xs mb-1.5 sm:mb-2">
                 <Cable className="w-5 h-5 sm:w-6 sm:h-6 text-[#f8cb46]" />
               </div>
-              <span className="text-[10px] sm:text-xs font-bold text-[#34222e] leading-tight line-clamp-1">Print & CNC</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Trending Electronics */}
-        <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
-                Trending Electronics
-              </h2>
-              <p className="text-xs text-[#7a6274] mt-0.5">
-                Popular components ordered for projects and prototyping
-              </p>
-            </div>
-
-            <button
-              onClick={() => onNavigate('catalog')}
-              className="text-xs font-bold text-[#e2434b] hover:text-[#c7323a] flex items-center space-x-1 cursor-pointer"
-            >
-              <span>See all</span>
-              <ArrowRight className="w-4 h-4" />
+              <span className="text-[10px] sm:text-xs font-bold text-sb-ink leading-tight line-clamp-1">Print request</span>
             </button>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-            {trendingProducts.map((product) => {
-              const inCart = cart.find(item => item.product.id === product.id)?.quantity || 0;
-              return (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onSelect={onSelectProduct}
-                  onAddToCart={onAddToCart}
-                  onQuickView={onQuickView}
-                  cartQuantity={inCart}
-                />
-              );
-            })}
-          </div>
         </section>
+      );
+    }
 
-        {/* Development Boards Section */}
-        {devBoards.length > 0 && (
-          <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
-                  Development Boards & Microcontrollers
-                </h2>
-                <p className="text-xs text-[#7a6274] mt-0.5">
-                  ESP32, Raspberry Pi, Arduino, and STM32 boards
-                </p>
-              </div>
+    if (section.type === 'trending') {
+      const trending = products.slice(0, 16);
+      if (trending.length === 0) return null;
+      return (
+        <section key={section.id} className={SECTION_CARD}>
+          {sectionHeader(section, 'See all', () => onNavigate('catalog'))}
+          {productGrid(trending)}
+        </section>
+      );
+    }
 
-              <button
-                onClick={() => {
-                  onSelectCategory('Development Boards');
-                  onNavigate('catalog');
-                }}
-                className="text-xs font-bold text-[#e2434b] hover:text-[#c7323a] flex items-center space-x-1 cursor-pointer"
-              >
-                <span>View Boards</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+    const category = categories.find((c) => c.id === section.categoryId);
+    if (!category) return null;
+    const rail = products.filter((p) => inCategory(p, category.id)).slice(0, 8);
+    if (rail.length === 0) return null;
+    return (
+      <section key={section.id} className={SECTION_CARD}>
+        {sectionHeader({ ...section, title: section.title || category.name }, 'View all', () => onSelectCategory(category.name))}
+        {productGrid(rail)}
+      </section>
+    );
+  };
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-              {devBoards.map((product) => {
-                const inCart = cart.find(item => item.product.id === product.id)?.quantity || 0;
-                return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onSelect={onSelectProduct}
-                    onAddToCart={onAddToCart}
-                    onQuickView={onQuickView}
-                    cartQuantity={inCart}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* Sensors & Motors Section */}
-        {sensorsAndMotors.length > 0 && (
-          <section className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xs border border-[#f9bf8f]/60">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-[#34222e]">
-                  Sensors & Motors
-                </h2>
-                <p className="text-xs text-[#7a6274] mt-0.5">
-                  High-accuracy modules and geared motors
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  onSelectCategory('Sensors & Modules');
-                  onNavigate('catalog');
-                }}
-                className="text-xs font-bold text-[#e2434b] hover:text-[#c7323a] flex items-center space-x-1 cursor-pointer"
-              >
-                <span>View All</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-              {sensorsAndMotors.map((product) => {
-                const inCart = cart.find(item => item.product.id === product.id)?.quantity || 0;
-                return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onSelect={onSelectProduct}
-                    onAddToCart={onAddToCart}
-                    onQuickView={onQuickView}
-                    cartQuantity={inCart}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        )}
+  return (
+    <div className="min-h-screen bg-sb-canvas text-sb-ink pb-24">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 pt-3 sm:pt-6 space-y-4 sm:space-y-6">
+        <HeroSlider onNavigate={onNavigate} onSelectCategory={onSelectCategory} />
+        {sections.map(renderSection)}
       </main>
-
     </div>
   );
 };

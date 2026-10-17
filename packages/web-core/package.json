@@ -11,6 +11,7 @@
     "./sign-in": "./src/SignInPanel.tsx",
     "./use-load": "./src/useLoad.ts",
     "./use-draft": "./src/useDraft.ts",
+    "./storefront": "./src/storefront.ts",
     "./feedback": "./src/feedback.tsx",
     "./geo-map": "./src/GeoMap.tsx"
   },

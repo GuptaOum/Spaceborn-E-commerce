@@ -39,18 +39,18 @@ export function CartDispatches({ cart }: { cart: CartItem[] }) {
   return (
     <div className="mt-1 space-y-1.5">
       {dispatches.map((dispatch, index) => (
-        <div key={`${dispatch.storeName}-${index}`} className="flex items-start gap-1.5 text-[11px] text-[#34222e]">
+        <div key={`${dispatch.storeName}-${index}`} className="flex items-start gap-1.5 text-[11px] text-sb-ink">
           <Store className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#059669]" />
           <div className="min-w-0">
             <p className="font-bold">
               {dispatches.length > 1 ? `Part ${index + 1} from ` : 'Delivering from '}
               {dispatch.storeName}
             </p>
-            <p className="text-[#7a6274]">
+            <p className="text-sb-muted">
               {[dispatch.addressLine, dispatch.city, dispatch.pincode].filter(Boolean).join(', ')} · {dispatch.distanceKm} km away
             </p>
             {dispatches.length > 1 && (
-              <p className="truncate text-[#7a6274]">
+              <p className="truncate text-sb-muted">
                 {dispatch.items
                   .map((it) => `${it.quantity}x ${cart.find((c) => c.product.id === it.productId)?.product.name ?? 'Item'}`)
                   .join(', ')}

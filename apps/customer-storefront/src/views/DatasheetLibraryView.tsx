@@ -43,7 +43,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
   });
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-sb-canvas py-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
@@ -77,7 +77,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Filter by MPN, SKU, or Keyword (e.g. N20, TB6600, ESP32, LiDAR)..."
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-[#0c831f] transition"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 outline-none focus:border-sb-brand transition"
             />
           </div>
 
@@ -86,7 +86,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
             <select
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white outline-none focus:border-[#0c831f] cursor-pointer"
+              className="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white outline-none focus:border-sb-brand cursor-pointer"
             >
               <option value="All">All Categories</option>
               <option value="Motors & Drivers">Motors & Drivers</option>
@@ -158,7 +158,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
                     title={product.datasheetUrl ? 'Open datasheet' : 'No datasheet uploaded for this part yet'}
                     className={`w-full border py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center space-x-1 transition ${
                       product.datasheetUrl
-                        ? 'bg-orange-50 hover:bg-orange-100 text-[#0c831f] border-orange-200 cursor-pointer'
+                        ? 'bg-orange-50 hover:bg-orange-100 text-sb-brand border-orange-200 cursor-pointer'
                         : 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
                     }`}
                   >
@@ -173,7 +173,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
                       onSelectProduct(product);
                       onNavigate('product');
                     }}
-                    className="text-slate-500 hover:text-[#0c831f] transition flex items-center space-x-1 cursor-pointer"
+                    className="text-slate-500 hover:text-sb-brand transition flex items-center space-x-1 cursor-pointer"
                   >
                     <span>View in Store (₹{product.price})</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -192,7 +192,7 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
             <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 border border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between border-b border-slate-100 pb-3">
                 <div className="space-y-0.5">
-                  <span className="text-[11px] font-mono text-[#0c831f] font-bold">{activeModalProduct.sku}</span>
+                  <span className="text-[11px] font-mono text-sb-brand font-bold">{activeModalProduct.sku}</span>
                   <h3 className="font-bold text-slate-900 text-base">{activeModalProduct.name}</h3>
                 </div>
                 <button onClick={() => setActiveModalProduct(null)} className="text-slate-400 hover:text-slate-600 font-bold p-1 cursor-pointer">âœ•</button>
@@ -202,19 +202,19 @@ export const DatasheetLibraryView: React.FC<DatasheetLibraryViewProps> = ({
               <div className="flex space-x-2 border-b border-slate-200 text-xs font-semibold">
                 <button 
                   onClick={() => setActiveTab('specs')}
-                  className={`py-2 px-3 border-b-2 transition cursor-pointer ${activeTab === 'specs' ? 'border-[#0c831f] text-[#0c831f]' : 'border-transparent text-slate-500'}`}
+                  className={`py-2 px-3 border-b-2 transition cursor-pointer ${activeTab === 'specs' ? 'border-sb-brand text-sb-brand' : 'border-transparent text-slate-500'}`}
                 >
                   Electrical Specs
                 </button>
                 <button 
                   onClick={() => setActiveTab('pinout')}
-                  className={`py-2 px-3 border-b-2 transition cursor-pointer ${activeTab === 'pinout' ? 'border-[#0c831f] text-[#0c831f]' : 'border-transparent text-slate-500'}`}
+                  className={`py-2 px-3 border-b-2 transition cursor-pointer ${activeTab === 'pinout' ? 'border-sb-brand text-sb-brand' : 'border-transparent text-slate-500'}`}
                 >
                   Pinout & Wiring Diagram
                 </button>
                 <button 
                   onClick={() => setActiveTab('code')}
-                  className={`py-2 px-3 border-b-2 transition cursor-pointer ${activeTab === 'code' ? 'border-[#0c831f] text-[#0c831f]' : 'border-transparent text-slate-500'}`}
+                  className={`py-2 px-3 border-b-2 transition cursor-pointer ${activeTab === 'code' ? 'border-sb-brand text-sb-brand' : 'border-transparent text-slate-500'}`}
                 >
                   Driver Code Snippet
                 </button>
@@ -302,7 +302,7 @@ void loop() {
                     setActiveModalProduct(null);
                     onNavigate('product');
                   }}
-                  className="bg-[#0c831f] hover:bg-[#0a6e1a] text-white px-5 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
+                  className="bg-sb-brand hover:bg-sb-brand-strong text-white px-5 py-2 rounded-lg text-xs font-bold transition cursor-pointer"
                 >
                   View Product Page
                 </button>

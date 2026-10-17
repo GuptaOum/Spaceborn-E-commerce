@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useStore } from '../context/StoreContext';
+import { AnnouncementBar } from './AnnouncementBar';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CartDrawer } from './CartDrawer';
@@ -122,7 +123,9 @@ export const NextAppShell: React.FC<{ children: React.ReactNode }> = ({ children
   const currentView = pathname.replace('/', '') || 'home';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fee9d7] font-sans antialiased text-[#34222e] selection:bg-[#f9bf8f] selection:text-[#34222e]">
+    <div className="min-h-screen flex flex-col bg-sb-canvas font-sans antialiased text-sb-ink selection:bg-sb-line selection:text-sb-ink">
+      <AnnouncementBar onNavigate={handleNavigate} onSelectCategory={handleSelectCategory} />
+
       {/* Top Main Navigation Header */}
       <Header
         cart={cart}

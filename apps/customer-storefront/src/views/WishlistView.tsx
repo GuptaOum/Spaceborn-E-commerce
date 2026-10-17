@@ -26,17 +26,17 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
   const addable = items.filter(({ current }) => !current || current.stock > 0);
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-4 sm:py-8 px-3 sm:px-6">
+    <div className="min-h-screen bg-sb-canvas text-sb-ink py-4 sm:py-8 px-3 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
 
-        <div className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-[#f9bf8f]/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-sb-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-sb-line/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 text-[#e2434b] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-sb-canvas border border-sb-line/60 text-[#e2434b] flex items-center justify-center shrink-0">
               <Heart className="w-6 h-6 fill-[#e2434b]" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight">Saved parts</h1>
-              <p className="text-[#7a6274] text-xs mt-0.5">
+              <p className="text-sb-muted text-xs mt-0.5">
                 {wishlist.length} {wishlist.length === 1 ? 'part' : 'parts'} saved
               </p>
             </div>
@@ -48,7 +48,7 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
                 addable.forEach(({ saved, current }) => onAddToCart(current ?? saved, 1));
                 onNavigate('cart');
               }}
-              className="bg-[#0c831f] hover:bg-[#0a6e1a] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-xs cursor-pointer"
+              className="bg-sb-brand hover:bg-sb-brand-strong text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 shadow-xs cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>Add {addable.length === wishlist.length ? 'all' : addable.length} to cart</span>
@@ -57,17 +57,17 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
         </div>
 
         {wishlist.length === 0 ? (
-          <div className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl p-10 sm:p-12 border border-[#f9bf8f]/60 text-center space-y-4 shadow-xs">
-            <div className="w-16 h-16 rounded-full bg-[#fee9d7] border border-[#f9bf8f]/60 text-[#7a6274] flex items-center justify-center mx-auto">
+          <div className="bg-sb-card rounded-2xl sm:rounded-3xl p-10 sm:p-12 border border-sb-line/60 text-center space-y-4 shadow-xs">
+            <div className="w-16 h-16 rounded-full bg-sb-canvas border border-sb-line/60 text-sb-muted flex items-center justify-center mx-auto">
               <Heart className="w-8 h-8" />
             </div>
             <h3 className="text-lg font-bold">Nothing saved yet</h3>
-            <p className="text-[#7a6274] text-xs max-w-md mx-auto">
+            <p className="text-sb-muted text-xs max-w-md mx-auto">
               Browse motors, sensors, microcontrollers and batteries in stock near you, and tap the heart on any part to save it here.
             </p>
             <button
               onClick={() => onNavigate('catalog')}
-              className="bg-[#0c831f] hover:bg-[#0a6e1a] text-white px-6 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="bg-sb-brand hover:bg-sb-brand-strong text-white px-6 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer"
             >
               Browse the catalog
             </button>
@@ -80,14 +80,14 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
               return (
                 <div
                   key={product.id}
-                  className="bg-[#fffbf7] rounded-2xl border border-[#f9bf8f]/60 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-[#0c831f] transition"
+                  className="bg-sb-card rounded-2xl border border-sb-line/60 p-4 sm:p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-sb-brand transition"
                 >
                   <div>
-                    <div className="flex items-center justify-between text-xs text-[#7a6274] mb-2">
+                    <div className="flex items-center justify-between text-xs text-sb-muted mb-2">
                       <span className="font-mono font-semibold">{product.sku}</span>
                       <button
                         onClick={() => onRemoveFromWishlist(product.id)}
-                        className="text-[#7a6274] hover:text-[#e2434b] p-1 cursor-pointer transition"
+                        className="text-sb-muted hover:text-[#e2434b] p-1 cursor-pointer transition"
                         title="Remove from saved"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -98,9 +98,9 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-16 h-16 object-contain rounded-xl border border-[#f9bf8f]/40 bg-white p-1.5 shrink-0 group-hover:scale-105 transition"
+                        className="w-16 h-16 object-contain rounded-xl border border-sb-line/40 bg-white p-1.5 shrink-0 group-hover:scale-105 transition"
                       />
-                      <h4 className="font-bold text-xs sm:text-sm line-clamp-2 group-hover:text-[#0c831f] transition">
+                      <h4 className="font-bold text-xs sm:text-sm line-clamp-2 group-hover:text-sb-brand transition">
                         {product.name}
                       </h4>
                     </div>
@@ -109,37 +109,37 @@ export const WishlistView: React.FC<WishlistViewProps> = ({
                       <div>
                         <span className="text-lg font-black">₹{product.price}</span>
                         {product.originalPrice && product.originalPrice > product.price && (
-                          <span className="text-xs text-[#7a6274] line-through ml-2">₹{product.originalPrice}</span>
+                          <span className="text-xs text-sb-muted line-through ml-2">₹{product.originalPrice}</span>
                         )}
                       </div>
                       {!current ? (
-                        <span className="text-[11px] font-semibold text-[#7a6274] bg-white px-2 py-0.5 rounded border border-[#f9bf8f]/60">
+                        <span className="text-[11px] font-semibold text-sb-muted bg-white px-2 py-0.5 rounded border border-sb-line/60">
                           Stock checked at checkout
                         </span>
                       ) : available ? (
-                        <span className="text-[11px] font-semibold text-[#0c831f] bg-[#f2fcf4] px-2 py-0.5 rounded border border-[#0c831f]/20">
+                        <span className="text-[11px] font-semibold text-sb-brand bg-sb-brand-soft px-2 py-0.5 rounded border border-sb-brand/20">
                           In stock near you
                         </span>
                       ) : (
-                        <span className="text-[11px] font-semibold text-[#e2434b] bg-[#fee9d7] px-2 py-0.5 rounded border border-[#f9bf8f]">
+                        <span className="text-[11px] font-semibold text-[#e2434b] bg-sb-canvas px-2 py-0.5 rounded border border-sb-line">
                           Not near you right now
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="border-t border-[#f9bf8f]/40 pt-3 flex items-center space-x-2">
+                  <div className="border-t border-sb-line/40 pt-3 flex items-center space-x-2">
                     <button
                       onClick={() => onAddToCart(product, 1)}
                       disabled={!available}
-                      className="flex-1 bg-[#0c831f] hover:bg-[#0a6e1a] disabled:opacity-40 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
+                      className="flex-1 bg-sb-brand hover:bg-sb-brand-strong disabled:opacity-40 disabled:cursor-not-allowed text-white py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition cursor-pointer"
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
                       <span>Add to cart</span>
                     </button>
                     <button
                       onClick={() => onSelectProduct(product)}
-                      className="bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/60 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer"
+                      className="bg-white border border-sb-line/70 hover:bg-sb-canvas/60 py-2 px-3 rounded-xl text-xs font-semibold transition cursor-pointer"
                     >
                       Details
                     </button>

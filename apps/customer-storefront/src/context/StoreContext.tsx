@@ -113,6 +113,7 @@ export function toProduct(p: CatalogOffer): Product {
     id: p.id,
     name: p.name,
     sku: p.sku,
+    categoryId: p.categoryId,
     category: p.categoryName || seed?.category || 'Electronics',
     subCategory: seed?.subCategory || '',
     price: p.price,

@@ -1,19 +1,26 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CATEGORY_SEEDS, scoreCategories } from '../catalog/categories.js';
 import { backfillProductEmbeddings } from '../catalog/search.js';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
 import catalog from './seed-catalog.json' with { type: 'json' };
 import { pool, withTransaction } from './pool.js';
 
-const CATEGORIES: Record<string, { id: string; name: string; sort: number }> = {
-  Controllers: { id: 'dev-boards', name: 'Dev Boards & MCUs', sort: 1 },
-  Sensors: { id: 'sensors', name: 'Sensors & Modules', sort: 2 },
-  Motors: { id: 'motors', name: 'Motors & Drivers', sort: 3 },
-  Batteries: { id: 'power', name: 'Batteries & Power', sort: 4 },
-  Accessories: { id: 'accessories', name: 'Tools & Accessories', sort: 5 },
-  Structural: { id: 'mechanical', name: 'Mechanical & Frames', sort: 6 },
+// The catalog file's coarse labels, used only when a title matches no category keyword.
+const FALLBACK_CATEGORY: Record<string, string> = {
+  Controllers: 'dev-boards',
+  Sensors: 'sensors',
+  Motors: 'motors',
+  Batteries: 'power',
+  Accessories: 'accessories',
+  Structural: 'mechanical',
 };
+
+function seedCategoryId(item: { name: string; description?: string | null; category: string }): string {
+  const best = scoreCategories({ name: item.name, description: item.description ?? null }, CATEGORY_SEEDS, {})[0];
+  return best && best.keywordHits > 0 ? best.categoryId : (FALLBACK_CATEGORY[item.category] ?? 'accessories');
+}
 
 const DEMO_STORES = [
   { owner: 'seed-vendor-kanpur', name: 'Kanpur Robotics Hub', address: '14/116 Mall Road', city: 'Kanpur', pincode: '208001', lat: 26.4499, lng: 80.3319 },
@@ -26,15 +33,17 @@ export async function seed() {
   if (config.isProd && process.env.FORCE_SEED !== 'true') throw new Error('Refusing to seed demo data in production');
 
   await withTransaction(async (c) => {
-    for (const cat of Object.values(CATEGORIES)) {
+    // Existing categories are left alone: admins may have renamed or reordered them.
+    for (const [i, cat] of CATEGORY_SEEDS.entries()) {
       await c.query(
-        'insert into categories (id, name, sort_order) values ($1, $2, $3) on conflict (id) do update set name = excluded.name, sort_order = excluded.sort_order',
-        [cat.id, cat.name, cat.sort],
+        `insert into categories (id, name, sort_order, description, keywords, icon) values ($1, $2, $3, $4, $5, $6)
+         on conflict (id) do nothing`,
+        [cat.id, cat.name, i + 1, cat.description, cat.keywords, cat.icon],
       );
     }
 
     for (const item of catalog) {
-      const category = CATEGORIES[item.category] ?? CATEGORIES.Accessories!;
+      const category = { id: seedCategoryId(item) };
       const badges = ['MOT-N20-12V-300E', 'MCU-ESP32-32D-MOD', 'DEV-ARD-UNO-R3', 'SBC-RPI-5-8GB', 'SEN-LIDAR-TOF-M8'].includes(item.sku)
         ? ['our_pick']
         : [];

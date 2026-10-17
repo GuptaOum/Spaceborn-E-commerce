@@ -32,7 +32,7 @@ export default function ProductClientPage({ productId }: { productId: string }) 
   const product = listed ?? (fetched?.key === fetchKey ? fetched.product : undefined);
 
   if (product === undefined) {
-    return <div className="min-h-[50vh] flex items-center justify-center text-xs text-[#7a6274]">Loading...</div>;
+    return <div className="min-h-[50vh] flex items-center justify-center text-xs text-sb-muted">Loading...</div>;
   }
 
   const handleSelectProduct = (prod: Product) => {
@@ -48,7 +48,7 @@ export default function ProductClientPage({ productId }: { productId: string }) 
   if (!product) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <p className="text-sm font-bold text-[#7a6274]">This product is not available at the store near you.</p>
+        <p className="text-sm font-bold text-sb-muted">This product is not available at the store near you.</p>
       </div>
     );
   }

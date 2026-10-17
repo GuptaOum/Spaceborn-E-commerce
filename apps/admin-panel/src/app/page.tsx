@@ -15,10 +15,11 @@ import { OrdersTab } from '@/components/OrdersTab';
 import { ProductSubmissionsTab } from '@/components/ProductSubmissionsTab';
 import { ProductsTab } from '@/components/ProductsTab';
 import { StoresTab } from '@/components/StoresTab';
+import { StudioTab } from '@/components/studio/StudioTab';
 import { TeamTab } from '@/components/TeamTab';
 import { useQueue } from '@/hooks/useQueue';
 
-export type TabId = 'stores' | 'services' | 'submissions' | 'orders' | 'fab-jobs' | 'products' | 'ai' | 'team';
+export type TabId = 'stores' | 'services' | 'submissions' | 'orders' | 'fab-jobs' | 'products' | 'studio' | 'ai' | 'team';
 
 interface NavPillar {
   title: string;
@@ -45,6 +46,7 @@ const PILLARS: NavPillar[] = [
     title: 'Platform Management',
     tabs: [
       { id: 'products', label: 'Master catalog', globalOnly: true },
+      { id: 'studio', label: 'Storefront Studio', globalOnly: true },
       { id: 'ai', label: 'AI insights', globalOnly: true },
       { id: 'team', label: 'Admin team' },
     ],
@@ -180,6 +182,7 @@ export default function AdminHome() {
         {tab === 'orders' && <OrdersTab />}
         {tab === 'fab-jobs' && <FabJobsTab />}
         {tab === 'products' && me.isGlobal && <ProductsTab />}
+        {tab === 'studio' && me.isGlobal && <StudioTab />}
         {tab === 'ai' && me.isGlobal && <AiInsightsTab />}
         {tab === 'team' && <TeamTab me={me} />}
       </main>

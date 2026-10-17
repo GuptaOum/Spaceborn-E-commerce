@@ -62,7 +62,7 @@ function inline(text: string): React.ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) return <strong key={i}>{part.slice(2, -2)}</strong>;
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
-      return <code key={i} className="rounded bg-[#34222e]/10 px-1 font-mono text-[0.85em]">{part.slice(1, -1)}</code>;
+      return <code key={i} className="rounded bg-sb-ink/10 px-1 font-mono text-[0.85em]">{part.slice(1, -1)}</code>;
     }
     return part;
   });
@@ -96,22 +96,22 @@ function ProductStrip({ products, onOpen, onAdd }: { products: Product[]; onOpen
   return (
     <div className="-mx-1 mt-2 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
       {products.map((p) => (
-        <div key={p.id} className="w-36 shrink-0 snap-start rounded-xl border border-[#34222e]/10 bg-white p-2 shadow-sm">
+        <div key={p.id} className="w-36 shrink-0 snap-start rounded-xl border border-sb-ink/10 bg-white p-2 shadow-sm">
           <button onClick={() => onOpen(p)} className="block w-full text-left" title={p.name}>
-            <img src={p.image} alt="" className="mb-1.5 h-20 w-full rounded-lg bg-[#fee9d7] object-contain" loading="lazy" />
-            <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-[#34222e]">{p.name}</span>
+            <img src={p.image} alt="" className="mb-1.5 h-20 w-full rounded-lg bg-sb-canvas object-contain" loading="lazy" />
+            <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-sb-ink">{p.name}</span>
           </button>
           <div className="mt-1 flex items-center justify-between gap-1">
-            <span className="font-mono text-xs font-black text-[#34222e]">{formatInr(p.price)}</span>
+            <span className="font-mono text-xs font-black text-sb-ink">{formatInr(p.price)}</span>
             {p.stock > 0 ? (
-              <button onClick={() => onAdd(p)} className="rounded-md border border-[#0c831f] px-2 py-0.5 text-[10px] font-black uppercase text-[#0c831f] hover:bg-[#0c831f] hover:text-white">
+              <button onClick={() => onAdd(p)} className="rounded-md border border-sb-brand px-2 py-0.5 text-[10px] font-black uppercase text-sb-brand hover:bg-sb-brand hover:text-white">
                 Add
               </button>
             ) : (
               <span className="text-[10px] font-semibold text-red-600">Out of stock</span>
             )}
           </div>
-          {p.stock > 0 && <p className="mt-0.5 text-[10px] text-[#7a6274]">⚡ {p.deliveryMins} min</p>}
+          {p.stock > 0 && <p className="mt-0.5 text-[10px] text-sb-muted">⚡ {p.deliveryMins} min</p>}
         </div>
       ))}
     </div>
@@ -325,7 +325,7 @@ export const ChatCopilot: React.FC = () => {
         <button
           onClick={() => setOpen(true)}
           aria-label="Ask the Spaceborn assistant"
-          className="fixed bottom-20 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-[#34222e] px-4 py-3 text-sm font-bold text-white shadow-2xl shadow-[#34222e]/30 transition-transform hover:scale-105 active:scale-95 md:bottom-6 md:left-6 md:right-auto"
+          className="fixed bottom-20 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-sb-ink px-4 py-3 text-sm font-bold text-white shadow-2xl shadow-sb-ink/30 transition-transform hover:scale-105 active:scale-95 md:bottom-6 md:left-6 md:right-auto"
         >
           <Sparkles className="h-4 w-4 text-[#f8cb46]" />
           <span>Ask Spaceborn</span>
@@ -336,9 +336,9 @@ export const ChatCopilot: React.FC = () => {
         <section
           role="dialog"
           aria-label="Spaceborn assistant"
-          className="fixed inset-x-0 bottom-0 z-50 flex h-[88vh] flex-col overflow-hidden rounded-t-3xl border border-[#34222e]/10 bg-[#fff8f1] shadow-2xl md:inset-x-auto md:bottom-6 md:left-6 md:h-[640px] md:max-h-[calc(100vh-3rem)] md:w-[410px] md:rounded-3xl"
+          className="fixed inset-x-0 bottom-0 z-50 flex h-[88vh] flex-col overflow-hidden rounded-t-3xl border border-sb-ink/10 bg-[#fff8f1] shadow-2xl md:inset-x-auto md:bottom-6 md:left-6 md:h-[640px] md:max-h-[calc(100vh-3rem)] md:w-[410px] md:rounded-3xl"
         >
-          <header className="flex items-center gap-3 border-b border-[#34222e]/10 bg-[#34222e] px-4 py-3 text-white">
+          <header className="flex items-center gap-3 border-b border-sb-ink/10 bg-sb-ink px-4 py-3 text-white">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
               <Bot className="h-5 w-5 text-[#f8cb46]" />
             </div>
@@ -358,21 +358,21 @@ export const ChatCopilot: React.FC = () => {
             </button>
           </header>
 
-          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-4 text-sm text-[#34222e]">
+          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-3 py-4 text-sm text-sb-ink">
             {!ready && (
               <div className="flex justify-center py-10">
-                <Loader2 className="h-5 w-5 animate-spin text-[#7a6274]" aria-label="Loading conversation" />
+                <Loader2 className="h-5 w-5 animate-spin text-sb-muted" aria-label="Loading conversation" />
               </div>
             )}
             {ready && messages.length === 0 && (
               <div className="px-1">
                 <p className="font-bold">Hi{currentUser ? ` ${currentUser.fullName.split(' ')[0]}` : ''}! What are you building?</p>
-                <p className="mt-1 text-xs text-[#7a6274]">
+                <p className="mt-1 text-xs text-sb-muted">
                   I only suggest parts that shops near {areaName} have in stock right now, and I can check your cart for missing pieces.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SUGGESTIONS.map((s) => (
-                    <button key={s} onClick={() => void send(s)} className="rounded-full border border-[#34222e]/15 bg-white px-3 py-1.5 text-xs font-semibold hover:border-[#34222e]/40">
+                    <button key={s} onClick={() => void send(s)} className="rounded-full border border-sb-ink/15 bg-white px-3 py-1.5 text-xs font-semibold hover:border-sb-ink/40">
                       {s}
                     </button>
                   ))}
@@ -383,54 +383,54 @@ export const ChatCopilot: React.FC = () => {
             {ready && messages.map((m, idx) =>
               m.role === 'user' ? (
                 <div key={m.id} className="flex justify-end">
-                  <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-[#34222e] px-3 py-2 text-white">{m.text}</p>
+                  <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-sb-ink px-3 py-2 text-white">{m.text}</p>
                 </div>
               ) : (
                 <div key={m.id} className="max-w-[95%]">
                   {m.products.length > 0 && <ProductStrip products={m.products} onOpen={openProduct} onAdd={(p) => addToCart(p, 1)} />}
                   {(m.text || (busy && idx === messages.length - 1)) && (
                     <div className="mt-1 rounded-2xl rounded-bl-md bg-white px-3 py-2 shadow-sm">
-                      {m.text ? <RichText text={m.text} /> : <Loader2 className="h-4 w-4 animate-spin text-[#7a6274]" aria-label="Thinking" />}
+                      {m.text ? <RichText text={m.text} /> : <Loader2 className="h-4 w-4 animate-spin text-sb-muted" aria-label="Thinking" />}
                     </div>
                   )}
                   {m.proposals.map((p) => (
-                    <div key={p.productId} className="mt-2 flex items-center gap-2 rounded-xl border border-[#0c831f]/30 bg-[#0c831f]/5 p-2">
+                    <div key={p.productId} className="mt-2 flex items-center gap-2 rounded-xl border border-sb-brand/30 bg-sb-brand/5 p-2">
                       <img src={p.product.image} alt="" className="h-10 w-10 rounded-lg bg-white object-contain" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-bold">{p.product.name}</p>
-                        <p className="text-[11px] text-[#7a6274]">
+                        <p className="text-[11px] text-sb-muted">
                           {p.quantity} × {formatInr(p.product.price)}
                         </p>
                       </div>
                       {p.state === 'pending' && (
                         <>
-                          <button onClick={() => dismiss(m.id, p.productId)} className="rounded-lg px-2 py-1 text-[11px] font-semibold text-[#7a6274] hover:bg-black/5">
+                          <button onClick={() => dismiss(m.id, p.productId)} className="rounded-lg px-2 py-1 text-[11px] font-semibold text-sb-muted hover:bg-black/5">
                             No
                           </button>
-                          <button onClick={() => confirm(m.id, p)} className="rounded-lg bg-[#0c831f] px-2.5 py-1 text-[11px] font-black uppercase text-white hover:bg-[#0a701a]">
+                          <button onClick={() => confirm(m.id, p)} className="rounded-lg bg-sb-brand px-2.5 py-1 text-[11px] font-black uppercase text-white hover:bg-sb-brand-strong">
                             Confirm
                           </button>
                         </>
                       )}
                       {p.state === 'added' && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0c831f]">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sb-brand">
                           <Check className="h-3.5 w-3.5" /> Added
                         </span>
                       )}
-                      {p.state === 'dismissed' && <span className="text-[11px] text-[#7a6274]">Skipped</span>}
+                      {p.state === 'dismissed' && <span className="text-[11px] text-sb-muted">Skipped</span>}
                     </div>
                   ))}
                   {m.links.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {m.links.map((path) => (
-                        <button key={path} onClick={() => go(path)} className="rounded-full bg-[#f8cb46] px-3 py-1 text-[11px] font-bold text-[#34222e]">
+                        <button key={path} onClick={() => go(path)} className="rounded-full bg-[#f8cb46] px-3 py-1 text-[11px] font-bold text-sb-ink">
                           {PAGE_LABEL[path.split('/')[1] ?? ''] ?? 'Open'} →
                         </button>
                       ))}
                     </div>
                   )}
                   {m.error && <p className="mt-1 text-xs font-semibold text-red-600">{m.error}</p>}
-                  {m.degraded && !m.error && <p className="mt-1 text-[10px] text-[#7a6274]">Showing search results while the assistant recovers.</p>}
+                  {m.degraded && !m.error && <p className="mt-1 text-[10px] text-sb-muted">Showing search results while the assistant recovers.</p>}
                 </div>
               ),
             )}
@@ -441,7 +441,7 @@ export const ChatCopilot: React.FC = () => {
               e.preventDefault();
               void send(input);
             }}
-            className="flex items-end gap-2 border-t border-[#34222e]/10 bg-white p-3"
+            className="flex items-end gap-2 border-t border-sb-ink/10 bg-white p-3"
           >
             <textarea
               ref={inputRef}
@@ -456,14 +456,14 @@ export const ChatCopilot: React.FC = () => {
               rows={1}
               placeholder={ready ? 'Ask about parts, projects or your order…' : 'Loading conversation…'}
               disabled={!ready}
-              className="max-h-28 min-h-[40px] flex-1 resize-none rounded-xl border border-[#34222e]/15 bg-[#fff8f1] px-3 py-2 text-sm outline-none focus:border-[#34222e]/40 disabled:opacity-60"
+              className="max-h-28 min-h-[40px] flex-1 resize-none rounded-xl border border-sb-ink/15 bg-[#fff8f1] px-3 py-2 text-sm outline-none focus:border-sb-ink/40 disabled:opacity-60"
             />
             {busy ? (
-              <button type="button" onClick={() => abortRef.current?.abort()} aria-label="Stop" className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7a6274] text-white">
+              <button type="button" onClick={() => abortRef.current?.abort()} aria-label="Stop" className="flex h-10 w-10 items-center justify-center rounded-xl bg-sb-muted text-white">
                 <Square className="h-4 w-4" />
               </button>
             ) : (
-              <button type="submit" disabled={!ready || !input.trim()} aria-label="Send" className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#34222e] text-white disabled:opacity-40">
+              <button type="submit" disabled={!ready || !input.trim()} aria-label="Send" className="flex h-10 w-10 items-center justify-center rounded-xl bg-sb-ink text-white disabled:opacity-40">
                 <Send className="h-4 w-4" />
               </button>
             )}

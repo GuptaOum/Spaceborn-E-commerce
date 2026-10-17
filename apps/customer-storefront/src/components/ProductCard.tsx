@@ -91,13 +91,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <article
       onClick={() => onSelect(product)}
-      className="bg-[#fffbf7] border border-[#f9bf8f]/60 hover:border-[#0c831f] hover:shadow-md rounded-2xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between group overflow-hidden cursor-pointer relative shadow-2xs"
+      className="bg-sb-card border border-sb-line/60 hover:border-sb-brand hover:shadow-md rounded-2xl p-2.5 sm:p-3 transition-all duration-200 flex flex-col justify-between group overflow-hidden cursor-pointer relative shadow-2xs"
     >
       {/* Top Header: Delivery ETA & Badges */}
       <div className="flex items-center justify-between gap-1 mb-1.5 relative z-10 min-h-[22px]">
         {/* Delivery ETA Pill */}
-        <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-bold text-[#0c831f] bg-[#f2fcf4] border border-[#0c831f]/20 px-1.5 py-0.5 rounded-md shrink-0">
-          <Zap className="w-2.5 h-2.5 fill-[#0c831f]" />
+        <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-[10px] font-bold text-sb-brand bg-sb-brand-soft border border-sb-brand/20 px-1.5 py-0.5 rounded-md shrink-0">
+          <Zap className="w-2.5 h-2.5 fill-sb-brand" />
           <span>{deliveryTime} MINS</span>
         </span>
 
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Quick View Button (Desktop Hover) */}
           <button
             onClick={handleQuickViewClick}
-            className="w-5 h-5 rounded-full bg-white text-[#34222e]/60 hover:text-[#0c831f] hover:bg-white hidden md:flex items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-2xs border border-[#f9bf8f]/40"
+            className="w-5 h-5 rounded-full bg-white text-sb-ink/60 hover:text-sb-brand hover:bg-white hidden md:flex items-center justify-center transition opacity-0 group-hover:opacity-100 cursor-pointer shadow-2xs border border-sb-line/40"
             title="Quick View"
           >
             <Eye className="w-3 h-3" />
@@ -121,7 +121,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Product Image Canvas */}
-      <div className="w-full h-32 sm:h-36 rounded-xl bg-white border border-[#f9bf8f]/30 flex items-center justify-center p-2 mb-2 overflow-hidden relative">
+      <div className="w-full h-32 sm:h-36 rounded-xl bg-white border border-sb-line/30 flex items-center justify-center p-2 mb-2 overflow-hidden relative">
         <img
           src={imgSrc}
           alt={product.name}
@@ -146,37 +146,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
 
           {/* Product Title (2-line clamped) */}
-          <h3 className="text-xs sm:text-[13px] font-bold text-[#34222e] line-clamp-2 leading-snug group-hover:text-[#0c831f] transition-colors mb-1 min-h-[32px]">
+          <h3 className="text-xs sm:text-[13px] font-bold text-sb-ink line-clamp-2 leading-snug group-hover:text-sb-brand transition-colors mb-1 min-h-[32px]">
             {product.name}
           </h3>
 
           {reviewsCount > 0 ? (
-            <div className="flex items-center gap-1 text-[10px] text-[#7a6274] mb-2">
+            <div className="flex items-center gap-1 text-[10px] text-sb-muted mb-2">
               <div className="flex items-center text-amber-400">
                 <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               </div>
-              <span className="font-bold text-[#34222e]">{ratingScore}</span>
-              <span className="text-[#7a6274]">({reviewsCount})</span>
+              <span className="font-bold text-sb-ink">{ratingScore}</span>
+              <span className="text-sb-muted">({reviewsCount})</span>
             </div>
           ) : (
-            <p className="mb-2 text-[10px] text-[#7a6274]">No reviews yet</p>
+            <p className="mb-2 text-[10px] text-sb-muted">No reviews yet</p>
           )}
         </div>
 
         {/* Pricing & Add to Cart Action */}
-        <div className="pt-2 border-t border-[#f9bf8f]/30 flex items-center justify-between gap-1.5 mt-auto">
+        <div className="pt-2 border-t border-sb-line/30 flex items-center justify-between gap-1.5 mt-auto">
           <div className="flex flex-col min-w-0">
             <div className="flex items-baseline gap-1 flex-wrap">
-              <span className="text-xs sm:text-sm font-black text-[#34222e] leading-tight">
+              <span className="text-xs sm:text-sm font-black text-sb-ink leading-tight">
                 ₹{product.price.toLocaleString('en-IN')}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
-                <span className="text-[9.5px] text-[#7a6274] line-through font-medium leading-tight">
+                <span className="text-[9.5px] text-sb-muted line-through font-medium leading-tight">
                   ₹{product.originalPrice}
                 </span>
               )}
             </div>
-            <span className="text-[8.5px] text-[#7a6274] font-medium leading-none mt-0.5">
+            <span className="text-[8.5px] text-sb-muted font-medium leading-none mt-0.5">
               (Incl. GST)
             </span>
           </div>
@@ -188,7 +188,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 <button
                   type="button"
                   onClick={handleAdd}
-                  className={`w-full h-full rounded-lg border border-[#0c831f] text-[#0c831f] bg-[#f2fcf4] hover:bg-[#0c831f] hover:text-white font-bold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-0.5 shadow-2xs cursor-pointer active:scale-95 ${
+                  className={`w-full h-full rounded-lg border border-sb-brand text-sb-brand bg-sb-brand-soft hover:bg-sb-brand hover:text-white font-bold text-[10px] sm:text-[11px] transition-all flex items-center justify-center gap-0.5 shadow-2xs cursor-pointer active:scale-95 ${
                     isPopping ? 'scale-95' : ''
                   }`}
                 >
@@ -197,7 +197,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </button>
               ) : (
                 <div
-                  className={`w-full h-full rounded-lg bg-[#0c831f] text-white flex items-center justify-between px-1.5 font-bold text-xs shadow-2xs animate-in zoom-in-95 duration-150 ${
+                  className={`w-full h-full rounded-lg bg-sb-brand text-white flex items-center justify-between px-1.5 font-bold text-xs shadow-2xs animate-in zoom-in-95 duration-150 ${
                     isPopping ? 'scale-95' : ''
                   }`}
                 >
@@ -222,7 +222,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </div>
               )
             ) : (
-              <span className="w-full h-full px-1 rounded-lg font-bold text-[8.5px] bg-[#fee9d7]/50 text-[#7a6274] border border-[#f9bf8f]/50 uppercase flex items-center justify-center">
+              <span className="w-full h-full px-1 rounded-lg font-bold text-[8.5px] bg-sb-canvas/50 text-sb-muted border border-sb-line/50 uppercase flex items-center justify-center">
                 Out of Stock
               </span>
             )}

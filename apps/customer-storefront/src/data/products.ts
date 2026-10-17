@@ -1066,51 +1066,6 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
 ];
 
-export interface CategoryDefinition {
-  id: string;
-  name: string;
-  count: number;
-  aliases: string[];
-}
-
-export const CATEGORIES: CategoryDefinition[] = [
-  { id: 'all', name: 'All Categories', count: 0, aliases: ['all', 'all categories', 'all items', 'all products'] },
-  { id: 'dev-boards', name: 'Dev Boards & MCUs', count: 0, aliases: ['dev boards & mcus', 'development boards', 'dev boards', 'mcus', 'controllers', 'microcontrollers'] },
-  { id: 'sensors', name: 'Sensors & Modules', count: 0, aliases: ['sensors & modules', 'sensors', 'modules'] },
-  { id: 'motors', name: 'Motors & Drivers', count: 0, aliases: ['motors & drivers', 'motors', 'drivers', 'motor drivers'] },
-  { id: 'power', name: 'Batteries & Power', count: 0, aliases: ['batteries & power', 'batteries & chargers', 'batteries', 'power', 'chargers'] },
-  { id: 'mechanical', name: 'Robotics & Mechanical', count: 0, aliases: ['robotics & mechanical', 'mechanical & frames', 'mechanical', 'structural', 'frames', 'robotics'] },
-  { id: 'tools', name: 'Tools & Soldering', count: 0, aliases: ['tools & soldering', 'tools & accessories', 'tools', 'soldering', 'accessories'] },
-  { id: '3d-printing', name: '3D Printing & CNC', count: 0, aliases: ['3d printing & cnc', '3d printing', 'cnc', 'print & cnc'] },
-  { id: 'components', name: 'Components & Hardware', count: 0, aliases: ['components & hardware', 'components', 'hardware'] },
-  { id: 'diy-kits', name: 'DIY Kits', count: 0, aliases: ['diy kits', 'diy', 'kits'] },
-];
-
-export function getCategoryCanonicalId(categoryName: string): string {
-  const norm = (categoryName || '').trim().toLowerCase();
-  if (!norm || norm === 'all' || norm === 'all categories' || norm === 'all items' || norm === 'all products') {
-    return 'all';
-  }
-  for (const cat of CATEGORIES) {
-    if (cat.name.toLowerCase() === norm || cat.id.toLowerCase() === norm) return cat.id;
-    if (cat.aliases.some(alias => alias === norm || norm.includes(alias) || alias.includes(norm))) {
-      return cat.id;
-    }
-  }
-  return norm;
-}
-
-export function matchCategory(productCategory: string, filterCategory: string): boolean {
-  const targetId = getCategoryCanonicalId(filterCategory);
-  if (targetId === 'all') return true;
-  const prodId = getCategoryCanonicalId(productCategory);
-  return prodId === targetId;
-}
-
-export function isCategoryActive(categoryName: string, selectedCategory: string): boolean {
-  return getCategoryCanonicalId(categoryName) === getCategoryCanonicalId(selectedCategory);
-}
-
 export const MOTOR_SUBCATEGORIES = [
   'Micro Metal N20',
   'Planetary Gear Motors',

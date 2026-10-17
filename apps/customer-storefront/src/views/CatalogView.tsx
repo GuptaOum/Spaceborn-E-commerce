@@ -3,7 +3,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useDraft } from '@spaceborn/web-core/use-draft';
 import { Product } from '../types';
 import { ProductCard } from '../components/ProductCard';
-import { CATEGORIES, matchCategory, isCategoryActive } from '../data/products';
+import { useStorefront } from '../context/StorefrontConfig';
+import { CategoryIcon } from '../components/CategoryIcon';
 import { useStore } from '../context/StoreContext';
 import { 
   SlidersHorizontal, 
@@ -15,15 +16,6 @@ import {
   ShoppingCart, 
   Star,
   LayoutGrid,
-  Zap,
-  Cpu,
-  Compass,
-  Battery,
-  Flame,
-  Layers,
-  Box,
-  ShieldCheck,
-  Wrench,
   X
 } from 'lucide-react';
 
@@ -39,24 +31,6 @@ interface CatalogViewProps {
   onClearSearch?: () => void;
 }
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  'All Categories': <LayoutGrid className="w-4 h-4" />,
-  'Dev Boards & MCUs': <Cpu className="w-4 h-4" />,
-  'Development Boards': <Cpu className="w-4 h-4" />,
-  'Sensors & Modules': <Compass className="w-4 h-4" />,
-  'Motors & Drivers': <Zap className="w-4 h-4" />,
-  'Batteries & Power': <Battery className="w-4 h-4" />,
-  'Batteries & Chargers': <Battery className="w-4 h-4" />,
-  'DIY Kits': <Flame className="w-4 h-4" />,
-  '3D Printing & CNC': <Layers className="w-4 h-4" />,
-  'Robotics & Mechanical': <Box className="w-4 h-4" />,
-  'Mechanical & Frames': <Box className="w-4 h-4" />,
-  'Components & Hardware': <ShieldCheck className="w-4 h-4" />,
-  'Components': <ShieldCheck className="w-4 h-4" />,
-  'Tools & Soldering': <Wrench className="w-4 h-4" />,
-  'Tools & Accessories': <Wrench className="w-4 h-4" />,
-};
-
 export const CatalogView: React.FC<CatalogViewProps> = ({
   products,
   onSelectProduct,
@@ -69,6 +43,12 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   onClearSearch,
 }) => {
   const { searchResults, searchStatus, catalogStatus } = useStore();
+  const { categories: shelf, isAll, resolveCategory, inCategory } = useStorefront();
+  const CATEGORIES = useMemo(() => [{ id: 'all', name: 'All Categories', icon: 'all', description: '' }, ...shelf], [shelf]);
+  const activeCategory = isAll(selectedCategory) ? null : resolveCategory(selectedCategory);
+  const showingAll = !activeCategory;
+  const categoryLabel = activeCategory?.name ?? 'All Categories';
+  const isCategoryActive = (id: string) => (id === 'all' ? showingAll : activeCategory?.id === id);
   // Server results are already ranked by relevance; the local token filter is only a fallback.
   const serverRanked = initialSearchQuery.trim().length > 1 && searchResults !== null;
 
@@ -78,7 +58,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [selectedVoltages, setSelectedVoltages] = useDraft<string[]>('catalog:voltages', []);
   const [selectedRpms, setSelectedRpms] = useDraft<string[]>('catalog:rpms', []);
   const [selectedShaft, setSelectedShaft] = useDraft<string[]>('catalog:shaft', []);
-  const [maxPrice, setMaxPrice] = useDraft('catalog:maxPrice', 10000);
+  // null means any price; the slider's top follows the dearest product so printers are not hidden by default.
+  const [maxPrice, setMaxPrice] = useDraft<number | null>('catalog:priceCap', null);
+  const priceCeiling = useMemo(
+    () => Math.max(10000, Math.ceil(products.reduce((top, p) => Math.max(top, p.price), 0) / 1000) * 1000),
+    [products],
+  );
+  const priceStep = priceCeiling > 50000 ? 500 : 50;
   const [sortBy, setSortBy] = useDraft<'featured' | 'price_asc' | 'price_desc' | 'rating'>('catalog:sort', 'featured');
   const [viewMode, setViewMode] = useDraft<'grid' | 'list'>('catalog:view', 'grid');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -100,7 +86,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   useEffect(() => {
     if (initialSearchQuery !== prevSearchRef.current) {
       prevSearchRef.current = initialSearchQuery;
-      if (initialSearchQuery.trim().length > 0 && selectedCategory !== 'All Categories') {
+      if (initialSearchQuery.trim().length > 0 && !isAll(selectedCategory)) {
         onSelectCategory('All Categories');
       }
       setSelectedSubCategory('All');
@@ -114,22 +100,22 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       if (cat.id === 'all') {
         counts[cat.name] = products.length;
       } else {
-        counts[cat.name] = products.filter(p => matchCategory(p.category, cat.name)).length;
+        counts[cat.name] = products.filter(p => inCategory(p, cat.id)).length;
       }
     });
     return counts;
-  }, [products]);
+  }, [products, CATEGORIES, inCategory]);
 
   // Contextual subcategories for the selected category
   const availableSubCategories = useMemo(() => {
     const subs = new Set<string>();
     products.forEach(p => {
-      if (selectedCategory === 'All Categories' || selectedCategory === 'all' || matchCategory(p.category, selectedCategory)) {
+      if (inCategory(p, selectedCategory)) {
         if (p.subCategory) subs.add(p.subCategory);
       }
     });
     return Array.from(subs);
-  }, [products, selectedCategory]);
+  }, [products, selectedCategory, inCategory]);
 
   // Available filter options derived from products
   const availableVoltages = ['5V', '6V', '12V', '24V'];
@@ -150,7 +136,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setSelectedVoltages([]);
     setSelectedRpms([]);
     setSelectedShaft([]);
-    setMaxPrice(10000);
+    setMaxPrice(null);
   };
 
   const hasActiveFilters = 
@@ -159,15 +145,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     selectedVoltages.length > 0 ||
     selectedRpms.length > 0 ||
     selectedShaft.length > 0 ||
-    maxPrice < 10000;
+    maxPrice !== null;
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     const source = serverRanked ? searchResults! : products;
     return source.filter(p => {
       // Category match
-      if (selectedCategory !== 'All Categories' && selectedCategory !== 'all') {
-        if (!matchCategory(p.category, selectedCategory)) return false;
+      if (!showingAll) {
+        if (!inCategory(p, selectedCategory)) return false;
       }
 
       // Subcategory match
@@ -215,7 +201,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       if (inStockOnly && p.stock <= 0) return false;
 
       // Price filter
-      if (p.price > maxPrice) return false;
+      if (maxPrice !== null && p.price > maxPrice) return false;
 
       // Voltage filter
       if (selectedVoltages.length > 0) {
@@ -263,27 +249,27 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       : `${filteredProducts.length} item${filteredProducts.length === 1 ? '' : 's'}`;
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] text-[#34222e] py-3 sm:py-6">
+    <div className="min-h-screen bg-sb-canvas text-sb-ink py-3 sm:py-6">
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center space-x-2 text-xs text-[#7a6274] mb-3 sm:mb-4 min-w-0">
+        <div className="flex items-center space-x-2 text-xs text-sb-muted mb-3 sm:mb-4 min-w-0">
           <span 
             onClick={() => onSelectCategory('All Categories')} 
             className="hover:text-[#e2434b] cursor-pointer shrink-0"
           >
             Home
           </span>
-          <ChevronRight className="w-3.5 h-3.5 text-[#7a6274] shrink-0" />
+          <ChevronRight className="w-3.5 h-3.5 text-sb-muted shrink-0" />
           {isSearching ? (
             <span className="truncate">Search</span>
           ) : (
             <>
-              <span className="hover:text-[#e2434b] cursor-pointer truncate">{selectedCategory}</span>
+              <span className="hover:text-[#e2434b] cursor-pointer truncate">{categoryLabel}</span>
               {selectedSubCategory !== 'All' && (
                 <>
-                  <ChevronRight className="w-3.5 h-3.5 text-[#7a6274] shrink-0" />
-                  <span className="font-bold text-[#34222e] truncate">{selectedSubCategory}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-sb-muted shrink-0" />
+                  <span className="font-bold text-sb-ink truncate">{selectedSubCategory}</span>
                 </>
               )}
             </>
@@ -293,11 +279,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         {/* Search mode: one compact header instead of banner + category rail + callout */}
         {isSearching && (
           <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-[#34222e] min-w-0 truncate">
-              Results for <span className="text-[#0c831f]">“{initialSearchQuery.trim()}”</span>
+            <h1 className="text-lg sm:text-xl font-bold text-sb-ink min-w-0 truncate">
+              Results for <span className="text-sb-brand">“{initialSearchQuery.trim()}”</span>
             </h1>
-            <span className="text-xs text-[#7a6274]">{resultCountLabel}</span>
-            {selectedCategory !== 'All Categories' && (
+            <span className="text-xs text-sb-muted">{resultCountLabel}</span>
+            {!showingAll && (
               <button
                 type="button"
                 onClick={() => {
@@ -305,16 +291,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   setSelectedSubCategory('All');
                 }}
                 title="Remove category filter"
-                className="inline-flex items-center gap-1 text-[11px] bg-[#fffbf7] border border-[#f9bf8f]/60 text-[#34222e] px-2 py-0.5 rounded-full font-semibold cursor-pointer hover:bg-[#fee9d7]"
+                className="inline-flex items-center gap-1 text-[11px] bg-sb-card border border-sb-line/60 text-sb-ink px-2 py-0.5 rounded-full font-semibold cursor-pointer hover:bg-sb-canvas"
               >
-                in {selectedCategory}
+                in {categoryLabel}
                 <X className="w-3 h-3" />
               </button>
             )}
             <button
               type="button"
               onClick={handleClearSearch}
-              className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-[#7a6274] hover:text-[#e2434b] cursor-pointer"
+              className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-sb-muted hover:text-[#e2434b] cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
               <span>Clear</span>
@@ -324,24 +310,24 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
         {/* Category Header Banner (browsing only) */}
         {!isSearching && (
-        <div className="bg-[#fffbf7] rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 p-3.5 sm:p-6 mb-4 sm:mb-6 shadow-xs">
+        <div className="bg-sb-card rounded-2xl sm:rounded-3xl border border-sb-line/60 p-3.5 sm:p-6 mb-4 sm:mb-6 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center space-x-2 text-xs font-bold text-[#0c831f] mb-1">
+              <div className="flex items-center space-x-2 text-xs font-bold text-sb-brand mb-1">
                 <span>⚡ Delivered by the nearest shop</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold text-[#34222e]">
-                {selectedCategory === 'All Categories' ? 'All Products' : selectedCategory}
+              <h1 className="text-xl sm:text-2xl font-bold text-sb-ink">
+                {showingAll ? 'All Products' : categoryLabel}
               </h1>
-              <p className="text-xs text-[#7a6274] mt-1 max-w-2xl leading-relaxed">
-                {selectedCategory === 'All Categories'
+              <p className="text-xs text-sb-muted mt-1 max-w-2xl leading-relaxed">
+                {showingAll
                   ? 'Microcontrollers, sensors, motors, tools and accessories in stock at shops near you.'
-                  : `${selectedCategory} in stock at shops near you.`}
+                  : activeCategory?.description || `${categoryLabel} in stock at shops near you.`}
               </p>
             </div>
 
             <div className="flex items-center space-x-3 shrink-0">
-              <span className="text-xs font-bold text-[#0c831f] bg-[#f2fcf4] px-3.5 py-1.5 rounded-xl border border-[#0c831f]/20">
+              <span className="text-xs font-bold text-sb-brand bg-sb-brand-soft px-3.5 py-1.5 rounded-xl border border-sb-brand/20">
                 {filteredProducts.length} Products Available
               </span>
             </div>
@@ -351,13 +337,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
         {/* Quick-Commerce Category Pills / Chips Rail (browsing only; the sidebar and filters cover this while searching) */}
         {!isSearching && (
-        <div className="mb-4 sm:mb-6 bg-[#fffbf7] rounded-2xl sm:rounded-3xl border border-[#f9bf8f]/60 p-3 sm:p-4 shadow-xs">
+        <div className="mb-4 sm:mb-6 bg-sb-card rounded-2xl sm:rounded-3xl border border-sb-line/60 p-3 sm:p-4 shadow-xs">
           <div className="flex items-center justify-between mb-2.5 px-1">
-            <span className="text-xs font-bold text-[#34222e] flex items-center gap-1.5 uppercase tracking-wider">
-              <LayoutGrid className="w-3.5 h-3.5 text-[#0c831f]" />
+            <span className="text-xs font-bold text-sb-ink flex items-center gap-1.5 uppercase tracking-wider">
+              <LayoutGrid className="w-3.5 h-3.5 text-sb-brand" />
               <span>Browse Categories</span>
             </span>
-            {selectedCategory !== 'All Categories' && (
+            {!showingAll && (
               <button
                 type="button"
                 onClick={() => {
@@ -374,7 +360,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
             {CATEGORIES.map((cat) => {
-              const isActive = isCategoryActive(cat.name, selectedCategory);
+              const isActive = isCategoryActive(cat.id);
               const count = categoryCounts[cat.name] ?? 0;
               return (
                 <button
@@ -390,17 +376,17 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   }}
                   className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer shrink-0 select-none ${
                     isActive
-                      ? 'bg-[#0c831f] text-white shadow-xs font-bold'
-                      : 'bg-[#fee9d7]/50 hover:bg-[#fee9d7] border border-[#f9bf8f]/60 text-[#34222e]'
+                      ? 'bg-sb-brand text-white shadow-xs font-bold'
+                      : 'bg-sb-canvas/50 hover:bg-sb-canvas border border-sb-line/60 text-sb-ink'
                   }`}
                 >
                   <span className={isActive ? 'text-white' : 'text-[#e2434b]'}>
-                    {CATEGORY_ICONS[cat.name] || <Box className="w-3.5 h-3.5" />}
+                    <CategoryIcon icon={cat.icon} className="w-3.5 h-3.5" />
                   </span>
                   <span>{cat.name}</span>
                   {count > 0 && (
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5 ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-[#fffbf7] text-[#7a6274] border border-[#f9bf8f]/40'
+                      isActive ? 'bg-white/20 text-white' : 'bg-sb-card text-sb-muted border border-sb-line/40'
                     }`}>
                       {count}
                     </span>
@@ -422,9 +408,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           <aside className="hidden lg:block lg:col-span-3 space-y-4">
             
             {/* Categories Vertical Aisles */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-4 shadow-xs text-[#34222e] space-y-2.5">
-              <div className="flex items-center justify-between pb-2 border-b border-[#f9bf8f]/40 px-1">
-                <span className="text-xs font-black uppercase tracking-wider text-[#34222e] flex items-center space-x-1.5">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-4 shadow-xs text-sb-ink space-y-2.5">
+              <div className="flex items-center justify-between pb-2 border-b border-sb-line/40 px-1">
+                <span className="text-xs font-black uppercase tracking-wider text-sb-ink flex items-center space-x-1.5">
                   <LayoutGrid className="w-3.5 h-3.5 text-[#e2434b]" />
                   <span>Categories</span>
                 </span>
@@ -436,7 +422,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               {/* Vertical Category Aisles */}
               <div className="space-y-1">
                 {CATEGORIES.map((cat) => {
-                  const isActive = isCategoryActive(cat.name, selectedCategory);
+                  const isActive = isCategoryActive(cat.id);
                   const count = categoryCounts[cat.name] || 0;
                   return (
                     <button
@@ -452,19 +438,19 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs transition-all duration-150 cursor-pointer ${
                         isActive
-                          ? 'bg-[#059669] text-white shadow-xs font-bold'
-                          : 'text-[#34222e] hover:bg-[#fee9d7]/70 font-semibold'
+                          ? 'bg-sb-brand text-white shadow-xs font-bold'
+                          : 'text-sb-ink hover:bg-sb-canvas/70 font-semibold'
                       }`}
                     >
                       <div className="flex items-center space-x-2.5 min-w-0">
                         <span className={`shrink-0 ${isActive ? 'text-white' : 'text-[#e2434b]'}`}>
-                          {CATEGORY_ICONS[cat.name] || <Box className="w-4 h-4" />}
+                          <CategoryIcon icon={cat.icon} className="w-4 h-4" />
                         </span>
                         <span className="truncate">{cat.name}</span>
                       </div>
                       <div className="flex items-center gap-1 shrink-0 ml-1">
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                          isActive ? 'bg-white/20 text-white' : 'bg-[#fee9d7] text-[#7a6274]'
+                          isActive ? 'bg-white/20 text-white' : 'bg-sb-canvas text-sb-muted'
                         }`}>
                           {count}
                         </span>
@@ -479,8 +465,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               {/* Subcategories Shelf (if selected category has subcategories) */}
               {availableSubCategories.length > 0 && (
-                <div className="pt-2.5 border-t border-[#f9bf8f]/40 space-y-1.5 px-1">
-                  <span className="text-[10px] font-bold text-[#7a6274] block uppercase tracking-wider">
+                <div className="pt-2.5 border-t border-sb-line/40 space-y-1.5 px-1">
+                  <span className="text-[10px] font-bold text-sb-muted block uppercase tracking-wider">
                     Types & Subcategories
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -488,8 +474,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       onClick={() => setSelectedSubCategory('All')}
                       className={`px-2 py-1 rounded-xl text-[11px] font-semibold transition cursor-pointer ${
                         selectedSubCategory === 'All'
-                          ? 'bg-[#0c831f] text-white shadow-xs'
-                          : 'bg-white text-[#7a6274] hover:text-[#34222e] border border-[#f9bf8f]/60'
+                          ? 'bg-sb-brand text-white shadow-xs'
+                          : 'bg-white text-sb-muted hover:text-sb-ink border border-sb-line/60'
                       }`}
                     >
                       All
@@ -500,8 +486,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         onClick={() => setSelectedSubCategory(sub)}
                         className={`px-2 py-1 rounded-xl text-[11px] font-semibold transition cursor-pointer ${
                           selectedSubCategory === sub
-                            ? 'bg-[#0c831f] text-white shadow-xs'
-                            : 'bg-white text-[#7a6274] hover:text-[#34222e] border border-[#f9bf8f]/60'
+                            ? 'bg-sb-brand text-white shadow-xs'
+                            : 'bg-white text-sb-muted hover:text-sb-ink border border-sb-line/60'
                         }`}
                       >
                         {sub}
@@ -513,10 +499,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             </div>
 
             {/* Filter Options Block */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-4 sm:p-5 shadow-xs space-y-4 text-[#34222e]">
-              <div className="flex items-center justify-between pb-2 border-b border-[#f9bf8f]/40">
-                <span className="text-xs font-black uppercase tracking-wider text-[#34222e] flex items-center space-x-1.5">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#0c831f]" />
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-4 sm:p-5 shadow-xs space-y-4 text-sb-ink">
+              <div className="flex items-center justify-between pb-2 border-b border-sb-line/40">
+                <span className="text-xs font-black uppercase tracking-wider text-sb-ink flex items-center space-x-1.5">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-sb-brand" />
                   <span>Filters</span>
                 </span>
                 {hasActiveFilters && (
@@ -532,49 +518,52 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               {/* In Stock Availability Checkbox */}
               <div>
-                <label className="flex items-center space-x-2 text-xs font-semibold text-[#34222e] cursor-pointer">
+                <label className="flex items-center space-x-2 text-xs font-semibold text-sb-ink cursor-pointer">
                   <input
                     type="checkbox"
                     checked={inStockOnly}
                     onChange={(e) => setInStockOnly(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#0c831f] focus:ring-[#0c831f] accent-[#0c831f] cursor-pointer"
+                    className="w-4 h-4 rounded text-sb-brand focus:ring-sb-brand accent-sb-brand cursor-pointer"
                   />
                   <span>In-Stock Only</span>
                 </label>
               </div>
 
               {/* Price Range Slider */}
-              <div className="space-y-2 pt-3 border-t border-[#f9bf8f]/40">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#34222e]">
+              <div className="space-y-2 pt-3 border-t border-sb-line/40">
+                <div className="flex items-center justify-between text-xs font-semibold text-sb-ink">
                   <span>Max Price:</span>
-                  <span className="font-bold text-[#34222e]">₹{maxPrice.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-sb-ink">{maxPrice === null ? 'Any' : `₹${maxPrice.toLocaleString('en-IN')}`}</span>
                 </div>
                 <input
                   type="range"
-                  min="50"
-                  max="10000"
-                  step="50"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                  className="w-full accent-[#0c831f] cursor-pointer"
+                  min={priceStep}
+                  max={priceCeiling}
+                  step={priceStep}
+                  value={maxPrice ?? priceCeiling}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value);
+                    setMaxPrice(v >= priceCeiling ? null : v);
+                  }}
+                  className="w-full accent-sb-brand cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-[#7a6274]">
-                  <span>₹50</span>
-                  <span>₹10,000</span>
+                <div className="flex justify-between text-[10px] text-sb-muted">
+                  <span>₹{priceStep}</span>
+                  <span>₹{priceCeiling.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
               {/* Operating Voltage */}
-              <div className="space-y-2 pt-3 border-t border-[#f9bf8f]/40">
-                <span className="text-xs font-bold text-[#34222e] block">Operating Voltage</span>
+              <div className="space-y-2 pt-3 border-t border-sb-line/40">
+                <span className="text-xs font-bold text-sb-ink block">Operating Voltage</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   {availableVoltages.map(v => (
-                    <label key={v} className="flex items-center space-x-1.5 text-xs text-[#7a6274] hover:text-[#34222e] cursor-pointer">
+                    <label key={v} className="flex items-center space-x-1.5 text-xs text-sb-muted hover:text-sb-ink cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedVoltages.includes(v)}
                         onChange={() => toggleFilter(selectedVoltages, setSelectedVoltages, v)}
-                        className="w-3.5 h-3.5 rounded text-[#0c831f] focus:ring-[#0c831f] accent-[#0c831f]"
+                        className="w-3.5 h-3.5 rounded text-sb-brand focus:ring-sb-brand accent-sb-brand"
                       />
                       <span>{v} DC</span>
                     </label>
@@ -590,13 +579,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           <main className="lg:col-span-9 space-y-4">
             
             {/* Controls Bar: filters (phone/tablet), sort, view. The count lives in the page header. */}
-            <div className="bg-[#fffbf7] rounded-2xl border border-[#f9bf8f]/60 p-2.5 sm:p-3.5 flex items-center justify-between gap-2 shadow-xs">
+            <div className="bg-sb-card rounded-2xl border border-sb-line/60 p-2.5 sm:p-3.5 flex items-center justify-between gap-2 shadow-xs">
               
               <div className="flex items-center gap-2 min-w-0">
                 {/* Mobile Filter Toggle */}
                 <button
                   onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-                  className="lg:hidden flex items-center space-x-1.5 text-xs font-bold text-[#34222e] bg-white px-3 py-1.5 rounded-xl border border-[#f9bf8f]/60 cursor-pointer shrink-0"
+                  className="lg:hidden flex items-center space-x-1.5 text-xs font-bold text-sb-ink bg-white px-3 py-1.5 rounded-xl border border-sb-line/60 cursor-pointer shrink-0"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-[#e2434b]" />
                   <span>Filters{hasActiveFilters ? ' •' : ''}</span>
@@ -606,11 +595,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 {/* Sort Dropdown */}
                 <div className="flex items-center space-x-1.5 text-xs">
-                  <span className="text-[#7a6274] hidden sm:inline">Sort:</span>
+                  <span className="text-sb-muted hidden sm:inline">Sort:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-white border border-[#f9bf8f]/60 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#34222e] outline-none cursor-pointer"
+                    className="bg-white border border-sb-line/60 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-sb-ink outline-none cursor-pointer"
                   >
                     <option value="featured">Featured</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -620,11 +609,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 </div>
 
                 {/* View Switcher */}
-                <div className="flex items-center border border-[#f9bf8f]/60 rounded-xl overflow-hidden bg-white">
+                <div className="flex items-center border border-sb-line/60 rounded-xl overflow-hidden bg-white">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-1.5 transition cursor-pointer ${
-                      viewMode === 'grid' ? 'bg-[#fee9d7] text-[#e2434b]' : 'text-[#7a6274] hover:text-[#34222e]'
+                      viewMode === 'grid' ? 'bg-sb-canvas text-[#e2434b]' : 'text-sb-muted hover:text-sb-ink'
                     }`}
                     title="Grid View"
                   >
@@ -633,7 +622,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   <button
                     onClick={() => setViewMode('list')}
                     className={`p-1.5 transition cursor-pointer ${
-                      viewMode === 'list' ? 'bg-[#fee9d7] text-[#e2434b]' : 'text-[#7a6274] hover:text-[#34222e]'
+                      viewMode === 'list' ? 'bg-sb-canvas text-[#e2434b]' : 'text-sb-muted hover:text-sb-ink'
                     }`}
                     title="List View"
                   >
@@ -647,9 +636,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
             {/* Mobile Filters Drawer if open */}
             {mobileFilterOpen && (
-              <div className="lg:hidden bg-[#fffbf7] p-4 rounded-2xl border border-[#f9bf8f]/60 space-y-4 shadow-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-[#f9bf8f]/40">
-                  <span className="text-xs font-bold text-[#34222e]">Filter Options</span>
+              <div className="lg:hidden bg-sb-card p-4 rounded-2xl border border-sb-line/60 space-y-4 shadow-xs">
+                <div className="flex items-center justify-between pb-2 border-b border-sb-line/40">
+                  <span className="text-xs font-bold text-sb-ink">Filter Options</span>
                   <button onClick={clearAllFilters} className="text-xs font-bold text-[#e2434b]">Clear All</button>
                 </div>
 
@@ -659,7 +648,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       key={v}
                       onClick={() => toggleFilter(selectedVoltages, setSelectedVoltages, v)}
                       className={`px-2.5 py-1 rounded-lg border text-xs ${
-                        selectedVoltages.includes(v) ? 'bg-[#0c831f] text-white border-[#0c831f]' : 'bg-white border-[#f9bf8f]/60 text-[#34222e]'
+                        selectedVoltages.includes(v) ? 'bg-sb-brand text-white border-sb-brand' : 'bg-white border-sb-line/60 text-sb-ink'
                       }`}
                     >
                       {v}
@@ -667,12 +656,12 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   ))}
                 </div>
 
-                <label className="flex items-center space-x-2 text-xs font-bold text-[#34222e]">
+                <label className="flex items-center space-x-2 text-xs font-bold text-sb-ink">
                   <input
                     type="checkbox"
                     checked={inStockOnly}
                     onChange={(e) => setInStockOnly(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#0c831f] accent-[#0c831f]"
+                    className="w-4 h-4 rounded text-sb-brand accent-sb-brand"
                   />
                   <span>In-Stock Only</span>
                 </label>
@@ -681,11 +670,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
             {/* Products Listing */}
             {filteredProducts.length === 0 ? (
-              <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-12 text-center space-y-3">
-                <div className="w-14 h-14 rounded-full bg-[#fee9d7] mx-auto flex items-center justify-center text-[#e2434b]">
+              <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-12 text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-sb-canvas mx-auto flex items-center justify-center text-[#e2434b]">
                   <Search className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">
+                <h3 className="text-sm font-bold text-sb-ink">
                   {catalogStatus === 'loading'
                     ? 'Loading products near you'
                     : catalogStatus === 'error'
@@ -694,7 +683,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         ? 'No store delivers here yet'
                         : 'No products found'}
                 </h3>
-                <p className="text-xs text-[#7a6274] max-w-sm mx-auto">
+                <p className="text-xs text-sb-muted max-w-sm mx-auto">
                   {catalogStatus === 'loading'
                     ? 'Checking stock at stores around your location…'
                     : catalogStatus === 'error'
@@ -710,20 +699,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     <button
                       type="button"
                       onClick={handleClearSearch}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0c831f] hover:bg-[#0a6e1a] text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-sb-brand hover:bg-sb-brand-strong text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-xs"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>Clear Search Query</span>
                     </button>
                   )}
-                  {selectedCategory !== 'All Categories' && (
+                  {!showingAll && (
                     <button
                       type="button"
                       onClick={() => {
                         onSelectCategory('All Categories');
                         setSelectedSubCategory('All');
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-bold rounded-xl transition cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-bold rounded-xl transition cursor-pointer"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>Show All Categories</span>
@@ -733,7 +722,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     <button
                       type="button"
                       onClick={clearAllFilters}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-bold rounded-xl transition cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-bold rounded-xl transition cursor-pointer"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>Reset Filters</span>
@@ -760,10 +749,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   <div
                     key={product.id}
                     onClick={() => onSelectProduct(product)}
-                    className="bg-[#fffbf7] rounded-2xl border border-[#f9bf8f]/60 p-3 sm:p-4 hover:border-[#0c831f] hover:shadow-sm transition-all flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 cursor-pointer text-[#34222e]"
+                    className="bg-sb-card rounded-2xl border border-sb-line/60 p-3 sm:p-4 hover:border-sb-brand hover:shadow-sm transition-all flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 cursor-pointer text-sb-ink"
                   >
                     <div className="flex items-center space-x-4 w-full sm:w-auto">
-                      <div className="w-20 h-20 rounded-xl bg-white border border-[#f9bf8f]/40 p-1.5 shrink-0 flex items-center justify-center overflow-hidden">
+                      <div className="w-20 h-20 rounded-xl bg-white border border-sb-line/40 p-1.5 shrink-0 flex items-center justify-center overflow-hidden">
                         <img
                           src={product.image}
                           alt={product.name}
@@ -771,8 +760,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         />
                       </div>
                       <div>
-                        <div className="mb-0.5 text-[10px] text-[#7a6274]">SKU: {product.sku}</div>
-                        <h3 className="text-xs sm:text-sm font-bold text-[#34222e] leading-snug">
+                        <div className="mb-0.5 text-[10px] text-sb-muted">SKU: {product.sku}</div>
+                        <h3 className="text-xs sm:text-sm font-bold text-sb-ink leading-snug">
                           {product.name}
                         </h3>
                         <div className="flex items-center space-x-2 mt-1 text-xs">
@@ -784,20 +773,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                               />
                             ))}
                           </div>
-                          <span className="text-[11px] font-bold text-[#34222e]">{product.rating}</span>
-                          <span className="text-[10px] text-[#0c831f] font-semibold bg-[#f2fcf4] px-1.5 py-0.5 rounded border border-[#0c831f]/20">
+                          <span className="text-[11px] font-bold text-sb-ink">{product.rating}</span>
+                          <span className="text-[10px] text-sb-brand font-semibold bg-sb-brand-soft px-1.5 py-0.5 rounded border border-sb-brand/20">
                             ⚡ {product.deliveryMins || 10} Mins
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#f9bf8f]/40 gap-2">
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-sb-line/40 gap-2">
                       <div className="text-left sm:text-right">
-                        <span className="text-base font-bold text-[#34222e]">
+                        <span className="text-base font-bold text-sb-ink">
                           ₹{product.price.toLocaleString('en-IN')}
                         </span>
-                        <span className="text-[10px] text-[#7a6274] block">
+                        <span className="text-[10px] text-sb-muted block">
                           Incl. 18% GST
                         </span>
                       </div>
@@ -807,7 +796,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           e.stopPropagation();
                           onAddToCart(product, 1);
                         }}
-                        className="bg-[#0c831f] hover:bg-[#0a6e1a] text-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center space-x-1.5"
+                        className="bg-sb-brand hover:bg-sb-brand-strong text-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer flex items-center space-x-1.5"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
                         <span>Add to Cart</span>

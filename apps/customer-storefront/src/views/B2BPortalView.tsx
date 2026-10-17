@@ -96,7 +96,7 @@ SEN-TF-LUNA-LIDAR, 5`
   const grandTotal = totalTaxable;
 
   return (
-    <div className="min-h-screen bg-[#fee9d7] py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-sb-canvas py-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Header */}
@@ -135,7 +135,7 @@ SEN-TF-LUNA-LIDAR, 5`
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center space-x-2">
-                <FileSpreadsheet className="w-5 h-5 text-[#0c831f]" />
+                <FileSpreadsheet className="w-5 h-5 text-sb-brand" />
                 <h3 className="font-bold text-slate-900 text-sm">Paste BOM (MPN, Qty)</h3>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">Format: SKU, Qty</span>
@@ -146,14 +146,14 @@ SEN-TF-LUNA-LIDAR, 5`
               value={bomInputText}
               onChange={e => setBomInputText(e.target.value)}
               placeholder="MOT-N20-12V-300E, 20&#10;DRV-TB6600-4A, 10"
-              className="w-full p-3 font-mono text-xs rounded-xl border border-slate-200 outline-none focus:border-[#0c831f] transition bg-slate-50/50"
+              className="w-full p-3 font-mono text-xs rounded-xl border border-slate-200 outline-none focus:border-sb-brand transition bg-slate-50/50"
             />
 
             <div className="space-y-3">
               <button 
                 onClick={handleAnalyzeBom}
                 disabled={isProcessing}
-                className="w-full bg-[#0c831f] hover:bg-[#0a6e1a] text-white py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
+                className="w-full bg-sb-brand hover:bg-sb-brand-strong text-white py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2 shadow-sm cursor-pointer"
               >
                 <Calculator className="w-4 h-4" />
                 <span>{isProcessing ? 'Matching Catalog...' : 'Analyze & Match Spaceborn Catalog'}</span>
@@ -166,7 +166,7 @@ SEN-TF-LUNA-LIDAR, 5`
                   value={appliedGstin}
                   onChange={e => setAppliedGstin(e.target.value)}
                   placeholder="29AABCS9482Q1Z7"
-                  className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 outline-none focus:border-[#0c831f]"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-200 outline-none focus:border-sb-brand"
                 />
               </div>
             </div>
@@ -191,7 +191,7 @@ SEN-TF-LUNA-LIDAR, 5`
 
                 <button 
                   onClick={handleAddAllToCart}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#0c831f] hover:bg-[#0a6e1a] rounded-lg transition flex items-center space-x-1.5 shadow-sm cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-sb-brand hover:bg-sb-brand-strong rounded-lg transition flex items-center space-x-1.5 shadow-sm cursor-pointer"
                 >
                   <ShoppingCart className="w-3.5 h-3.5" />
                   <span>Add All to Cart</span>

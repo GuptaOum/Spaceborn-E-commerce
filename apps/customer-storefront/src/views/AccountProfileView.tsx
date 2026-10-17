@@ -135,51 +135,51 @@ export function AccountProfileView({
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-6">
       
       {/* Breadcrumbs */}
-      <div className="flex items-center space-x-2 text-xs text-[#7a6274]">
-        <button onClick={() => onNavigate('home')} className="hover:text-[#34222e] cursor-pointer transition-colors">
+      <div className="flex items-center space-x-2 text-xs text-sb-muted">
+        <button onClick={() => onNavigate('home')} className="hover:text-sb-ink cursor-pointer transition-colors">
           Home
         </button>
         <span>/</span>
-        <span className="font-semibold text-[#34222e]">Customer Dashboard</span>
+        <span className="font-semibold text-sb-ink">Customer Dashboard</span>
       </div>
 
       {/* Success Notification Banner */}
       {savedSuccess && (
-        <div className="p-3.5 bg-[#f2fcf4] border border-[#0c831f]/30 rounded-2xl text-[#0c831f] text-xs font-semibold flex items-center space-x-2.5 animate-in fade-in duration-200">
-          <CheckCircle2 className="w-4 h-4 text-[#0c831f] shrink-0" />
+        <div className="p-3.5 bg-sb-brand-soft border border-sb-brand/30 rounded-2xl text-sb-brand text-xs font-semibold flex items-center space-x-2.5 animate-in fade-in duration-200">
+          <CheckCircle2 className="w-4 h-4 text-sb-brand shrink-0" />
           <span>{savedSuccess}</span>
         </div>
       )}
 
       {/* User Welcome & Profile Header */}
-      <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 sm:p-6 shadow-xs">
+      <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 sm:p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#34222e] text-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center font-black text-lg shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-sb-ink text-sb-canvas border border-sb-line/60 flex items-center justify-center font-black text-lg shadow-sm">
               {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <h2 className="text-lg font-bold text-[#34222e]">{user.fullName}</h2>
+                <h2 className="text-lg font-bold text-sb-ink">{user.fullName}</h2>
                 {user.accountType === 'business' ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/30">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sb-brand-soft text-sb-brand border border-sb-brand/30">
                     <Building2 className="w-3 h-3 mr-1" />
                     B2B Enterprise
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#fee9d7] text-[#34222e] border border-[#f9bf8f]/60">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sb-canvas text-sb-ink border border-sb-line/60">
                     <Sparkles className="w-3 h-3 mr-1 text-[#ca8a04]" />
                     Maker Account
                   </span>
                 )}
                 {user.gstDetails?.verified && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/30">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sb-brand-soft text-sb-brand border border-sb-brand/30">
                     <ShieldCheck className="w-3 h-3 mr-1" />
                     GST Verified
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#7a6274] mt-0.5">
+              <p className="text-xs text-sb-muted mt-0.5">
                 {user.email} • {user.phone}
               </p>
             </div>
@@ -191,9 +191,9 @@ export function AccountProfileView({
                 setActiveTab('profile');
                 setIsEditing(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#f9bf8f]/60 bg-white hover:bg-[#fee9d7]/40 text-[#34222e] text-xs font-semibold cursor-pointer transition shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sb-line/60 bg-white hover:bg-sb-canvas/40 text-sb-ink text-xs font-semibold cursor-pointer transition shadow-xs"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#7a6274]" />
+              <Edit3 className="w-3.5 h-3.5 text-sb-muted" />
               <span>Edit Profile</span>
             </button>
             <button
@@ -213,8 +213,8 @@ export function AccountProfileView({
           onClick={() => setActiveTab('overview')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'overview'
-              ? 'bg-[#34222e] text-[#fee9d7] shadow-sm'
-              : 'bg-[#fffbf7] text-[#34222e] border border-[#f9bf8f]/60 hover:bg-[#fee9d7]/50'
+              ? 'bg-sb-ink text-sb-canvas shadow-sm'
+              : 'bg-sb-card text-sb-ink border border-sb-line/60 hover:bg-sb-canvas/50'
           }`}
         >
           <LayoutDashboard className="w-3.5 h-3.5" />
@@ -225,8 +225,8 @@ export function AccountProfileView({
           onClick={() => setActiveTab('profile')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'profile'
-              ? 'bg-[#34222e] text-[#fee9d7] shadow-sm'
-              : 'bg-[#fffbf7] text-[#34222e] border border-[#f9bf8f]/60 hover:bg-[#fee9d7]/50'
+              ? 'bg-sb-ink text-sb-canvas shadow-sm'
+              : 'bg-sb-card text-sb-ink border border-sb-line/60 hover:bg-sb-canvas/50'
           }`}
         >
           <User className="w-3.5 h-3.5" />
@@ -237,8 +237,8 @@ export function AccountProfileView({
           onClick={() => setActiveTab('addresses')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'addresses'
-              ? 'bg-[#34222e] text-[#fee9d7] shadow-sm'
-              : 'bg-[#fffbf7] text-[#34222e] border border-[#f9bf8f]/60 hover:bg-[#fee9d7]/50'
+              ? 'bg-sb-ink text-sb-canvas shadow-sm'
+              : 'bg-sb-card text-sb-ink border border-sb-line/60 hover:bg-sb-canvas/50'
           }`}
         >
           <MapPin className="w-3.5 h-3.5" />
@@ -249,8 +249,8 @@ export function AccountProfileView({
           onClick={() => setActiveTab('gst')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition cursor-pointer shrink-0 ${
             activeTab === 'gst'
-              ? 'bg-[#34222e] text-[#fee9d7] shadow-sm'
-              : 'bg-[#fffbf7] text-[#34222e] border border-[#f9bf8f]/60 hover:bg-[#fee9d7]/50'
+              ? 'bg-sb-ink text-sb-canvas shadow-sm'
+              : 'bg-sb-card text-sb-ink border border-sb-line/60 hover:bg-sb-canvas/50'
           }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
@@ -266,19 +266,19 @@ export function AccountProfileView({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             
             {/* Orders Card */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 shadow-xs flex flex-col justify-between hover:border-[#f9bf8f] transition-all">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 shadow-xs flex flex-col justify-between hover:border-sb-line transition-all">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center text-[#0c831f] mb-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-sb-canvas border border-sb-line/60 flex items-center justify-center text-sb-brand mb-3.5">
                   <Package className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">My Orders & Live Tracking</h3>
-                <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-sb-ink">My Orders & Live Tracking</h3>
+                <p className="text-xs text-sb-muted mt-1 leading-relaxed">
                   Track ongoing shipments, view delivery OTPs, or re-order components with 1-click.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate('orders')}
-                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white text-xs font-bold cursor-pointer transition shadow-xs"
+                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-sb-brand hover:bg-sb-brand-strong text-white text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <span>View My Orders</span>
                 <ArrowRight className="w-4 h-4" />
@@ -286,13 +286,13 @@ export function AccountProfileView({
             </div>
 
             {/* Delivery Addresses Card */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 shadow-xs flex flex-col justify-between hover:border-[#f9bf8f] transition-all">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 shadow-xs flex flex-col justify-between hover:border-sb-line transition-all">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center text-[#e2434b] mb-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-sb-canvas border border-sb-line/60 flex items-center justify-center text-[#e2434b] mb-3.5">
                   <MapPin className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">Delivery Addresses</h3>
-                <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-sb-ink">Delivery Addresses</h3>
+                <p className="text-xs text-sb-muted mt-1 leading-relaxed">
                   {defaultAddress 
                     ? `Default: ${defaultAddress.addressLine1}, ${defaultAddress.city} (${defaultAddress.pincode})`
                     : 'Manage home, lab, and office drop points for superfast checkout.'}
@@ -300,7 +300,7 @@ export function AccountProfileView({
               </div>
               <button
                 onClick={() => setActiveTab('addresses')}
-                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] text-xs font-bold cursor-pointer transition shadow-xs"
+                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-sb-ink hover:bg-[#1a0f16] text-sb-canvas text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <span>Manage Addresses ({user.addresses.length})</span>
                 <ChevronRight className="w-4 h-4" />
@@ -308,13 +308,13 @@ export function AccountProfileView({
             </div>
 
             {/* GST & Business Billing Card */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 shadow-xs flex flex-col justify-between hover:border-[#f9bf8f] transition-all">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 shadow-xs flex flex-col justify-between hover:border-sb-line transition-all">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center text-[#ca8a04] mb-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-sb-canvas border border-sb-line/60 flex items-center justify-center text-[#ca8a04] mb-3.5">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">GST & Tax Invoicing</h3>
-                <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-sb-ink">GST & Tax Invoicing</h3>
+                <p className="text-xs text-sb-muted mt-1 leading-relaxed">
                   {user.gstDetails?.verified 
                     ? `Active ITC: ${user.gstDetails.gstin} (${user.gstDetails.legalName})`
                     : 'Claim up to 18% Input Tax Credit on component and lab purchases.'}
@@ -322,7 +322,7 @@ export function AccountProfileView({
               </div>
               <button
                 onClick={() => setActiveTab('gst')}
-                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-bold cursor-pointer transition shadow-xs"
+                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <span>{user.gstDetails?.verified ? 'View GST Profile' : 'Configure GST Details'}</span>
                 <ChevronRight className="w-4 h-4" />
@@ -330,19 +330,19 @@ export function AccountProfileView({
             </div>
 
             {/* 3D Printing & CNC Rapid Prototyping Card */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 shadow-xs flex flex-col justify-between hover:border-[#f9bf8f] transition-all">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 shadow-xs flex flex-col justify-between hover:border-sb-line transition-all">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center text-[#34222e] mb-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-sb-canvas border border-sb-line/60 flex items-center justify-center text-sb-ink mb-3.5">
                   <Wrench className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">3D Printing & CNC Lab</h3>
-                <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-sb-ink">3D Printing & CNC Lab</h3>
+                <p className="text-xs text-sb-muted mt-1 leading-relaxed">
                   Upload 3D STL/STEP files for instant auto-slicing quotes. SLA resin, nylon FDM, and CNC aluminum milling.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate('fabrication')}
-                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-bold cursor-pointer transition shadow-xs"
+                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <span>Get Instant Quote</span>
                 <ArrowRight className="w-4 h-4" />
@@ -350,19 +350,19 @@ export function AccountProfileView({
             </div>
 
             {/* Start Shopping Catalog Card */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 shadow-xs flex flex-col justify-between hover:border-[#f9bf8f] transition-all">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 shadow-xs flex flex-col justify-between hover:border-sb-line transition-all">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center text-[#0c831f] mb-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-sb-canvas border border-sb-line/60 flex items-center justify-center text-sb-brand mb-3.5">
                   <ShoppingBag className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">Electronics Catalog</h3>
-                <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-sb-ink">Electronics Catalog</h3>
+                <p className="text-xs text-sb-muted mt-1 leading-relaxed">
                   Browse microcontrollers, sensors, motors, batteries, and robotics kits in stock at shops near you.
                 </p>
               </div>
               <button
                 onClick={() => onNavigate('catalog')}
-                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-bold cursor-pointer transition shadow-xs"
+                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <span>Browse Store Catalog</span>
                 <ArrowRight className="w-4 h-4" />
@@ -370,22 +370,22 @@ export function AccountProfileView({
             </div>
 
             {/* Direct Support Card */}
-            <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-5 shadow-xs flex flex-col justify-between hover:border-[#f9bf8f] transition-all">
+            <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-5 shadow-xs flex flex-col justify-between hover:border-sb-line transition-all">
               <div>
-                <div className="w-10 h-10 rounded-2xl bg-[#fee9d7] border border-[#f9bf8f]/60 flex items-center justify-center text-[#e2434b] mb-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-sb-canvas border border-sb-line/60 flex items-center justify-center text-[#e2434b] mb-3.5">
                   <PhoneCall className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-bold text-[#34222e]">Customer Support</h3>
-                <p className="text-xs text-[#7a6274] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-sb-ink">Customer Support</h3>
+                <p className="text-xs text-sb-muted mt-1 leading-relaxed">
                   Need help with component selection or order updates? Call toll-free or message our engineer team.
                 </p>
-                <div className="mt-2 text-xs font-mono font-bold text-[#34222e]">
+                <div className="mt-2 text-xs font-mono font-bold text-sb-ink">
                   📞 1800 266 0199
                 </div>
               </div>
               <button
                 onClick={() => onNavigate('contact')}
-                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-bold cursor-pointer transition shadow-xs"
+                className="mt-4 inline-flex items-center justify-between w-full px-3.5 py-2 rounded-xl bg-white border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <span>Contact Support</span>
                 <ChevronRight className="w-4 h-4" />
@@ -399,26 +399,26 @@ export function AccountProfileView({
 
       {/* Tab 2: Profile & Account Details */}
       {activeTab === 'profile' && (
-        <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-6 shadow-xs animate-in fade-in duration-150">
-          <div className="flex items-center justify-between pb-4 border-b border-[#f9bf8f]/40 mb-5">
+        <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-6 shadow-xs animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-4 border-b border-sb-line/40 mb-5">
             <div>
-              <h3 className="text-base font-bold text-[#34222e]">Personal & Account Details</h3>
-              <p className="text-xs text-[#7a6274] mt-0.5">Manage your personal credentials, contact info, and role.</p>
+              <h3 className="text-base font-bold text-sb-ink">Personal & Account Details</h3>
+              <p className="text-xs text-sb-muted mt-0.5">Manage your personal credentials, contact info, and role.</p>
             </div>
             {!isEditing ? (
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#f9bf8f]/70 hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-semibold cursor-pointer transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-sb-line/70 hover:bg-sb-canvas/50 text-sb-ink text-xs font-semibold cursor-pointer transition shadow-xs"
               >
-                <Edit3 className="w-3.5 h-3.5 text-[#7a6274]" />
+                <Edit3 className="w-3.5 h-3.5 text-sb-muted" />
                 <span>Edit Details</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="text-xs text-[#7a6274] hover:text-[#34222e] font-semibold cursor-pointer"
+                className="text-xs text-sb-muted hover:text-sb-ink font-semibold cursor-pointer"
               >
                 Cancel
               </button>
@@ -427,39 +427,39 @@ export function AccountProfileView({
 
           {!isEditing ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/40">
-                <span className="text-[11px] text-[#7a6274] block mb-1">Full Legal Name</span>
-                <span className="font-bold text-[#34222e] text-sm">{user.fullName}</span>
+              <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/40">
+                <span className="text-[11px] text-sb-muted block mb-1">Full Legal Name</span>
+                <span className="font-bold text-sb-ink text-sm">{user.fullName}</span>
               </div>
 
-              <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/40">
-                <span className="text-[11px] text-[#7a6274] block mb-1">Primary Email Address</span>
-                <span className="font-mono font-semibold text-[#34222e]">{user.email}</span>
+              <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/40">
+                <span className="text-[11px] text-sb-muted block mb-1">Primary Email Address</span>
+                <span className="font-mono font-semibold text-sb-ink">{user.email}</span>
               </div>
 
-              <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/40">
-                <span className="text-[11px] text-[#7a6274] block mb-1">Mobile Phone Number</span>
-                <span className="font-mono font-semibold text-[#34222e]">{user.phone}</span>
+              <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/40">
+                <span className="text-[11px] text-sb-muted block mb-1">Mobile Phone Number</span>
+                <span className="font-mono font-semibold text-sb-ink">{user.phone}</span>
               </div>
 
-              <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/40">
-                <span className="text-[11px] text-[#7a6274] block mb-1">Account Category</span>
-                <span className="font-bold text-[#34222e] capitalize">
+              <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/40">
+                <span className="text-[11px] text-sb-muted block mb-1">Account Category</span>
+                <span className="font-bold text-sb-ink capitalize">
                   {user.accountType === 'business' ? 'B2B Enterprise / Institutional Lab' : 'Maker / Individual Pro'}
                 </span>
               </div>
 
               {user.companyName && (
-                <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/40 sm:col-span-2">
-                  <span className="text-[11px] text-[#7a6274] block mb-1">Company / Lab / Institute</span>
-                  <span className="font-bold text-[#34222e] text-sm">{user.companyName}</span>
+                <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/40 sm:col-span-2">
+                  <span className="text-[11px] text-sb-muted block mb-1">Company / Lab / Institute</span>
+                  <span className="font-bold text-sb-ink text-sm">{user.companyName}</span>
                 </div>
               )}
 
               {user.designation && (
-                <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/40 sm:col-span-2">
-                  <span className="text-[11px] text-[#7a6274] block mb-1">Role / Designation</span>
-                  <span className="font-semibold text-[#34222e]">{user.designation}</span>
+                <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/40 sm:col-span-2">
+                  <span className="text-[11px] text-sb-muted block mb-1">Role / Designation</span>
+                  <span className="font-semibold text-sb-ink">{user.designation}</span>
                 </div>
               )}
             </div>
@@ -467,46 +467,46 @@ export function AccountProfileView({
             <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1.5">Full Name</label>
+                  <label className="block text-sb-ink font-bold mb-1.5">Full Name</label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl focus:border-[#0c831f] outline-none text-[#34222e] font-medium"
+                    className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl focus:border-sb-brand outline-none text-sb-ink font-medium"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1.5">Mobile Phone Number</label>
+                  <label className="block text-sb-ink font-bold mb-1.5">Mobile Phone Number</label>
                   <input
                     type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl focus:border-[#0c831f] outline-none text-[#34222e] font-mono"
+                    className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl focus:border-sb-brand outline-none text-sb-ink font-mono"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1.5">Company / Lab Name (Optional)</label>
+                  <label className="block text-sb-ink font-bold mb-1.5">Company / Lab Name (Optional)</label>
                   <input
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="e.g. Apex Robotics Lab"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl focus:border-[#0c831f] outline-none text-[#34222e]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl focus:border-sb-brand outline-none text-sb-ink"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1.5">Role / Designation (Optional)</label>
+                  <label className="block text-sb-ink font-bold mb-1.5">Role / Designation (Optional)</label>
                   <input
                     type="text"
                     value={designation}
                     onChange={(e) => setDesignation(e.target.value)}
                     placeholder="e.g. Hardware Engineer"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl focus:border-[#0c831f] outline-none text-[#34222e]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl focus:border-sb-brand outline-none text-sb-ink"
                   />
                 </div>
               </div>
@@ -515,13 +515,13 @@ export function AccountProfileView({
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-[#f9bf8f]/70 rounded-xl text-[#7a6274] hover:text-[#34222e] font-semibold cursor-pointer"
+                  className="px-4 py-2 border border-sb-line/70 rounded-xl text-sb-muted hover:text-sb-ink font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#0c831f] hover:bg-[#0a6e1a] text-white rounded-xl font-bold cursor-pointer transition shadow-xs"
+                  className="px-5 py-2 bg-sb-brand hover:bg-sb-brand-strong text-white rounded-xl font-bold cursor-pointer transition shadow-xs"
                 >
                   Save Profile
                 </button>
@@ -533,17 +533,17 @@ export function AccountProfileView({
 
       {/* Tab 3: Saved Delivery Addresses */}
       {activeTab === 'addresses' && (
-        <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-6 shadow-xs animate-in fade-in duration-150">
-          <div className="flex items-center justify-between pb-4 border-b border-[#f9bf8f]/40 mb-5">
+        <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-6 shadow-xs animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-4 border-b border-sb-line/40 mb-5">
             <div>
-              <h3 className="text-base font-bold text-[#34222e]">Saved Delivery Addresses</h3>
-              <p className="text-xs text-[#7a6274] mt-0.5">Pre-saved addresses for fast 1-click checkout and delivery.</p>
+              <h3 className="text-base font-bold text-sb-ink">Saved Delivery Addresses</h3>
+              <p className="text-xs text-sb-muted mt-0.5">Pre-saved addresses for fast 1-click checkout and delivery.</p>
             </div>
             {!isAddingAddress && (
               <button
                 type="button"
                 onClick={() => setIsAddingAddress(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0c831f] hover:bg-[#0a6e1a] text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-sb-brand hover:bg-sb-brand-strong text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add New Address</span>
@@ -553,39 +553,39 @@ export function AccountProfileView({
 
           {/* Add Address Form */}
           {isAddingAddress && (
-            <form onSubmit={handleAddAddress} className="mb-6 p-5 bg-[#fee9d7]/30 border border-[#f9bf8f]/60 rounded-2xl space-y-3.5 text-xs animate-in fade-in duration-150">
-              <h4 className="font-bold text-[#34222e] text-sm">Add New Address</h4>
+            <form onSubmit={handleAddAddress} className="mb-6 p-5 bg-sb-canvas/30 border border-sb-line/60 rounded-2xl space-y-3.5 text-xs animate-in fade-in duration-150">
+              <h4 className="font-bold text-sb-ink text-sm">Add New Address</h4>
               
               <div>
-                <label className="block text-[#34222e] font-bold mb-1">Street Address / House / Plot / Lab</label>
+                <label className="block text-sb-ink font-bold mb-1">Street Address / House / Plot / Lab</label>
                 <input
                   type="text"
                   value={newAddrLine1}
                   onChange={(e) => setNewAddrLine1(e.target.value)}
                   placeholder="e.g. Lab 3, Department of Robotics, IIT Kanpur Campus"
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl outline-none focus:border-[#0c831f] text-[#34222e]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl outline-none focus:border-sb-brand text-sb-ink"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1">City</label>
+                  <label className="block text-sb-ink font-bold mb-1">City</label>
                   <input
                     type="text"
                     value={newAddrCity}
                     onChange={(e) => setNewAddrCity(e.target.value)}
                     placeholder="Kanpur"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl outline-none focus:border-[#0c831f] text-[#34222e]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl outline-none focus:border-sb-brand text-sb-ink"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1">State</label>
+                  <label className="block text-sb-ink font-bold mb-1">State</label>
                   <select
                     value={newAddrState}
                     onChange={(e) => setNewAddrState(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#f9bf8f]/70 rounded-xl outline-none focus:border-[#0c831f] text-[#34222e]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-sb-line/70 rounded-xl outline-none focus:border-sb-brand text-sb-ink"
                   >
                     <option value="Uttar Pradesh">Uttar Pradesh</option>
                     <option value="Karnataka">Karnataka</option>
@@ -598,28 +598,28 @@ export function AccountProfileView({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[#34222e] font-bold mb-1">PIN Code</label>
+                  <label className="block text-sb-ink font-bold mb-1">PIN Code</label>
                   <input
                     type="text"
                     maxLength={6}
                     value={newAddrPincode}
                     onChange={(e) => setNewAddrPincode(e.target.value)}
                     placeholder="208016"
-                    className="w-full px-3.5 py-2.5 font-mono bg-white border border-[#f9bf8f]/70 rounded-xl outline-none focus:border-[#0c831f] text-[#34222e]"
+                    className="w-full px-3.5 py-2.5 font-mono bg-white border border-sb-line/70 rounded-xl outline-none focus:border-sb-brand text-sb-ink"
                     required
                   />
                 </div>
               </div>
 
               <div className="flex items-center space-x-4 pt-1">
-                <label className="text-[#34222e] font-bold">Address Type:</label>
+                <label className="text-sb-ink font-bold">Address Type:</label>
                 <label className="inline-flex items-center space-x-1.5 cursor-pointer">
                   <input
                     type="radio"
                     name="addressType"
                     checked={newAddrType === 'business'}
                     onChange={() => setNewAddrType('business')}
-                    className="accent-[#0c831f]"
+                    className="accent-sb-brand"
                   />
                   <span>Business / Lab</span>
                 </label>
@@ -629,7 +629,7 @@ export function AccountProfileView({
                     name="addressType"
                     checked={newAddrType === 'residential'}
                     onChange={() => setNewAddrType('residential')}
-                    className="accent-[#0c831f]"
+                    className="accent-sb-brand"
                   />
                   <span>Home / Residential</span>
                 </label>
@@ -639,13 +639,13 @@ export function AccountProfileView({
                 <button
                   type="button"
                   onClick={() => setIsAddingAddress(false)}
-                  className="px-4 py-2 border border-[#f9bf8f]/70 rounded-xl text-[#7a6274] hover:text-[#34222e] font-semibold cursor-pointer"
+                  className="px-4 py-2 border border-sb-line/70 rounded-xl text-sb-muted hover:text-sb-ink font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#0c831f] hover:bg-[#0a6e1a] text-white rounded-xl font-bold cursor-pointer transition shadow-xs"
+                  className="px-5 py-2 bg-sb-brand hover:bg-sb-brand-strong text-white rounded-xl font-bold cursor-pointer transition shadow-xs"
                 >
                   Save Address
                 </button>
@@ -655,10 +655,10 @@ export function AccountProfileView({
 
           {/* List of Saved Addresses */}
           {user.addresses.length === 0 ? (
-            <div className="p-8 text-center border border-dashed border-[#f9bf8f]/60 rounded-2xl bg-[#fee9d7]/20">
-              <MapPin className="w-8 h-8 text-[#7a6274] mx-auto mb-2 opacity-60" />
-              <p className="text-xs font-semibold text-[#34222e]">No addresses saved yet.</p>
-              <p className="text-[11px] text-[#7a6274] mt-0.5">Add your lab, office, or home location for 1-click ordering.</p>
+            <div className="p-8 text-center border border-dashed border-sb-line/60 rounded-2xl bg-sb-canvas/20">
+              <MapPin className="w-8 h-8 text-sb-muted mx-auto mb-2 opacity-60" />
+              <p className="text-xs font-semibold text-sb-ink">No addresses saved yet.</p>
+              <p className="text-[11px] text-sb-muted mt-0.5">Add your lab, office, or home location for 1-click ordering.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -667,49 +667,49 @@ export function AccountProfileView({
                   key={addr.id}
                   className={`p-4 rounded-2xl border transition relative flex flex-col justify-between ${
                     addr.isDefault
-                      ? 'border-[#0c831f] bg-[#f2fcf4]/40 ring-1 ring-[#0c831f]/20 shadow-xs'
-                      : 'border-[#f9bf8f]/60 bg-white hover:border-[#f9bf8f]'
+                      ? 'border-sb-brand bg-sb-brand-soft/40 ring-1 ring-sb-brand/20 shadow-xs'
+                      : 'border-sb-line/60 bg-white hover:border-sb-line'
                   }`}
                 >
                   <div>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <span className="font-bold text-xs text-[#34222e]">{addr.fullName}</span>
-                        <span className="text-[10px] bg-[#fee9d7] text-[#34222e] px-2 py-0.5 rounded-full font-bold">
+                        <span className="font-bold text-xs text-sb-ink">{addr.fullName}</span>
+                        <span className="text-[10px] bg-sb-canvas text-sb-ink px-2 py-0.5 rounded-full font-bold">
                           {addr.type === 'business' ? '🏢 Lab / Business' : '🏠 Home'}
                         </span>
                       </div>
                       {addr.isDefault && (
-                        <span className="text-[10px] font-bold text-[#0c831f] bg-[#f2fcf4] border border-[#0c831f]/30 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-sb-brand bg-sb-brand-soft border border-sb-brand/30 px-2 py-0.5 rounded-full">
                           Default
                         </span>
                       )}
                     </div>
 
                     {addr.companyName && (
-                      <p className="text-[11px] font-semibold text-[#7a6274]">{addr.companyName}</p>
+                      <p className="text-[11px] font-semibold text-sb-muted">{addr.companyName}</p>
                     )}
-                    <p className="text-xs text-[#34222e] mt-1 leading-relaxed">
+                    <p className="text-xs text-sb-ink mt-1 leading-relaxed">
                       {addr.addressLine1}
                       {addr.addressLine2 && `, ${addr.addressLine2}`}
                     </p>
-                    <p className="text-xs text-[#7a6274] font-medium mt-0.5">
+                    <p className="text-xs text-sb-muted font-medium mt-0.5">
                       {addr.city}, {addr.state} - {addr.pincode}
                     </p>
-                    <p className="text-[11px] text-[#7a6274] font-mono mt-1">Phone: {addr.phone}</p>
+                    <p className="text-[11px] text-sb-muted font-mono mt-1">Phone: {addr.phone}</p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#f9bf8f]/40 flex items-center justify-between text-xs">
+                  <div className="mt-4 pt-3 border-t border-sb-line/40 flex items-center justify-between text-xs">
                     {!addr.isDefault ? (
                       <button
                         type="button"
                         onClick={() => handleSetDefaultAddress(addr.id)}
-                        className="text-[#0c831f] hover:underline font-bold cursor-pointer"
+                        className="text-sb-brand hover:underline font-bold cursor-pointer"
                       >
                         Set as Default
                       </button>
                     ) : (
-                      <span className="text-[11px] text-[#0c831f] font-semibold flex items-center gap-1">
+                      <span className="text-[11px] text-sb-brand font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Active Default
                       </span>
                     )}
@@ -732,17 +732,17 @@ export function AccountProfileView({
 
       {/* Tab 4: GST & Business Invoicing */}
       {activeTab === 'gst' && (
-        <div className="bg-[#fffbf7] rounded-3xl border border-[#f9bf8f]/60 p-6 shadow-xs animate-in fade-in duration-150">
-          <div className="flex items-center justify-between pb-4 border-b border-[#f9bf8f]/40 mb-5">
+        <div className="bg-sb-card rounded-3xl border border-sb-line/60 p-6 shadow-xs animate-in fade-in duration-150">
+          <div className="flex items-center justify-between pb-4 border-b border-sb-line/40 mb-5">
             <div>
-              <h3 className="text-base font-bold text-[#34222e]">Goods & Services Tax (GST) Invoicing</h3>
-              <p className="text-xs text-[#7a6274] mt-0.5">
+              <h3 className="text-base font-bold text-sb-ink">Goods & Services Tax (GST) Invoicing</h3>
+              <p className="text-xs text-sb-muted mt-0.5">
                 Compliant e-invoices with Government IRN hash for 18% Input Tax Credit (ITC).
               </p>
             </div>
             {user.gstDetails?.verified && (
-              <div className="flex items-center space-x-1.5 px-3 py-1 bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/30 rounded-xl text-xs font-bold">
-                <ShieldCheck className="w-4 h-4 text-[#0c831f]" />
+              <div className="flex items-center space-x-1.5 px-3 py-1 bg-sb-brand-soft text-sb-brand border border-sb-brand/30 rounded-xl text-xs font-bold">
+                <ShieldCheck className="w-4 h-4 text-sb-brand" />
                 <span>GSTIN on this profile</span>
               </div>
             )}
@@ -750,47 +750,47 @@ export function AccountProfileView({
 
           {user.gstDetails?.gstin ? (
             <div className="space-y-4">
-              <div className="p-4 bg-[#fee9d7]/30 rounded-2xl border border-[#f9bf8f]/60 space-y-3 text-xs">
+              <div className="p-4 bg-sb-canvas/30 rounded-2xl border border-sb-line/60 space-y-3 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <span className="text-[11px] text-[#7a6274] block mb-0.5">GSTIN Number</span>
-                    <span className="text-sm font-mono font-bold text-[#34222e]">{user.gstDetails.gstin}</span>
+                    <span className="text-[11px] text-sb-muted block mb-0.5">GSTIN Number</span>
+                    <span className="text-sm font-mono font-bold text-sb-ink">{user.gstDetails.gstin}</span>
                   </div>
                   <div>
-                    <span className="text-[11px] text-[#7a6274] block mb-0.5">Permanent Account Number (PAN)</span>
-                    <span className="text-sm font-mono font-bold text-[#34222e]">
+                    <span className="text-[11px] text-sb-muted block mb-0.5">Permanent Account Number (PAN)</span>
+                    <span className="text-sm font-mono font-bold text-sb-ink">
                       {user.gstDetails.pan || user.gstDetails.gstin.substring(2, 12)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[11px] text-[#7a6274] block mb-0.5">Registered Legal Entity</span>
-                    <span className="font-bold text-[#34222e]">{user.gstDetails.legalName}</span>
+                    <span className="text-[11px] text-sb-muted block mb-0.5">Registered Legal Entity</span>
+                    <span className="font-bold text-sb-ink">{user.gstDetails.legalName}</span>
                   </div>
                   <div>
-                    <span className="text-[11px] text-[#7a6274] block mb-0.5">Jurisdiction State Code</span>
-                    <span className="font-semibold text-[#34222e]">
+                    <span className="text-[11px] text-sb-muted block mb-0.5">Jurisdiction State Code</span>
+                    <span className="font-semibold text-sb-ink">
                       State Code {user.gstDetails.stateCode}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-[#f2fcf4] border border-[#0c831f]/30 rounded-2xl text-[#0c831f] flex items-start space-x-3 text-xs">
-                <CheckCircle2 className="w-4 h-4 text-[#0c831f] shrink-0 mt-0.5" />
+              <div className="p-4 bg-sb-brand-soft border border-sb-brand/30 rounded-2xl text-sb-brand flex items-start space-x-3 text-xs">
+                <CheckCircle2 className="w-4 h-4 text-sb-brand shrink-0 mt-0.5" />
                 <div>
                   <h5 className="font-bold">GSTIN saved on this profile only</h5>
-                  <p className="text-[#34222e]/80 mt-0.5 leading-relaxed">
+                  <p className="text-sb-ink/80 mt-0.5 leading-relaxed">
                     Listed prices already include GST. Spaceborn does not issue a GST tax invoice, so this number is not printed on a receipt and cannot be used for input tax credit.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="p-6 bg-[#fee9d7]/20 rounded-2xl border border-dashed border-[#f9bf8f]/70 text-center space-y-3">
-              <Building2 className="w-8 h-8 text-[#7a6274] mx-auto opacity-70" />
+            <div className="p-6 bg-sb-canvas/20 rounded-2xl border border-dashed border-sb-line/70 text-center space-y-3">
+              <Building2 className="w-8 h-8 text-sb-muted mx-auto opacity-70" />
               <div>
-                <h4 className="text-xs font-bold text-[#34222e]">No GSTIN Linked</h4>
-                <p className="text-[11px] text-[#7a6274] max-w-md mx-auto mt-1 leading-relaxed">
+                <h4 className="text-xs font-bold text-sb-ink">No GSTIN Linked</h4>
+                <p className="text-[11px] text-sb-muted max-w-md mx-auto mt-1 leading-relaxed">
                   A GSTIN saved here stays on your profile. Spaceborn does not turn it into a tax invoice.
                 </p>
               </div>

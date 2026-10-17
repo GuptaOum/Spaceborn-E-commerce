@@ -176,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
     : [];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#fffbf7] border-b border-[#f9bf8f]/60 shadow-xs transition-all">
+    <header className="sticky top-0 z-50 bg-sb-card border-b border-sb-line/60 shadow-xs transition-all">
 
       {/* Main Clean Header */}
       <div className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 sm:py-2.5">
@@ -196,18 +196,18 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Delivery Location Selector (tablet and up; phones get a chip in the search row) */}
             <div
               onClick={() => setShowLocationModal(true)}
-              className="hidden md:flex items-center gap-1 text-left cursor-pointer group pl-2 sm:pl-3 border-l border-[#f9bf8f]/60"
+              className="hidden md:flex items-center gap-1 text-left cursor-pointer group pl-2 sm:pl-3 border-l border-sb-line/60"
             >
               <MapPin className="w-3.5 h-3.5 text-[#e2434b]" />
-              <span className="truncate max-w-[160px] text-xs font-bold text-[#34222e]">{cityName}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#34222e]/60 group-hover:translate-y-0.5 transition-transform" />
+              <span className="truncate max-w-[160px] text-xs font-bold text-sb-ink">{cityName}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-sb-ink/60 group-hover:translate-y-0.5 transition-transform" />
             </div>
           </div>
 
           {/* Minimalist Search Bar with Semantic Enter Key Navigation */}
           <div className="relative flex-1 max-w-xl hidden md:block">
-            <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 hover:bg-[#fffbf7] focus-within:bg-white focus-within:border-[#059669] focus-within:ring-2 focus-within:ring-[#059669]/10 transition-all overflow-hidden px-3.5 py-2">
-              <Search className="w-4 h-4 text-[#7a6274] mr-2.5 shrink-0" />
+            <div className="flex items-center rounded-xl bg-sb-canvas/50 border border-sb-line/70 hover:bg-sb-card focus-within:bg-white focus-within:border-[#059669] focus-within:ring-2 focus-within:ring-[#059669]/10 transition-all overflow-hidden px-3.5 py-2">
+              <Search className="w-4 h-4 text-sb-muted mr-2.5 shrink-0" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -227,7 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
                 onFocus={() => setShowSearchDropdown(true)}
                 placeholder={placeholders[placeholderIndex]}
-                className="w-full bg-transparent text-xs sm:text-sm text-[#34222e] placeholder:text-[#7a6274]/70 outline-none font-medium"
+                className="w-full bg-transparent text-xs sm:text-sm text-sb-ink placeholder:text-sb-muted/70 outline-none font-medium"
               />
               <div className="flex items-center gap-1.5 shrink-0">
                 {searchQuery ? (
@@ -237,7 +237,7 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={handleClearDesktopSearch}
                       aria-label="Clear search"
                       title="Clear search (Esc)"
-                      className="p-1 text-[#7a6274] hover:text-[#34222e] hover:bg-[#fee9d7] rounded-full cursor-pointer transition-colors"
+                      className="p-1 text-sb-muted hover:text-sb-ink hover:bg-sb-canvas rounded-full cursor-pointer transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -245,7 +245,7 @@ export const Header: React.FC<HeaderProps> = ({
                       type="button"
                       onClick={() => handlePerformSearch()}
                       title="Search catalog"
-                      className="px-2.5 py-0.5 rounded-lg bg-[#0c831f] hover:bg-[#0a6e1a] text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition shadow-xs"
+                      className="px-2.5 py-0.5 rounded-lg bg-sb-brand hover:bg-sb-brand-strong text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition shadow-xs"
                     >
                       <span>Search</span>
                       <kbd className="font-mono text-[9px] text-white/80">↵</kbd>
@@ -256,10 +256,10 @@ export const Header: React.FC<HeaderProps> = ({
                     type="button"
                     onClick={() => handlePerformSearch()}
                     title="Search catalog"
-                    className="px-2 py-0.5 rounded bg-white hover:bg-[#fee9d7]/50 border border-[#f9bf8f]/60 text-[#7a6274] text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition"
+                    className="px-2 py-0.5 rounded bg-white hover:bg-sb-canvas/50 border border-sb-line/60 text-sb-muted text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition"
                   >
                     <span>Search</span>
-                    <kbd className="font-mono text-[9px] text-[#7a6274]/70">↵</kbd>
+                    <kbd className="font-mono text-[9px] text-sb-muted/70">↵</kbd>
                   </button>
                 )}
               </div>
@@ -268,12 +268,12 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Quick Search Autocomplete Dropdown */}
             {showSearchDropdown && searchResults.length > 0 && (
               <div 
-                className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-[#f9bf8f]/60 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-sb-line/60 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                 onMouseLeave={() => setShowSearchDropdown(false)}
               >
-                <div className="px-4 py-1.5 text-[11px] font-bold text-[#7a6274] border-b border-[#f9bf8f]/30 flex items-center justify-between">
+                <div className="px-4 py-1.5 text-[11px] font-bold text-sb-muted border-b border-sb-line/30 flex items-center justify-between">
                   <span>Search Suggestions</span>
-                  <span className="text-[#0c831f] font-semibold">In stock near you</span>
+                  <span className="text-sb-brand font-semibold">In stock near you</span>
                 </div>
                 {searchResults.map(p => (
                   <div
@@ -282,28 +282,28 @@ export const Header: React.FC<HeaderProps> = ({
                       onSelectProduct(p);
                       setShowSearchDropdown(false);
                     }}
-                    className="px-4 py-2 hover:bg-[#fee9d7]/50 flex items-center justify-between cursor-pointer transition-colors group"
+                    className="px-4 py-2 hover:bg-sb-canvas/50 flex items-center justify-between cursor-pointer transition-colors group"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-lg bg-[#fffbf7] border border-[#f9bf8f]/40 flex items-center justify-center p-1">
+                      <div className="w-10 h-10 rounded-lg bg-sb-card border border-sb-line/40 flex items-center justify-center p-1">
                         <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-[#34222e] line-clamp-1 group-hover:text-[#e2434b]">{p.name}</p>
-                        <p className="text-[10px] text-[#7a6274]">SKU: {p.sku}</p>
+                        <p className="text-xs font-semibold text-sb-ink line-clamp-1 group-hover:text-[#e2434b]">{p.name}</p>
+                        <p className="text-[10px] text-sb-muted">SKU: {p.sku}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-[#34222e] bg-[#fee9d7] px-2 py-1 rounded-md">
+                    <span className="text-xs font-bold text-sb-ink bg-sb-canvas px-2 py-1 rounded-md">
                       ₹{p.price}
                     </span>
                   </div>
                 ))}
                 <div
                   onClick={() => handlePerformSearch()}
-                  className="px-4 py-2 border-t border-[#f9bf8f]/30 text-xs font-bold text-[#0c831f] hover:bg-[#fee9d7]/40 flex items-center justify-between cursor-pointer transition-colors"
+                  className="px-4 py-2 border-t border-sb-line/30 text-xs font-bold text-sb-brand hover:bg-sb-canvas/40 flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span>Search entire catalog for &ldquo;{searchQuery}&rdquo;</span>
-                  <span className="text-[#7a6274] font-mono text-[10px]">↵</span>
+                  <span className="text-sb-muted font-mono text-[10px]">↵</span>
                 </div>
               </div>
             )}
@@ -317,9 +317,9 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onNavigate('orders')}
               aria-label="Orders"
               title="Orders"
-              className="inline-flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#f9bf8f]/60 bg-[#fffbf7] hover:bg-[#fee9d7]/50 text-[#34222e] text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-95"
+              className="inline-flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto p-1.5 sm:px-3 sm:py-2 rounded-xl border border-sb-line/60 bg-sb-card hover:bg-sb-canvas/50 text-sb-ink text-xs font-semibold transition-all cursor-pointer shrink-0 active:scale-95"
             >
-              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7a6274]" />
+              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sb-muted" />
               <span className="hidden sm:inline">Orders</span>
             </button>
 
@@ -329,14 +329,14 @@ export const Header: React.FC<HeaderProps> = ({
                 <button
                   onClick={() => setShowAccountMenu(!showAccountMenu)}
                   aria-label="Account menu"
-                  className="flex items-center space-x-1 sm:space-x-2 text-[#34222e] p-0.5 sm:p-1 rounded-xl hover:bg-[#fee9d7]/50 transition cursor-pointer"
+                  className="flex items-center space-x-1 sm:space-x-2 text-sb-ink p-0.5 sm:p-1 rounded-xl hover:bg-sb-canvas/50 transition cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#34222e] text-[#fee9d7] font-bold text-xs flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-sb-ink text-sb-canvas font-bold text-xs flex items-center justify-center">
                     {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                   </div>
                   <div className="text-left hidden lg:block pr-1">
-                    <span className="text-xs font-bold text-[#34222e] flex items-center">
-                      {user.fullName.split(' ')[0]} <ChevronDown className="w-3 h-3 ml-1 text-[#7a6274]" />
+                    <span className="text-xs font-bold text-sb-ink flex items-center">
+                      {user.fullName.split(' ')[0]} <ChevronDown className="w-3 h-3 ml-1 text-sb-muted" />
                     </span>
                   </div>
                 </button>
@@ -345,7 +345,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onClick={() => onOpenAuth('login')}
                   aria-label="Sign in"
                   title="Sign in"
-                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-[#34222e] hover:bg-[#1a0f16] text-[#fee9d7] w-8 h-8 sm:w-auto sm:h-auto px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95 shrink-0"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 bg-sb-ink hover:bg-[#1a0f16] text-sb-canvas w-8 h-8 sm:w-auto sm:h-auto px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95 shrink-0"
                 >
                   <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f8cb46]" />
                   <span className="hidden sm:inline">Sign In / Google</span>
@@ -355,33 +355,33 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Account Dropdown */}
               {showAccountMenu && user && (
                 <div 
-                  className="absolute right-0 top-full mt-2 w-56 bg-[#fffbf7] rounded-2xl shadow-xl border border-[#f9bf8f]/60 p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute right-0 top-full mt-2 w-56 bg-sb-card rounded-2xl shadow-xl border border-sb-line/60 p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
                   onMouseLeave={() => setShowAccountMenu(false)}
                 >
-                  <div className="px-3 py-2 bg-[#fee9d7] rounded-xl border border-[#f9bf8f]/50 mb-1.5">
-                    <p className="text-xs font-bold text-[#34222e]">{user.fullName}</p>
-                    <p className="text-[10px] text-[#7a6274] truncate">{user.email}</p>
+                  <div className="px-3 py-2 bg-sb-canvas rounded-xl border border-sb-line/50 mb-1.5">
+                    <p className="text-xs font-bold text-sb-ink">{user.fullName}</p>
+                    <p className="text-[10px] text-sb-muted truncate">{user.email}</p>
                   </div>
 
                   <div className="space-y-0.5">
-                    <button onClick={() => { onNavigate('profile'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#fee9d7]/50 flex items-center space-x-2.5 text-[#34222e] text-xs font-semibold cursor-pointer transition">
-                      <LayoutDashboard className="w-3.5 h-3.5 text-[#0c831f]" /> <span>Account Dashboard</span>
+                    <button onClick={() => { onNavigate('profile'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-sb-canvas/50 flex items-center space-x-2.5 text-sb-ink text-xs font-semibold cursor-pointer transition">
+                      <LayoutDashboard className="w-3.5 h-3.5 text-sb-brand" /> <span>Account Dashboard</span>
                     </button>
-                    <button onClick={() => { onNavigate('orders'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#fee9d7]/50 flex items-center space-x-2.5 text-[#34222e] text-xs font-semibold cursor-pointer transition">
-                      <Receipt className="w-3.5 h-3.5 text-[#34222e]" /> <span>My Orders</span>
+                    <button onClick={() => { onNavigate('orders'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-sb-canvas/50 flex items-center space-x-2.5 text-sb-ink text-xs font-semibold cursor-pointer transition">
+                      <Receipt className="w-3.5 h-3.5 text-sb-ink" /> <span>My Orders</span>
                     </button>
-                    <button onClick={() => { onNavigate('wishlist'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#fee9d7]/50 flex items-center space-x-2.5 text-[#34222e] text-xs font-semibold cursor-pointer transition">
+                    <button onClick={() => { onNavigate('wishlist'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-sb-canvas/50 flex items-center space-x-2.5 text-sb-ink text-xs font-semibold cursor-pointer transition">
                       <Heart className="w-3.5 h-3.5 text-[#e2434b]" /> <span>Saved Wishlist ({wishlistCount})</span>
                     </button>
-                    <button onClick={() => { onNavigate('fabrication'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#fee9d7]/50 flex items-center space-x-2.5 text-[#34222e] text-xs font-semibold cursor-pointer transition">
+                    <button onClick={() => { onNavigate('fabrication'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-sb-canvas/50 flex items-center space-x-2.5 text-sb-ink text-xs font-semibold cursor-pointer transition">
                       <Wrench className="w-3.5 h-3.5 text-[#ca8a04]" /> <span>3D Printing & CNC Lab</span>
                     </button>
-                    <button onClick={() => { onNavigate('contact'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#fee9d7]/50 flex items-center space-x-2.5 text-[#34222e] text-xs font-semibold cursor-pointer transition">
-                      <PhoneCall className="w-3.5 h-3.5 text-[#7a6274]" /> <span>Help & Support</span>
+                    <button onClick={() => { onNavigate('contact'); setShowAccountMenu(false); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-sb-canvas/50 flex items-center space-x-2.5 text-sb-ink text-xs font-semibold cursor-pointer transition">
+                      <PhoneCall className="w-3.5 h-3.5 text-sb-muted" /> <span>Help & Support</span>
                     </button>
                   </div>
                   
-                  <div className="mt-1.5 pt-1.5 border-t border-[#f9bf8f]/30">
+                  <div className="mt-1.5 pt-1.5 border-t border-sb-line/30">
                     <button onClick={() => { onSignOut(); setShowAccountMenu(false); }} className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-rose-50 text-[#e2434b] flex items-center space-x-2.5 text-xs font-bold transition cursor-pointer">
                       <LogOut className="w-3.5 h-3.5" /> <span>Sign Out</span>
                     </button>
@@ -396,8 +396,8 @@ export const Header: React.FC<HeaderProps> = ({
               aria-label={cartItemsCount > 0 ? `Cart, ${cartItemsCount} items` : 'Cart'}
               className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 ${
                 cartItemsCount > 0 ? 'h-8 px-2.5 sm:h-auto sm:px-4' : 'w-8 h-8 sm:w-auto sm:h-auto sm:px-4'
-              } py-1.5 sm:py-2 rounded-xl bg-[#0c831f] hover:bg-[#0a6e1a] text-white font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shrink-0 ${
-                isCartBumping ? 'animate-badge-bump ring-2 ring-[#0c831f]/40' : ''
+              } py-1.5 sm:py-2 rounded-xl bg-sb-brand hover:bg-sb-brand-strong text-white font-bold text-xs sm:text-sm shadow-sm transition-all duration-150 active:scale-[0.96] cursor-pointer shrink-0 ${
+                isCartBumping ? 'animate-badge-bump ring-2 ring-sb-brand/40' : ''
               }`}
             >
               <ShoppingCart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${isCartBumping ? 'scale-125' : ''}`} />
@@ -428,12 +428,12 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex w-full items-center gap-1 text-left cursor-pointer min-w-0 py-0.5"
           >
             <MapPin className="w-3.5 h-3.5 text-[#e2434b] shrink-0" />
-            <span className="truncate text-xs font-bold text-[#34222e]">{cityName}</span>
-            <ChevronDown className="w-3 h-3 text-[#34222e]/60 shrink-0" />
+            <span className="truncate text-xs font-bold text-sb-ink">{cityName}</span>
+            <ChevronDown className="w-3 h-3 text-sb-ink/60 shrink-0" />
           </button>
           <div className="relative">
-            <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 px-2.5 py-1.5 focus-within:bg-white focus-within:border-[#059669] transition-all">
-              <Search className="w-3.5 h-3.5 text-[#7a6274] mr-2 shrink-0" />
+            <div className="flex items-center rounded-xl bg-sb-canvas/50 border border-sb-line/70 px-2.5 py-1.5 focus-within:bg-white focus-within:border-[#059669] transition-all">
+              <Search className="w-3.5 h-3.5 text-sb-muted mr-2 shrink-0" />
               <input
                 ref={mobileSearchInputRef}
                 type="text"
@@ -453,7 +453,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }
                 }}
                 placeholder="Search components, sensors, motors..."
-                className="w-full bg-transparent text-xs text-[#34222e] placeholder:text-[#7a6274]/70 outline-none font-medium"
+                className="w-full bg-transparent text-xs text-sb-ink placeholder:text-sb-muted/70 outline-none font-medium"
               />
               {searchQuery ? (
                 <div className="flex items-center gap-1 shrink-0 ml-1">
@@ -462,14 +462,14 @@ export const Header: React.FC<HeaderProps> = ({
                     onClick={handleClearMobileSearch}
                     aria-label="Clear search"
                     title="Clear search"
-                    className="p-1 text-[#7a6274] hover:text-[#34222e] hover:bg-[#fee9d7] rounded-full cursor-pointer transition-colors"
+                    className="p-1 text-sb-muted hover:text-sb-ink hover:bg-sb-canvas rounded-full cursor-pointer transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => handlePerformSearch()}
-                    className="px-2 py-0.5 rounded-lg bg-[#0c831f] text-white text-[11px] font-bold cursor-pointer transition"
+                    className="px-2 py-0.5 rounded-lg bg-sb-brand text-white text-[11px] font-bold cursor-pointer transition"
                   >
                     Search
                   </button>
@@ -480,11 +480,11 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Mobile Autocomplete Search Suggestions Dropdown */}
             {showSearchDropdown && searchResults.length > 0 && (
               <div 
-                className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl border border-[#f9bf8f]/60 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl border border-sb-line/60 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
               >
-                <div className="px-3 py-1 text-[10.5px] font-bold text-[#7a6274] border-b border-[#f9bf8f]/30 flex items-center justify-between">
+                <div className="px-3 py-1 text-[10.5px] font-bold text-sb-muted border-b border-sb-line/30 flex items-center justify-between">
                   <span>Search Suggestions</span>
-                  <span className="text-[#0c831f] font-semibold">In stock near you</span>
+                  <span className="text-sb-brand font-semibold">In stock near you</span>
                 </div>
                 {searchResults.map(p => (
                   <div
@@ -493,28 +493,28 @@ export const Header: React.FC<HeaderProps> = ({
                       onSelectProduct(p);
                       setShowSearchDropdown(false);
                     }}
-                    className="px-3 py-1.5 hover:bg-[#fee9d7]/50 flex items-center justify-between cursor-pointer transition-colors"
+                    className="px-3 py-1.5 hover:bg-sb-canvas/50 flex items-center justify-between cursor-pointer transition-colors"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                      <div className="w-8 h-8 rounded-lg bg-[#fffbf7] border border-[#f9bf8f]/40 flex items-center justify-center p-0.5 shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-sb-card border border-sb-line/40 flex items-center justify-center p-0.5 shrink-0">
                         <img src={p.image} alt={p.name} className="max-w-full max-h-full object-contain" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-[#34222e] truncate">{p.name}</p>
-                        <p className="text-[9.5px] text-[#7a6274]">SKU: {p.sku}</p>
+                        <p className="text-xs font-semibold text-sb-ink truncate">{p.name}</p>
+                        <p className="text-[9.5px] text-sb-muted">SKU: {p.sku}</p>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-[#34222e] bg-[#fee9d7] px-2 py-0.5 rounded-md shrink-0">
+                    <span className="text-xs font-bold text-sb-ink bg-sb-canvas px-2 py-0.5 rounded-md shrink-0">
                       ₹{p.price}
                     </span>
                   </div>
                 ))}
                 <div
                   onClick={() => handlePerformSearch()}
-                  className="px-3 py-1.5 border-t border-[#f9bf8f]/30 text-xs font-bold text-[#0c831f] hover:bg-[#fee9d7]/40 flex items-center justify-between cursor-pointer transition-colors"
+                  className="px-3 py-1.5 border-t border-sb-line/30 text-xs font-bold text-sb-brand hover:bg-sb-canvas/40 flex items-center justify-between cursor-pointer transition-colors"
                 >
                   <span className="truncate">Search entire catalog for &ldquo;{searchQuery}&rdquo;</span>
-                  <span className="text-[#7a6274] font-mono text-[10px]">↵</span>
+                  <span className="text-sb-muted font-mono text-[10px]">↵</span>
                 </div>
               </div>
             )}
@@ -524,19 +524,19 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Location Picker Modal */}
       {showLocationModal && createPortal(
-        <div className="fixed inset-0 z-50 bg-[#34222e]/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-[#fffbf7] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#f9bf8f]/60 relative text-[#34222e]">
+        <div className="fixed inset-0 z-50 bg-sb-ink/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-sb-card rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sb-line/60 relative text-sb-ink">
             <button
               onClick={() => setShowLocationModal(false)}
-              className="absolute top-4 right-4 p-2 text-[#7a6274] hover:text-[#34222e] rounded-full hover:bg-[#fee9d7] cursor-pointer transition-colors"
+              className="absolute top-4 right-4 p-2 text-sb-muted hover:text-sb-ink rounded-full hover:bg-sb-canvas cursor-pointer transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#34222e] mb-1">
+            <h3 className="text-base font-bold text-sb-ink mb-1">
               Where should we deliver?
             </h3>
-            <p className="text-xs text-[#7a6274] mb-4">
+            <p className="text-xs text-sb-muted mb-4">
               This is your address, not a shop. Every shop that delivers here is pooled into one catalog, and each order goes to
               the nearest shop that has the items. Checkout shows which shop sends what.
             </p>
@@ -548,7 +548,7 @@ export const Header: React.FC<HeaderProps> = ({
                   .then(() => setShowLocationModal(false))
                   .catch((err: Error) => setLocateError(err.message));
               }}
-              className="mb-3 w-full rounded-2xl border border-[#0c831f] bg-[#f2fcf4] p-3 text-xs font-bold text-[#0c831f] cursor-pointer"
+              className="mb-3 w-full rounded-2xl border border-sb-brand bg-sb-brand-soft p-3 text-xs font-bold text-sb-brand cursor-pointer"
             >
               Use my current location
             </button>
@@ -565,12 +565,12 @@ export const Header: React.FC<HeaderProps> = ({
                 onChange={(e) => setPlaceQuery(e.target.value)}
                 placeholder="PIN code or area, e.g. 208001 or Swaroop Nagar"
                 inputMode="text"
-                className="flex-1 rounded-xl border border-[#f9bf8f]/70 bg-white px-3 py-2.5 text-xs text-[#34222e] outline-none focus:border-[#0c831f]"
+                className="flex-1 rounded-xl border border-sb-line/70 bg-white px-3 py-2.5 text-xs text-sb-ink outline-none focus:border-sb-brand"
               />
               <button
                 type="submit"
                 disabled={locateBusy || placeQuery.trim().length < 3}
-                className="rounded-xl bg-[#34222e] px-3.5 py-2.5 text-xs font-bold text-[#fee9d7] disabled:opacity-50 cursor-pointer"
+                className="rounded-xl bg-sb-ink px-3.5 py-2.5 text-xs font-bold text-sb-canvas disabled:opacity-50 cursor-pointer"
               >
                 {locateBusy ? '…' : 'Find'}
               </button>
@@ -578,7 +578,7 @@ export const Header: React.FC<HeaderProps> = ({
             {locateError && <p className="mb-3 text-xs text-[#e2434b]">{locateError}</p>}
 
             {placeResults.length > 0 && (
-              <div className="mb-3 space-y-1.5 rounded-2xl border border-[#f9bf8f]/40 p-2">
+              <div className="mb-3 space-y-1.5 rounded-2xl border border-sb-line/40 p-2">
                 {placeResults.map((r, i) => (
                   <button
                     key={`${r.latitude}-${r.longitude}-${i}`}
@@ -588,10 +588,10 @@ export const Header: React.FC<HeaderProps> = ({
                       setPlaceQuery('');
                       setShowLocationModal(false);
                     }}
-                    className="w-full rounded-xl px-3 py-2 text-left text-xs hover:bg-[#fee9d7]/50 cursor-pointer"
+                    className="w-full rounded-xl px-3 py-2 text-left text-xs hover:bg-sb-canvas/50 cursor-pointer"
                   >
-                    <span className="font-bold text-[#34222e]">{r.area}</span>
-                    {r.pincode && <span className="ml-2 rounded bg-[#fee9d7] px-1.5 py-0.5 text-[10px]">{r.pincode}</span>}
+                    <span className="font-bold text-sb-ink">{r.area}</span>
+                    {r.pincode && <span className="ml-2 rounded bg-sb-canvas px-1.5 py-0.5 text-[10px]">{r.pincode}</span>}
                   </button>
                 ))}
               </div>
@@ -607,18 +607,18 @@ export const Header: React.FC<HeaderProps> = ({
                   }}
                   className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                     location.label === preset.label
-                      ? 'border-[#0c831f] bg-[#f2fcf4] ring-1 ring-[#0c831f]'
-                      : 'border-[#f9bf8f]/40 hover:border-[#f9bf8f] hover:bg-[#fee9d7]/30'
+                      ? 'border-sb-brand bg-sb-brand-soft ring-1 ring-sb-brand'
+                      : 'border-sb-line/40 hover:border-sb-line hover:bg-sb-canvas/30'
                   }`}
                 >
                   <div className="flex items-start space-x-3">
                     <MapPin className="w-4 h-4 text-[#e2434b] mt-0.5 shrink-0" />
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-[#34222e]">{preset.label}</span>
-                        <span className="text-[10px] bg-[#fee9d7] px-1.5 py-0.5 rounded text-[#34222e]">{preset.pincode}</span>
+                        <span className="text-xs font-bold text-sb-ink">{preset.label}</span>
+                        <span className="text-[10px] bg-sb-canvas px-1.5 py-0.5 rounded text-sb-ink">{preset.pincode}</span>
                       </div>
-                      <p className="text-xs text-[#7a6274] mt-0.5">Your delivery pin. Shops nearby are chosen at checkout.</p>
+                      <p className="text-xs text-sb-muted mt-0.5">Your delivery pin. Shops nearby are chosen at checkout.</p>
                     </div>
                   </div>
                 </div>

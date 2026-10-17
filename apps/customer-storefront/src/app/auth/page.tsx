@@ -20,7 +20,7 @@ function AuthContent() {
   }, [loading, user, next, router]);
 
   if (loading || user) {
-    return <div className="min-h-[50vh] flex items-center justify-center text-xs text-[#7a6274]">Loading...</div>;
+    return <div className="min-h-[50vh] flex items-center justify-center text-xs text-sb-muted">Loading...</div>;
   }
   return (
     <div className="py-10">
@@ -31,7 +31,7 @@ function AuthContent() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-xs text-[#7a6274]">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-[50vh] flex items-center justify-center text-xs text-sb-muted">Loading...</div>}>
       <AuthContent />
     </Suspense>
   );

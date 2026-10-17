@@ -44,7 +44,8 @@ export async function payWithRazorpay(
       name: 'Spaceborn',
       description,
       prefill,
-      theme: { color: '#0c831f' },
+      // Razorpay renders in its own frame and needs a literal colour, not the CSS variable.
+      theme: { color: getComputedStyle(document.documentElement).getPropertyValue('--color-sb-brand').trim() || '#0c831f' },
       handler: (r: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
         resolve({ razorpayOrderId: r.razorpay_order_id, razorpayPaymentId: r.razorpay_payment_id, razorpaySignature: r.razorpay_signature }),
       modal: { ondismiss: () => reject(new Error('Payment window was closed before payment completed.')) },

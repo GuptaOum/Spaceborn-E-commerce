@@ -7,6 +7,8 @@ export interface Product {
   city?: string;     // E.g. 'Kanpur', 'Bangalore', 'Pune', 'Chennai', 'Gurugram'
   name: string;
   sku: string;
+  /** Stable shelf id from the API; `category` is its display name at the time it was loaded. */
+  categoryId?: string;
   category: string;
   subCategory: string;
   price: number; // in INR

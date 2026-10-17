@@ -21,12 +21,22 @@
   --color-surface-bg: #fee9d7;
   --color-surface-card: #fffbf7;
   --color-surface-muted: #fcedde;
+
+  /* Storefront Studio theme. These are the Sunrise preset; the published theme overrides them on <html>. */
+  --color-sb-canvas: #fee9d7;
+  --color-sb-card: #fffbf7;
+  --color-sb-line: #f9bf8f;
+  --color-sb-ink: #34222e;
+  --color-sb-muted: #7a6274;
+  --color-sb-brand: #0c831f;
+  --color-sb-brand-strong: #0a6e1a;
+  --color-sb-brand-soft: #f2fcf4;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #fee9d7;
-  color: #34222e;
+  background-color: var(--color-sb-canvas);
+  color: var(--color-sb-ink);
   -webkit-font-smoothing: antialiased;
 }
 

@@ -12,11 +12,11 @@ export default function ProfilePage() {
   if (!currentUser) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 space-y-4">
-        <h2 className="text-xl font-bold text-[#34222e]">Please Sign In</h2>
-        <p className="text-xs text-[#7a6274]">Sign in to access your business profile and delivery addresses.</p>
+        <h2 className="text-xl font-bold text-sb-ink">Please Sign In</h2>
+        <p className="text-xs text-sb-muted">Sign in to access your business profile and delivery addresses.</p>
         <button
           onClick={() => router.push('/auth')}
-          className="px-5 py-2.5 bg-[#0c831f] text-white text-xs font-bold rounded-xl"
+          className="px-5 py-2.5 bg-sb-brand text-white text-xs font-bold rounded-xl"
         >
           Go to Sign In
         </button>
