@@ -6,7 +6,7 @@ import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
 import type { Order, OrderStatus } from '@spaceborn/web-core/types';
-import { useLoad } from '@spaceborn/web-core/use-load';
+import { usePagedLoad } from '@spaceborn/web-core/use-load';
 import { RefundsPanel } from './RefundsPanel';
 import { FilterChips, ListState } from './ui';
 
@@ -34,8 +34,13 @@ export function OrdersTab() {
   const [searchQuery, setSearchQuery] = useDraft('admin:orders:search', '');
   const [expandedId, setExpandedId] = useDraft<string | null>('admin:orders:expanded', null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const query = STATUSES[filter] ? `?status=${STATUSES[filter]!.join(',')}` : '';
-  const orders = useLoad(() => api<{ orders: Order[] }>(`/admin/orders${query}`).then((r) => r.orders), [query]);
+  const query = STATUSES[filter] ? `status=${STATUSES[filter]!.join(',')}&` : '';
+  const orders = usePagedLoad(
+    (offset, limit) => api<{ orders: Order[] }>(`/admin/orders?${query}limit=${limit}&offset=${offset}`).then((r) => r.orders),
+    [query],
+    100,
+    (o) => o.id,
+  );
 
   const [cancel] = useAction(
     async (order: Order) => {
@@ -308,6 +313,17 @@ export function OrdersTab() {
               <p className="p-6 text-center text-sm text-slate-500">
                 {searchQuery ? `No orders matching “${searchQuery}”.` : `No ${filter === 'all' ? '' : filter} orders.`}
               </p>
+            )}
+            {orders.hasMore && (
+              <div className="border-t border-slate-100 p-3 text-center">
+                <button
+                  onClick={() => void orders.loadMore()}
+                  disabled={orders.loadingMore}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50"
+                >
+                  {orders.loadingMore ? 'Loading…' : `Load older orders (showing ${orders.data?.length ?? 0})`}
+                </button>
+              </div>
             )}
           </div>
         )}

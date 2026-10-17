@@ -141,7 +141,7 @@ export async function listAllJobs(statuses: FabStatus[] | null, limit: number, c
   const { rows } = await pool.query<JobView>(
     `${JOB_SELECT}
       where ($1::fab_job_status[] is null or j.status = any($1))
-        and ($3::text[] is null or lower(btrim(s.city)) = any($3))
+        and ($3::text[] is null or sb_city_key(s.city) = any($3))
       order by j.created_at desc limit $2`,
     [statuses, limit, cities],
   );

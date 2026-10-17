@@ -21,7 +21,7 @@ adminRouter.use(requireAuth, requireAdmin);
 adminRouter.use(storefrontAdminRouter);
 
 // Every regional query uses the same predicate; `cities` is null for admins who see all regions.
-const CITY = (param: string) => `(${param}::text[] is null or lower(btrim(s.city)) = any(${param}))`;
+const CITY = (param: string) => `(${param}::text[] is null or sb_city_key(s.city) = any(${param}))`;
 
 adminRouter.get('/whoami', (req, res) => {
   const scope = adminScope(req);
@@ -180,6 +180,7 @@ adminRouter.get('/stores/:id/inventory', async (req, res) => {
     `select p.id as "productId", p.sku, p.name, p.brand, p.category_id as "categoryId", c.name as "categoryName",
             p.mrp, p.badges, p.is_active as "isActive",
             i.price, i.stock, i.is_listed as "isListed", i.updated_at as "updatedAt",
+            i.hold_kind as "holdKind", i.hold_reason as "holdReason", (i.price > p.mrp) as "aboveMrp",
             (select coalesce(sum(oi.quantity), 0)::int
                from order_items oi join orders o on o.id = oi.order_id
               where oi.product_id = p.id and o.store_id = i.store_id
@@ -209,6 +210,8 @@ adminRouter.get('/stores/:id/inventory', async (req, res) => {
       inStock: rows.filter((r) => r.isListed && r.stock > 0).length,
       lowStock: rows.filter((r) => r.isListed && r.stock > 0 && r.stock <= 5).length,
       outOfStock: rows.filter((r) => r.isListed && r.stock === 0).length,
+      aboveMrp: rows.filter((r) => r.isListed && r.aboveMrp).length,
+      onHold: rows.filter((r) => r.holdKind).length,
       pendingProposals: pending.rows[0]?.n ?? 0,
     },
   });
@@ -239,6 +242,115 @@ adminRouter.post('/stores/:id/messages', async (req, res) => {
     [id, currentUser(req).uid, body],
   );
   res.status(201).json({ message: rows[0] });
+});
+
+// ---------------------------------------------------------------------------------------------
+// One shop's listing: price notices and holds. MRP is not enforced automatically when an admin
+// lowers it; the admin asks the shop to reprice and takes the listing down if it does not.
+
+async function scopedListing(db: Db, storeId: string, productId: string, cities: string[] | null) {
+  const { rows } = await db.query<{
+    store_name: string; city: string; name: string; sku: string; price: string; mrp: string; hold_kind: string | null;
+  }>(
+    `select s.name as store_name, s.city, p.name, p.sku, i.price, p.mrp, i.hold_kind
+       from inventory i join stores s on s.id = i.store_id join products p on p.id = i.product_id
+      where i.store_id = $1 and i.product_id = $2 and ${CITY('$3')}
+      for update of i`,
+    [storeId, productId, cities],
+  );
+  if (!rows[0]) throw notFound('That shop does not list this product');
+  return { ...rows[0], price: Number(rows[0].price), mrp: Number(rows[0].mrp) };
+}
+
+async function tellStore(db: Db, storeId: string, adminUid: string, body: string) {
+  await db.query(
+    `insert into store_messages (store_id, sender_role, sender_id, body) values ($1, 'admin', $2, $3)`,
+    [storeId, adminUid, body.slice(0, 2000)],
+  );
+}
+
+const inr = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+
+adminRouter.post('/stores/:id/inventory/:productId/price-notice', async (req, res) => {
+  const storeId = parse(uuid, req.params.id);
+  const productId = parse(uuid, req.params.productId);
+  const { note } = parse(z.object({ note: z.string().trim().max(600).optional() }), req.body ?? {});
+  const listing = await withTransaction(async (c) => {
+    const l = await scopedListing(c, storeId, productId, scopeCities(adminScope(req)));
+    if (l.price <= l.mrp) throw conflict(`${l.name} is already at or under its MRP of ${inr(l.mrp)}`);
+    await tellStore(
+      c,
+      storeId,
+      currentUser(req).uid,
+      `Price notice for ${l.name} (${l.sku}): you sell it at ${inr(l.price)}, above its MRP of ${inr(l.mrp)}. ` +
+        `Lower it to ${inr(l.mrp)} or less from Inventory, or we will take it off the website.` +
+        (note ? `\n\n${note}` : ''),
+    );
+    return l;
+  });
+  await audit(req, 'listing.price_notice', { type: 'store', id: storeId, city: listing.city }, {
+    productId, sku: listing.sku, price: listing.price, mrp: listing.mrp,
+  });
+  res.json({ ok: true });
+});
+
+adminRouter.post('/stores/:id/inventory/:productId/hold', async (req, res) => {
+  const storeId = parse(uuid, req.params.id);
+  const productId = parse(uuid, req.params.productId);
+  const body = parse(z.object({ reason }), req.body);
+  const result = await withTransaction(async (c) => {
+    const l = await scopedListing(c, storeId, productId, scopeCities(adminScope(req)));
+    // A price hold lifts itself when the shop reprices; any other reason waits for an admin.
+    const kind = l.price > l.mrp ? 'above_mrp' : 'admin';
+    await c.query(
+      `update inventory set is_listed = false, hold_kind = $3, hold_reason = $4, held_at = now()
+        where store_id = $1 and product_id = $2`,
+      [storeId, productId, kind, body.reason],
+    );
+    await tellStore(
+      c,
+      storeId,
+      currentUser(req).uid,
+      `We took ${l.name} (${l.sku}) off the website: ${body.reason}` +
+        (kind === 'above_mrp'
+          ? `\n\nSet the price to ${inr(l.mrp)} or less in Inventory and it goes back on the website.`
+          : '\n\nReply here once it is sorted and we will put it back.'),
+    );
+    return { ...l, kind };
+  });
+  await bumpCatalog();
+  await audit(req, 'listing.hold', { type: 'store', id: storeId, city: result.city }, {
+    productId, sku: result.sku, kind: result.kind, reason: body.reason,
+  });
+  res.json({ item: { productId, isListed: false, holdKind: result.kind, holdReason: body.reason } });
+});
+
+adminRouter.delete('/stores/:id/inventory/:productId/hold', async (req, res) => {
+  const storeId = parse(uuid, req.params.id);
+  const productId = parse(uuid, req.params.productId);
+  const result = await withTransaction(async (c) => {
+    const l = await scopedListing(c, storeId, productId, scopeCities(adminScope(req)));
+    if (!l.hold_kind) throw conflict(`${l.name} is not on hold`);
+    // Lifting never puts a price above the MRP back in front of customers.
+    const relist = l.price <= l.mrp;
+    await c.query(
+      `update inventory set is_listed = $3, hold_kind = null, hold_reason = null, held_at = null
+        where store_id = $1 and product_id = $2`,
+      [storeId, productId, relist],
+    );
+    await tellStore(
+      c,
+      storeId,
+      currentUser(req).uid,
+      relist
+        ? `${l.name} (${l.sku}) is back on the website.`
+        : `We lifted the hold on ${l.name} (${l.sku}). List it again from Inventory once the price is ${inr(l.mrp)} or less.`,
+    );
+    return { ...l, relist };
+  });
+  await bumpCatalog();
+  await audit(req, 'listing.release', { type: 'store', id: storeId, city: result.city }, { productId, sku: result.sku, relisted: result.relist });
+  res.json({ item: { productId, isListed: result.relist, holdKind: null, holdReason: null } });
 });
 
 type StoreDecision = 'approved' | 'rejected' | 'suspended';
@@ -353,7 +465,7 @@ for (const decision of ['approve', 'reject', 'suspend'] as const) {
 
 const PRODUCT_COLUMNS = `
   id, sku, name, category_id as "categoryId", brand, description, image_url as "imageUrl",
-  mrp, gst_rate as "gstRate", hsn, specs, badges, ('our_pick' = any(badges)) as "isChoice",
+  mpn, mrp, gst_rate as "gstRate", hsn, specs, badges, ('our_pick' = any(badges)) as "isChoice",
   is_active as "isActive", updated_at as "updatedAt"`;
 
 adminRouter.get('/products', requireGlobalAdmin, async (req, res) => {
@@ -374,6 +486,7 @@ adminRouter.get('/products', requireGlobalAdmin, async (req, res) => {
             coalesce(
               (select json_agg(json_build_object(
                  'storeId', s.id, 'storeName', s.name, 'city', s.city, 'price', i.price, 'stock', i.stock,
+                 'aboveMrp', i.price > p.mrp,
                  'unitsSold', (select coalesce(sum(oi.quantity), 0)::int from order_items oi join orders o on o.id = oi.order_id
                                 where oi.product_id = p.id and o.store_id = s.id
                                   and o.status not in ('pending_payment', 'cancelled', 'expired')),
@@ -448,7 +561,12 @@ adminRouter.patch('/products/:id', requireGlobalAdmin, async (req, res) => {
   if (!rows[0]) throw notFound('Product not found');
   await bumpCatalog();
   await audit(req, 'product.update', { type: 'product', id: rows[0].id }, { changed: Object.keys(b) });
-  res.json({ product: rows[0] });
+  // A lower MRP leaves existing shop prices alone; the admin follows up with each shop above it.
+  const above = await pool.query<{ n: number }>(
+    `select count(*)::int as n from inventory where product_id = $1 and is_listed and price > $2`,
+    [targetId, rows[0].mrp],
+  );
+  res.json({ product: rows[0], offersAboveMrp: above.rows[0]?.n ?? 0 });
 });
 
 // Replace the trust badges on a product. Sending [] clears them.
@@ -493,22 +611,32 @@ adminRouter.get('/product-submissions/:id', async (req, res) => {
 
 adminRouter.post('/product-submissions/:id/approve', async (req, res) => {
   const body = parse(
-    z.object({ mergeIntoProductId: uuid.optional(), categoryId: z.string().trim().min(1).max(60).optional() }),
+    z.object({
+      mergeIntoProductId: uuid.optional(),
+      categoryId: z.string().trim().min(1).max(60).optional(),
+      usePhoto: z.boolean().default(false),
+    }),
     req.body ?? {},
   );
   if (!body.mergeIntoProductId && adminScope(req).regions !== null) {
     throw forbidden('Approving a new catalog product needs an admin with access to all regions. Merge it into an existing product instead.');
+  }
+  // Every region sees the catalog photo, so only an all-regions admin may replace it.
+  if (body.usePhoto && adminScope(req).regions !== null) {
+    throw forbidden('Replacing a catalog photo needs an admin with access to all regions.');
   }
   const submission = await approveSubmission(
     parse(uuid, req.params.id),
     body.mergeIntoProductId ?? null,
     scopeCities(adminScope(req)),
     body.categoryId ?? null,
+    Boolean(body.mergeIntoProductId) && body.usePhoto,
   );
   await audit(req, 'submission.approve', { type: 'product_submission', id: submission.id, city: submission.city }, {
     name: submission.name, productId: submission.productId, merged: !!body.mergeIntoProductId, categoryId: submission.categoryId,
+    toppedUp: submission.toppedUp, photoReplaced: Boolean(body.mergeIntoProductId) && body.usePhoto,
   });
-  res.json({ submission: { id: submission.id, status: submission.status, productId: submission.productId } });
+  res.json({ submission: { id: submission.id, status: submission.status, productId: submission.productId, toppedUp: submission.toppedUp } });
 });
 
 adminRouter.post('/product-submissions/:id/reject', async (req, res) => {
@@ -524,8 +652,15 @@ adminRouter.post('/product-submissions/:id/reject', async (req, res) => {
 // Orders
 
 adminRouter.get('/orders', async (req, res) => {
-  const q = parse(z.object({ status: statusList, limit: z.coerce.number().int().min(1).max(200).default(50) }), req.query);
-  res.json({ orders: await listAllOrders(q.status, q.limit, scopeCities(adminScope(req))) });
+  const q = parse(
+    z.object({
+      status: statusList,
+      limit: z.coerce.number().int().min(1).max(200).default(50),
+      offset: z.coerce.number().int().min(0).max(100_000).default(0),
+    }),
+    req.query,
+  );
+  res.json({ orders: await listAllOrders(q.status, q.limit, scopeCities(adminScope(req)), q.offset) });
 });
 
 adminRouter.post('/orders/:id/cancel', async (req, res) => {

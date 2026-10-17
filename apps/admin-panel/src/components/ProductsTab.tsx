@@ -16,6 +16,7 @@ interface StoreStockInfo {
   stock: number;
   unitsSold?: number;
   unitsHeld?: number;
+  aboveMrp?: boolean;
 }
 
 interface AdminProduct {
@@ -228,7 +229,7 @@ export function ProductsTab() {
     setFormError(null);
     try {
       if (editingProduct) {
-        const r = await api<{ product: Omit<AdminProduct, 'storeCount' | 'stores'> }>(`/admin/products/${editingProduct.id}`, {
+        const r = await api<{ product: Omit<AdminProduct, 'storeCount' | 'stores'>; offersAboveMrp?: number }>(`/admin/products/${editingProduct.id}`, {
           method: 'PATCH',
           body: {
             name: form.name.trim(),
@@ -243,9 +244,26 @@ export function ProductsTab() {
           },
         });
         products.mutate((list) =>
-          list?.map((p) => (p.id === editingProduct.id ? { ...p, ...r.product, storeCount: p.storeCount, stores: p.stores } : p)) ?? [],
+          list?.map((p) =>
+            p.id === editingProduct.id
+              ? {
+                  ...p,
+                  ...r.product,
+                  storeCount: p.storeCount,
+                  stores: p.stores?.map((s) => ({ ...s, aboveMrp: s.price > Number(r.product.mrp) })),
+                }
+              : p,
+          ) ?? [],
         );
-        toast(`${r.product.name} updated in the catalog`, 'success');
+        const above = r.offersAboveMrp ?? 0;
+        if (above > 0) {
+          toast(
+            `${r.product.name} updated. ${above} shop${above === 1 ? ' sells' : 's sell'} above the new MRP: open Stores, view their inventory and ask them to lower it.`,
+            'info',
+          );
+        } else {
+          toast(`${r.product.name} updated in the catalog`, 'success');
+        }
         cancelEdit();
       } else {
         const r = await api<{ product: Omit<AdminProduct, 'storeCount' | 'stores'> }>('/admin/products', {
@@ -615,7 +633,8 @@ export function ProductsTab() {
                               {s.storeName} <span className="font-normal text-slate-500">({s.city})</span>
                             </span>
                             <div className="text-right">
-                              <span className="font-bold text-slate-900">{formatInr(s.price)}</span>
+                              <span className={`font-bold ${s.aboveMrp ? 'text-red-700' : 'text-slate-900'}`}>{formatInr(s.price)}</span>
+                              {s.aboveMrp && <span className="ml-1 rounded bg-red-600 px-1 text-[10px] font-semibold text-white">above MRP</span>}
                               <span className="ml-1.5 text-[11px] font-medium text-emerald-700">({s.stock} on shelf, {s.unitsSold ?? 0} sold{(s.unitsHeld ?? 0) > 0 ? `, ${s.unitsHeld} awaiting payment` : ''})</span>
                             </div>
                           </div>

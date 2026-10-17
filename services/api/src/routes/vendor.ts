@@ -150,6 +150,7 @@ vendorRouter.get('/inventory', requireApprovedStore, async (req, res) => {
     `select p.id as "productId", p.sku, p.name, p.mrp, p.category_id as "categoryId",
             case when p.image_key is not null then '/v1/catalog/products/' || p.id::text || '/image' else p.image_url end as "imageUrl",
             i.price, i.stock, i.is_listed as "isListed", i.updated_at as "updatedAt",
+            i.hold_kind as "holdKind", i.hold_reason as "holdReason",
             (select coalesce(sum(oi.quantity), 0)::int
                from order_items oi join orders o on o.id = oi.order_id
               where oi.product_id = i.product_id and o.store_id = i.store_id
@@ -205,7 +206,21 @@ vendorRouter.put('/inventory/:productId', requireApprovedStore, async (req, res)
     throw unprocessable('price_above_mrp', `Price cannot exceed the MRP of ₹${product.rows[0].mrp}`);
   }
 
-  const existing = await pool.query<{ stock: number }>('select stock from inventory where store_id = $1 and product_id = $2', [storeId(req), productId]);
+  const existing = await pool.query<{ stock: number; price: string; hold_kind: string | null }>(
+    'select stock, price, hold_kind from inventory where store_id = $1 and product_id = $2',
+    [storeId(req), productId],
+  );
+  // An admin hold keeps the listing off the website until an admin lifts it. A price hold lifts
+  // itself once the price is at or under the MRP, and the listing goes back on the website.
+  const hold = existing.rows[0]?.hold_kind ?? null;
+  const priceAfter = body.price ?? Number(existing.rows[0]?.price ?? 0);
+  const liftHold = hold === 'above_mrp' && priceAfter <= Number(product.rows[0].mrp);
+  if (hold === 'admin' && body.isListed) {
+    throw conflict('An admin took this listing off the website. Reply to them under Messages to get it back.', { code: 'listing_on_hold' });
+  }
+  if (hold === 'above_mrp' && !liftHold && body.isListed) {
+    throw unprocessable('price_above_mrp', `Lower the price to the MRP of ₹${product.rows[0].mrp} or less to put this back on the website.`);
+  }
   if (!existing.rows[0] && (body.price === undefined || body.stock === undefined)) {
     throw unprocessable('price_and_stock_required', 'Price and stock are required when listing a new product');
   }
@@ -217,7 +232,8 @@ vendorRouter.put('/inventory/:productId', requireApprovedStore, async (req, res)
   // upsert fails whenever price is omitted. Update existing rows and insert only new ones.
   // stock uses a delta, or an absolute value guarded by the count the vendor saw, so an order
   // that reduced stock a moment ago is never silently put back on the shelf.
-  const params = [storeId(req), productId, body.price ?? null, body.stock ?? null, body.stockDelta ?? null, body.isListed ?? null, body.expectedStock ?? null];
+  const isListed = liftHold ? (body.isListed ?? true) : hold ? false : (body.isListed ?? null);
+  const params = [storeId(req), productId, body.price ?? null, body.stock ?? null, body.stockDelta ?? null, isListed, body.expectedStock ?? null, liftHold];
   const { rows } = existing.rows[0]
     ? await pool.query(
         `update inventory set
@@ -225,10 +241,13 @@ vendorRouter.put('/inventory/:productId', requireApprovedStore, async (req, res)
            stock = case when $4::int is not null then $4
                         when $5::int is not null then greatest(0, stock + $5)
                         else stock end,
-           is_listed = coalesce($6, is_listed)
+           is_listed = coalesce($6, is_listed),
+           hold_kind = case when $8 then null else hold_kind end,
+           hold_reason = case when $8 then null else hold_reason end,
+           held_at = case when $8 then null else held_at end
          where store_id = $1 and product_id = $2
            and ($4::int is null or stock = $7::int)
-         returning product_id as "productId", price, stock, is_listed as "isListed"`,
+         returning product_id as "productId", price, stock, is_listed as "isListed", hold_kind as "holdKind"`,
         params,
       )
     : await pool.query(
@@ -267,10 +286,15 @@ vendorRouter.delete('/inventory/:productId', requireApprovedStore, async (req, r
       openOrders: held.rows[0]!.n,
     });
   }
+  // Deleting and re-adding would side-step an admin hold, so held rows stay until the hold is lifted.
   const { rowCount } = await pool.query(
-    'delete from inventory where store_id = $1 and product_id = $2',
+    `delete from inventory where store_id = $1 and product_id = $2 and hold_kind is distinct from 'admin'`,
     [storeId(req), productId],
   );
+  if (!rowCount) {
+    const held = await pool.query('select 1 from inventory where store_id = $1 and product_id = $2', [storeId(req), productId]);
+    if (held.rows[0]) throw conflict('An admin took this listing off the website. It stays here until they lift the hold.', { code: 'listing_on_hold' });
+  }
   if (!rowCount) throw notFound('Inventory item not found');
   await bumpCatalog();
   res.json({ ok: true });
@@ -281,6 +305,7 @@ const submissionBody = z.object({
   description: z.string().trim().min(10).max(4000),
   categoryId: z.string().trim().min(1).max(60),
   brand: z.string().trim().max(80).optional(),
+  mpn: z.string().trim().max(60).regex(/^[A-Za-z0-9][A-Za-z0-9 ._/+#-]*$/, 'Use the part number printed on the part or its datasheet').optional().or(z.literal('')),
   mrp: z.number().positive().max(1_000_000),
   price: z.number().positive().max(1_000_000),
   stock: z.number().int().min(0).max(100_000),
@@ -333,8 +358,15 @@ vendorRouter.get('/product-submissions/:id/image', requireApprovedStore, async (
 });
 
 vendorRouter.get('/orders', requireApprovedStore, async (req, res) => {
-  const q = parse(z.object({ status: statusList, limit: z.coerce.number().int().min(1).max(100).default(50) }), req.query);
-  res.json({ orders: await listStoreOrders(storeId(req), q.status, q.limit) });
+  const q = parse(
+    z.object({
+      status: statusList,
+      limit: z.coerce.number().int().min(1).max(100).default(50),
+      offset: z.coerce.number().int().min(0).max(100_000).default(0),
+    }),
+    req.query,
+  );
+  res.json({ orders: await listStoreOrders(storeId(req), q.status, q.limit, q.offset) });
 });
 
 const listingBody = z.object({
@@ -444,7 +476,12 @@ vendorRouter.post('/orders/:id/handover-otp', requireApprovedStore, async (req, 
 
 vendorRouter.post('/orders/:id/transition', requireApprovedStore, async (req, res) => {
   const body = parse(
-    z.object({ to: z.enum(ORDER_STATUSES), reason: reason.optional(), otp: z.string().regex(/^\d{4}$/).optional() }),
+    z.object({
+      to: z.enum(ORDER_STATUSES),
+      reason: reason.optional(),
+      otp: z.string().regex(/^\d{4}$/).optional(),
+      restock: z.boolean().optional(),
+    }),
     req.body,
   );
   const user = currentUser(req);
@@ -453,6 +490,7 @@ vendorRouter.post('/orders/:id/transition', requireApprovedStore, async (req, re
     to: body.to,
     reason: body.reason,
     otp: body.otp,
+    restock: body.restock,
     actor: { role: 'vendor', uid: user.uid, storeId: user.storeId },
   });
   res.json({ order });

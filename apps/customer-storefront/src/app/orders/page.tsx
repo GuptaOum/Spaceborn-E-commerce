@@ -9,7 +9,7 @@ import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-co
 import type { CheckoutPayment, Order, OrderStatus, OrderItem } from '@spaceborn/web-core/types';
 import { payWithRazorpay } from '../../lib/razorpay';
 import { useDraft } from '@spaceborn/web-core/use-draft';
-import { useLoad } from '@spaceborn/web-core/use-load';
+import { usePagedLoad } from '@spaceborn/web-core/use-load';
 import { useStore } from '../../context/StoreContext';
 import { LiveDelivery } from '../../components/LiveDelivery';
 import {
@@ -680,7 +680,7 @@ function OrderCard({
               <span className="text-sb-brand font-semibold">Receipt</span>
             )}
           </div>
-          {order.cancelReason && !order.cancelReason.toLowerCase().includes('payment') && !order.cancelReason.toLowerCase().includes('time') && (
+          {order.cancelReason && (order.status === 'cancelled' || order.status === 'expired') && (
             <p className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-medium">
               Cancellation Reason: {order.cancelReason}
             </p>
@@ -817,9 +817,12 @@ export default function OrdersPage() {
   const [activeFilter, setActiveFilter] = useDraft<'all' | 'active' | 'delivered' | 'cancelled'>('orders:filter', 'all');
   const [searchQuery, setSearchQuery] = useDraft('orders:search', '');
 
-  const orders = useLoad(
-    () => (user ? api<{ orders: Order[] }>('/orders').then((r) => r.orders) : Promise.resolve([] as Order[])),
+  const orders = usePagedLoad(
+    (offset, limit) =>
+      user ? api<{ orders: Order[] }>(`/orders?limit=${limit}&offset=${offset}`).then((r) => r.orders) : Promise.resolve([] as Order[]),
     [user?.uid],
+    20,
+    (o) => o.id,
   );
 
   useEffect(() => {
@@ -1049,6 +1052,18 @@ export default function OrdersPage() {
           ))}
         </section>
       ))}
+
+      {orders.hasMore && (
+        <div className="text-center">
+          <button
+            onClick={() => void orders.loadMore()}
+            disabled={orders.loadingMore}
+            className="rounded-xl border border-sb-line/60 bg-sb-card px-4 py-2 text-xs font-bold text-sb-ink hover:border-sb-brand disabled:opacity-50 cursor-pointer"
+          >
+            {orders.loadingMore ? 'Loading…' : 'Show older orders'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

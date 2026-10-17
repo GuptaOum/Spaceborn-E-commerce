@@ -68,3 +68,61 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[]): Loaded<T> {
 
   return { data, error, loading, refreshing, reload: fetchNow, refresh: fetchNow, mutate };
 }
+
+export interface PagedLoaded<T> extends Loaded<T[]> {
+  /** The last page came back full, so there may be more. */
+  hasMore: boolean;
+  loadingMore: boolean;
+  loadMore: () => Promise<void>;
+}
+
+/**
+ * A list fetched a page at a time. The first page loads like `useLoad`; `loadMore` appends the
+ * next one. Rows already on screen are skipped by `key`, so a row that moved pages is not doubled.
+ */
+export function usePagedLoad<T>(
+  fetchPage: (offset: number, limit: number) => Promise<T[]>,
+  deps: unknown[],
+  pageSize: number,
+  key: (row: T) => string | number,
+): PagedLoaded<T> {
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const shown = useRef<T[] | null>(null);
+  const loadedFor = useRef<string | null>(null);
+  const depsKey = JSON.stringify(deps);
+  const base = useLoad(async () => {
+    const rows = await fetchPage(0, pageSize);
+    // A refresh (polling, or after an action) renews the first page and keeps the pages the user
+    // already opened, so the list does not shrink under them. New filters start from page one.
+    const older = loadedFor.current === depsKey ? (shown.current ?? []).slice(pageSize) : [];
+    loadedFor.current = depsKey;
+    if (older.length === 0) setHasMore(rows.length >= pageSize);
+    const fresh = new Set(rows.map(key));
+    return [...rows, ...older.filter((r) => !fresh.has(key(r)))];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  const { data, mutate } = base;
+  shown.current = data;
+  const [moreError, setMoreError] = useState<string | null>(null);
+
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true);
+    try {
+      const rows = await fetchPage(data?.length ?? 0, pageSize);
+      setHasMore(rows.length >= pageSize);
+      setMoreError(null);
+      mutate((current) => {
+        const seen = new Set((current ?? []).map(key));
+        return [...(current ?? []), ...rows.filter((r) => !seen.has(key(r)))];
+      });
+    } catch (err) {
+      setMoreError((err as Error).message);
+    } finally {
+      setLoadingMore(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.length, mutate, pageSize, ...deps]);
+
+  return { ...base, error: base.error ?? moreError, hasMore, loadingMore, loadMore };
+}

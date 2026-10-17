@@ -96,41 +96,42 @@ function canView(order: OrderView, viewer: ActorContext) {
   return order.customerId === viewer.uid;
 }
 
-export async function listCustomerOrders(customerId: string, limit: number) {
+export async function listCustomerOrders(customerId: string, limit: number, offset = 0) {
   // A split checkout is shown as one purchase, so every delivery of a listed checkout comes along
-  // even when the page limit would have cut the group in half.
+  // even when the page limit would have cut the group in half. The next page may repeat a sibling;
+  // the client keeps one copy per order id.
   const { rows } = await pool.query<OrderView>(
     `with page as (
-       select id, checkout_id from orders where customer_id = $1 order by created_at desc limit $2
+       select id, checkout_id from orders where customer_id = $1 order by created_at desc, id desc limit $2 offset $3
      )
      ${ORDER_SELECT}
       where o.customer_id = $1
         and (o.id in (select id from page)
              or o.checkout_id in (select checkout_id from page where checkout_id is not null))
-      order by o.created_at desc`,
-    [customerId, limit],
+      order by o.created_at desc, o.id desc`,
+    [customerId, limit, offset],
   );
   return rows.map(withoutStore);
 }
 
-export async function listStoreOrders(storeId: string, statuses: OrderStatus[] | null, limit: number) {
+export async function listStoreOrders(storeId: string, statuses: OrderStatus[] | null, limit: number, offset = 0) {
   const { rows } = await pool.query<OrderView>(
     `${ORDER_SELECT}
       where o.store_id = $1 and o.status <> 'pending_payment' and ($2::order_status[] is null or o.status = any($2))
-      order by o.created_at desc limit $3`,
-    [storeId, statuses, limit],
+      order by o.created_at desc, o.id desc limit $3 offset $4`,
+    [storeId, statuses, limit, offset],
   );
   return rows.map(withoutOtp);
 }
 
-/** `cities` is an admin's lower-cased region list; null means every city. */
-export async function listAllOrders(statuses: OrderStatus[] | null, limit: number, cities: string[] | null = null) {
+/** `cities` is an admin's region list (see cityKey); null means every city. */
+export async function listAllOrders(statuses: OrderStatus[] | null, limit: number, cities: string[] | null = null, offset = 0) {
   const { rows } = await pool.query<OrderView>(
     `${ORDER_SELECT}
       where ($1::order_status[] is null or o.status = any($1))
-        and ($3::text[] is null or lower(btrim(s.city)) = any($3))
-      order by o.created_at desc limit $2`,
-    [statuses, limit, cities],
+        and ($3::text[] is null or sb_city_key(s.city) = any($3))
+      order by o.created_at desc, o.id desc limit $2 offset $4`,
+    [statuses, limit, cities, offset],
   );
   return rows.map(withoutOtp);
 }
@@ -544,6 +545,8 @@ export interface TransitionInput {
   actor: ActorContext;
   reason?: string;
   otp?: string;
+  /** Shop or support cancelling: false when the units are damaged or missing and must not go back on sale. */
+  restock?: boolean;
 }
 
 export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient) {
@@ -598,7 +601,8 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
       throw unprocessable('reason_required', 'A cancellation reason is required');
     }
 
-    if (HOLDS_STOCK.includes(from) && (input.to === 'cancelled' || input.to === 'expired')) {
+    const keepOffShelf = input.restock === false && input.to === 'cancelled' && (actor.role === 'vendor' || actor.role === 'admin');
+    if (HOLDS_STOCK.includes(from) && (input.to === 'cancelled' || input.to === 'expired') && !keepOffShelf) {
       await releaseStock(c, order.id);
     }
 

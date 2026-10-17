@@ -6,7 +6,7 @@ import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
 import type { Order, OrderStatus } from '@spaceborn/web-core/types';
-import { useLoad } from '@spaceborn/web-core/use-load';
+import { usePagedLoad } from '@spaceborn/web-core/use-load';
 import { RiderShare } from './RiderShare';
 
 // Your shop delivers its own orders: "Dispatch" means your rider has left with the parcel.
@@ -128,11 +128,16 @@ const STATUS_TONE: Partial<Record<OrderStatus, string>> = {
 };
 
 export function OrdersPanel({ onChange }: { onChange: () => void }) {
-  const { prompt } = useFeedback();
+  const { prompt, confirm } = useFeedback();
   const [filter, setFilter] = useDraft<keyof typeof FILTERS>('vendor:orders:filter', 'active');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const orders = useLoad(() => api<{ orders: Order[] }>(`/vendor/orders?status=${FILTERS[filter]}`).then((r) => r.orders), [filter]);
+  const orders = usePagedLoad(
+    (offset, limit) => api<{ orders: Order[] }>(`/vendor/orders?status=${FILTERS[filter]}&limit=${limit}&offset=${offset}`).then((r) => r.orders),
+    [filter],
+    50,
+    (o) => o.id,
+  );
 
   useEffect(() => {
     if (filter !== 'active') return;
@@ -171,7 +176,7 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
 
   const [transition] = useAction(
     async (order: Order, to: OrderStatus) => {
-      const body: { to: OrderStatus; otp?: string; reason?: string } = { to };
+      const body: { to: OrderStatus; otp?: string; reason?: string; restock?: boolean } = { to };
       if (to === 'delivered') {
         const otp = await prompt({
           title: `Deliver order #${order.orderNumber}`,
@@ -199,6 +204,13 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
         });
         if (!reason) return '';
         body.reason = reason;
+        // Not restocking is the safe answer: the website never sells units the shop does not have.
+        body.restock = await confirm({
+          title: 'Put these items back on your shelf?',
+          body: 'Choose “No” if they are damaged, missing or still with the rider, so the website does not sell units you do not have.',
+          confirmLabel: 'Yes, back on shelf',
+          cancelLabel: 'No, damaged or missing',
+        });
       }
       setBusyId(order.id);
       try {
@@ -359,6 +371,17 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
           </article>
         );
       })}
+      {orders.hasMore && (
+        <div className="text-center">
+          <button
+            onClick={() => void orders.loadMore()}
+            disabled={orders.loadingMore}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50"
+          >
+            {orders.loadingMore ? 'Loading…' : 'Load older orders'}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

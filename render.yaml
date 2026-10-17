@@ -7,6 +7,10 @@
 #   2. spaceborn-storefront   (Customer quick-commerce & 3D print / CNC storefront)
 #   3. spaceborn-vendor-hub   (Vendor portal for inventory, orders & fabrication)
 #   4. spaceborn-admin-panel  (Admin operations, store verification & catalog approval)
+#   5. spaceborn-worker       (Background worker: refunds, emails, order and payment timeouts)
+#
+# Real payments only: Razorpay keys are required, mock payments are off. The worker is a
+# background service, which Render does not offer on the free plan.
 #
 # NOTE: If you wish to run all 4 services inside a single free container (to stay
 # 100% within Render's 750 free hours/month perpetually), use `render.unified.yaml`.
@@ -34,7 +38,13 @@ services:
       - key: DB_SSL
         value: require
       - key: PAYMENTS_ALLOW_MOCK
-        value: "true"
+        value: "false"
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
       - key: UPLOADS_ALLOW_LOCAL
         value: "true"
       - key: CORS_ORIGIN
@@ -52,6 +62,43 @@ services:
         fromService:
           type: web
           name: spaceborn-vendor-hub
+          property: url
+
+  # ----------------------------------------------------------------------------
+  # 5. Background worker: without it refunds, emails and timeouts never run
+  # ----------------------------------------------------------------------------
+  - type: worker
+    name: spaceborn-worker
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run build -w @spaceborn/web-core && npm run build -w @spaceborn/api
+    startCommand: npm run start:worker -w @spaceborn/api
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: require
+      - key: PAYMENTS_ALLOW_MOCK
+        value: "false"
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: UPLOADS_ALLOW_LOCAL
+        value: "true"
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: PUBLIC_ORIGIN
+        fromService:
+          type: web
+          name: spaceborn-storefront
           property: url
 
   # ----------------------------------------------------------------------------

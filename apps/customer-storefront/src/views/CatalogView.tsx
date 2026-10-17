@@ -42,7 +42,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   onSearchChange,
   onClearSearch,
 }) => {
-  const { searchResults, searchStatus, catalogStatus } = useStore();
+  const { searchResults, searchStatus, catalogStatus, catalogHasMore, catalogLoadingMore, loadMoreProducts } = useStore();
   const { categories: shelf, isAll, resolveCategory, inCategory } = useStorefront();
   const CATEGORIES = useMemo(() => [{ id: 'all', name: 'All Categories', icon: 'all', description: '' }, ...shelf], [shelf]);
   const activeCategory = isAll(selectedCategory) ? null : resolveCategory(selectedCategory);
@@ -807,6 +807,17 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               </div>
             )}
 
+            {!searchResults && catalogHasMore && filteredProducts.length > 0 && (
+              <div className="mt-5 text-center">
+                <button
+                  onClick={() => void loadMoreProducts()}
+                  disabled={catalogLoadingMore}
+                  className="rounded-xl border border-sb-line/60 bg-sb-card px-5 py-2 text-xs font-bold text-sb-ink hover:border-sb-brand disabled:opacity-50 cursor-pointer"
+                >
+                  {catalogLoadingMore ? 'Loading…' : 'Show more products'}
+                </button>
+              </div>
+            )}
           </main>
 
         </div>

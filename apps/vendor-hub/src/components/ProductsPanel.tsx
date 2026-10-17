@@ -22,7 +22,7 @@ const FILTERS: ('all' | SubmissionStatus)[] = ['all', 'pending', 'approved', 're
 const MAX_PHOTO_MB = 8;
 
 const input = 'mt-1 w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm';
-const EMPTY_FORM = { name: '', description: '', categoryId: '', brand: '', mrp: '', price: '', stock: '1' };
+const EMPTY_FORM = { name: '', description: '', categoryId: '', brand: '', mpn: '', mrp: '', price: '', stock: '1' };
 
 function Photo({ id, localUrl }: { id: string; localUrl?: string }) {
   const [src, setSrc] = useState<string | null>(localUrl ?? null);
@@ -71,7 +71,7 @@ export function ProductsPanel() {
   }, [file]);
 
   const field = (key: keyof typeof form) => ({
-    value: form[key],
+    value: form[key] ?? '',
     onChange: (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value })),
     className: input,
     required: true,
@@ -94,6 +94,7 @@ export function ProductsPanel() {
       description: s.description,
       categoryId: s.categoryId,
       brand: s.brand ?? '',
+      mpn: s.mpn ?? '',
       mrp: String(s.mrp),
       price: String(s.price),
       stock: String(s.stock),
@@ -131,6 +132,7 @@ export function ProductsPanel() {
             description: form.description.trim(),
             categoryId: form.categoryId,
             brand: form.brand.trim() || undefined,
+            mpn: (form.mpn ?? '').trim() || undefined,
             mrp,
             price,
             stock: Math.trunc(Number(form.stock)),
@@ -153,6 +155,7 @@ export function ProductsPanel() {
             description: form.description.trim(),
             categoryId: form.categoryId,
             brand: form.brand.trim() || undefined,
+            mpn: (form.mpn ?? '').trim() || undefined,
             mrp,
             price,
             stock: Math.trunc(Number(form.stock)),
@@ -332,7 +335,14 @@ export function ProductsPanel() {
               ))}
           </select>
         </label>
-        <label className="block text-xs font-semibold text-slate-600">Brand<input {...field('brand')} required={false} maxLength={80} /></label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block text-xs font-semibold text-slate-600">Brand<input {...field('brand')} required={false} maxLength={80} /></label>
+          <label className="block text-xs font-semibold text-slate-600">
+            Part number (optional)
+            <input {...field('mpn')} required={false} maxLength={60} placeholder="e.g. ATmega328P-PU" />
+          </label>
+        </div>
+        <p className="-mt-1 text-[11px] text-slate-500">The manufacturer part number printed on the part or its datasheet. It lets us match your stock to the same item already on the website.</p>
         <div className="grid grid-cols-2 gap-2">
           <label className="text-xs font-semibold text-slate-600">MRP ₹<input type="number" min="1" step="0.01" {...field('mrp')} /></label>
           <label className="text-xs font-semibold text-slate-600">Your price ₹<input type="number" min="1" step="0.01" max={form.mrp || undefined} {...field('price')} /></label>

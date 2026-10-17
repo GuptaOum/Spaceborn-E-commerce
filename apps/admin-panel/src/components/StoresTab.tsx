@@ -27,11 +27,16 @@ interface StoreInventoryItem {
   unitsHeld: number;
   isListed: boolean;
   updatedAt: string;
+  aboveMrp: boolean;
+  holdKind: 'above_mrp' | 'admin' | null;
+  holdReason: string | null;
 }
 
 interface StoreInventory {
   items: StoreInventoryItem[];
-  summary: { listed: number; inStock: number; lowStock: number; outOfStock: number; pendingProposals: number };
+  summary: {
+    listed: number; inStock: number; lowStock: number; outOfStock: number; aboveMrp: number; onHold: number; pendingProposals: number;
+  };
 }
 
 const FILTERS: StoreStatus[] = ['pending', 'approved', 'suspended', 'rejected'];
@@ -46,6 +51,47 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
     (it) => !q || it.name.toLowerCase().includes(q) || it.sku.toLowerCase().includes(q) || it.categoryName.toLowerCase().includes(q),
   );
   const s = inv.data?.summary;
+  const { prompt, confirm } = useFeedback();
+
+  const patchItem = (productId: string, patch: Partial<StoreInventoryItem>) =>
+    inv.mutate((d) => (d ? { ...d, items: d.items.map((it) => (it.productId === productId ? { ...it, ...patch } : it)) } : d));
+
+  const [act, acting] = useAction(
+    async (it: StoreInventoryItem, kind: 'notice' | 'hold' | 'release') => {
+      const path = `/admin/stores/${storeId}/inventory/${it.productId}`;
+      if (kind === 'notice') {
+        const ok = await confirm({
+          title: `Ask the shop to lower ${it.name}?`,
+          body: `They sell it at ${formatInr(it.price)}, above the MRP of ${formatInr(it.mrp)}. They get a message asking for ${formatInr(it.mrp)} or less.`,
+          confirmLabel: 'Send notice',
+        });
+        if (!ok) return '';
+        await api(`${path}/price-notice`, { method: 'POST', body: {} });
+        return 'Price notice sent to the shop';
+      }
+      if (kind === 'hold') {
+        const reason = await prompt({
+          title: `Take ${it.name} off the website?`,
+          body: it.aboveMrp
+            ? 'Only this shop’s listing is hidden. It comes back by itself once they price it at or under the MRP.'
+            : 'Only this shop’s listing is hidden, and it stays hidden until you lift the hold.',
+          label: 'Reason the shop sees',
+          minLength: 3,
+          multiline: true,
+          confirmLabel: 'Take off website',
+          danger: true,
+        });
+        if (!reason) return '';
+        const r = await api<{ item: Partial<StoreInventoryItem> }>(`${path}/hold`, { method: 'POST', body: { reason } });
+        patchItem(it.productId, r.item);
+        return `${it.name} is off the website for this shop`;
+      }
+      const r = await api<{ item: Partial<StoreInventoryItem> }>(`${path}/hold`, { method: 'DELETE' });
+      patchItem(it.productId, r.item);
+      return r.item.isListed ? `${it.name} is back on the website` : 'Hold lifted. The shop must lower the price before it shows again.';
+    },
+    { success: (msg) => msg as string },
+  );
 
   return (
     <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -57,6 +103,8 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800 ring-1 ring-emerald-200">{s.inStock} in stock</span>
               {s.lowStock > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-800 ring-1 ring-amber-200">{s.lowStock} low (≤5)</span>}
               {s.outOfStock > 0 && <span className="rounded-full bg-red-50 px-2.5 py-1 font-semibold text-red-800 ring-1 ring-red-200">{s.outOfStock} out of stock</span>}
+              {s.aboveMrp > 0 && <span className="rounded-full bg-red-600 px-2.5 py-1 font-semibold text-white">{s.aboveMrp} above MRP</span>}
+              {s.onHold > 0 && <span className="rounded-full bg-slate-800 px-2.5 py-1 font-semibold text-white">{s.onHold} taken off by admin</span>}
               {s.pendingProposals > 0 && <span className="rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-800 ring-1 ring-sky-200">{s.pendingProposals} proposals waiting</span>}
               <input
                 value={query}
@@ -78,6 +126,7 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
                     <th className="px-3 py-2 text-right font-semibold" title="Already off the shelf for checkouts not paid yet">Awaiting payment</th>
                     <th className="px-3 py-2 font-semibold">Status</th>
                     <th className="px-3 py-2 font-semibold">Updated</th>
+                    <th className="px-3 py-2 font-semibold">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -96,7 +145,10 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
                         </p>
                       </td>
                       <td className="px-3 py-2">{it.categoryName}</td>
-                      <td className="px-3 py-2 text-right font-semibold">{formatInr(it.price)}</td>
+                      <td className={`px-3 py-2 text-right font-semibold ${it.aboveMrp ? 'text-red-700' : ''}`}>
+                        {formatInr(it.price)}
+                        {it.aboveMrp && <span className="block text-[10px] font-semibold uppercase">above MRP</span>}
+                      </td>
                       <td className="px-3 py-2 text-right text-slate-500">{formatInr(it.mrp)}</td>
                       <td className={`px-3 py-2 text-right font-semibold ${it.stock === 0 ? 'text-red-700' : it.stock <= 5 ? 'text-amber-700' : 'text-slate-800'}`}>{it.stock}</td>
                       <td className="px-3 py-2 text-right">{it.unitsSold}</td>
@@ -104,6 +156,10 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
                       <td className="px-3 py-2">
                         {!it.isActive ? (
                           <span className="rounded bg-red-100 px-1.5 py-0.5 font-semibold text-red-700">Product inactive</span>
+                        ) : it.holdKind ? (
+                          <span className="rounded bg-slate-800 px-1.5 py-0.5 font-semibold text-white" title={it.holdReason ?? undefined}>
+                            Taken off by admin
+                          </span>
                         ) : it.isListed ? (
                           <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-semibold text-emerald-800">Listed</span>
                         ) : (
@@ -111,11 +167,29 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
                         )}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap text-slate-500">{formatDateTime(it.updatedAt)}</td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {it.holdKind ? (
+                          <button disabled={acting} onClick={() => void act(it, 'release')} className="rounded border border-slate-300 px-2 py-0.5 font-semibold text-slate-700 disabled:opacity-50">
+                            Lift hold
+                          </button>
+                        ) : it.isListed ? (
+                          <span className="flex gap-1">
+                            {it.aboveMrp && (
+                              <button disabled={acting} onClick={() => void act(it, 'notice')} className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 font-semibold text-amber-800 disabled:opacity-50">
+                                Ask to lower
+                              </button>
+                            )}
+                            <button disabled={acting} onClick={() => void act(it, 'hold')} className="rounded border border-red-300 px-2 py-0.5 font-semibold text-red-700 disabled:opacity-50">
+                              Take off website
+                            </button>
+                          </span>
+                        ) : null}
+                      </td>
                     </tr>
                   ))}
                   {items.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-3 py-4 text-center text-slate-500">Nothing matches that filter.</td>
+                      <td colSpan={10} className="px-3 py-4 text-center text-slate-500">Nothing matches that filter.</td>
                     </tr>
                   )}
                 </tbody>

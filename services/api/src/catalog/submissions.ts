@@ -77,6 +77,8 @@ export interface SubmissionInput {
   description: string;
   categoryId: string;
   brand?: string;
+  /** Manufacturer part number, when the vendor knows it. */
+  mpn?: string;
   mrp: number;
   price: number;
   stock: number;
@@ -84,7 +86,7 @@ export interface SubmissionInput {
 }
 
 const COLUMNS = `
-  s.id, s.store_id as "storeId", s.name, s.description, s.category_id as "categoryId", s.brand,
+  s.id, s.store_id as "storeId", s.name, s.description, s.category_id as "categoryId", s.brand, s.mpn,
   s.mrp, s.price, s.stock, s.status, s.review_note as "reviewNote", s.product_id as "productId",
   s.image_key as "imageKey", s.created_at as "createdAt", s.updated_at as "updatedAt",
   (select c.name from categories c where c.id = s.category_id) as "categoryName"`;
@@ -122,12 +124,12 @@ export async function createSubmission(storeId: string, input: SubmissionInput) 
   const { rows } = await pool.query(
     `insert into product_submissions as s
        (store_id, name, description, category_id, brand, mrp, price, stock, image_key,
-        text_embedding, embedding_model, image_embedding, image_embedding_model)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::vector, $11, $12::vector, $13)
+        text_embedding, embedding_model, image_embedding, image_embedding_model, mpn)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::vector, $11, $12::vector, $13, $14)
      returning ${COLUMNS}`,
     [storeId, input.name, input.description, input.categoryId, input.brand ?? null, input.mrp, input.price,
       input.stock, input.imageKey, toPgVector(text.vector), text.model,
-      image ? toPgVector(image.vector) : null, image?.model ?? null],
+      image ? toPgVector(image.vector) : null, image?.model ?? null, input.mpn || null],
   );
   return present(rows[0]);
 }
@@ -160,13 +162,14 @@ export async function updateSubmission(storeId: string, id: string, input: Updat
        text_embedding = $11::vector, embedding_model = $12,
        image_embedding = case when $10::text is not null then $13::vector else s.image_embedding end,
        image_embedding_model = case when $10::text is not null then $14 else s.image_embedding_model end,
+       mpn = $15,
        review_note = null,
        status = 'pending'
      where s.id = $1 and s.store_id = $2 and s.status in ('pending', 'rejected')
      returning ${COLUMNS}`,
     [id, storeId, input.name, input.description, input.categoryId, input.brand ?? null, input.mrp, input.price,
       input.stock, input.imageKey ?? null, toPgVector(text.vector), text.model,
-      imageVector, imageModel],
+      imageVector, imageModel, input.mpn || null],
   );
   if (!rows[0]) throw notFound('Submission not found');
   return present(rows[0]);
@@ -189,7 +192,7 @@ export async function deleteSubmission(storeId: string, id: string) {
 
 /** Cities are a lower-cased admin region list; null means no regional restriction. */
 export type CityScope = string[] | null;
-const CITY_FILTER = `($CITIES::text[] is null or lower(btrim(st.city)) = any($CITIES))`;
+const CITY_FILTER = `($CITIES::text[] is null or sb_city_key(st.city) = any($CITIES))`;
 const cityFilter = (param: number) => CITY_FILTER.replaceAll('$CITIES', `$${param}`);
 
 export async function submissionImage(id: string, storeId: string | null, cities: CityScope = null) {
@@ -208,6 +211,9 @@ export interface SimilarMatch {
   name: string;
   sku: string | null;
   city: string | null;
+  mpn: string | null;
+  /** Same manufacturer part number as the proposal: the same component whatever the photo says. */
+  mpnMatch: boolean;
   score: number;
   textScore: number;
   imageScore: number | null;
@@ -221,6 +227,8 @@ interface ScoredRow {
   description: string;
   sku?: string | null;
   city?: string | null;
+  mpn?: string | null;
+  mpnMatch?: boolean;
   nameSim?: number | string | null;
   textScore?: number | string | null;
   imageScore?: number | string | null;
@@ -241,7 +249,8 @@ function scoreRow(
   const storedImage = image && row.image_embedding_model === image.model ? fromPgVector(row.image_embedding) : null;
   const imageScore = row.imageScore != null ? Number(row.imageScore) : storedImage ? cosine(image!.vector, storedImage) : null;
   const nameSim = Number(row.nameSim ?? 0);
-  const score = Math.max(textScore, imageScore ?? 0, nameSim);
+  const mpnMatch = Boolean(row.mpnMatch);
+  const score = mpnMatch ? 1 : Math.max(textScore, imageScore ?? 0, nameSim);
   if (score < MIN_SCORE) return null;
   return {
     kind: row.kind,
@@ -249,17 +258,19 @@ function scoreRow(
     name: row.name,
     sku: row.sku ?? null,
     city: row.city ?? null,
+    mpn: row.mpn ?? null,
+    mpnMatch,
     score: Math.round(score * 1000) / 1000,
     textScore: Math.round(textScore * 1000) / 1000,
     imageScore: imageScore == null ? null : Math.round(imageScore * 1000) / 1000,
     nameScore: Math.round(nameSim * 1000) / 1000,
-    likelyDuplicate: score >= DUPLICATE_SCORE || nameSim >= 0.85,
+    likelyDuplicate: mpnMatch || score >= DUPLICATE_SCORE || nameSim >= 0.85,
   };
 }
 
 export async function findSimilar(db: Db, submissionId: string, cities: CityScope = null): Promise<SimilarMatch[]> {
   const { rows } = await db.query(
-    `select name, description, text_embedding, embedding_model, image_embedding, image_embedding_model
+    `select name, description, mpn_key, text_embedding, embedding_model, image_embedding, image_embedding_model
        from product_submissions where id = $1`,
     [submissionId],
   );
@@ -307,7 +318,7 @@ export async function findSimilar(db: Db, submissionId: string, cities: CityScop
             s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
        from product_submissions s join stores st on st.id = s.store_id
       where s.status = 'pending' and s.id <> $2 and s.embedding_model = $4 and s.text_embedding is not null
-        and ($5::text[] is null or lower(btrim(st.city)) = any($5::text[]))
+        and ($5::text[] is null or sb_city_key(st.city) = any($5::text[]))
       order by s.text_embedding <=> $1::vector
       limit 8`,
     [vector, submissionId, sub.name, text.model, cities],
@@ -318,11 +329,30 @@ export async function findSimilar(db: Db, submissionId: string, cities: CityScop
             s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
        from product_submissions s join stores st on st.id = s.store_id
       where s.status = 'pending' and s.id <> $2
-        and ($3::text[] is null or lower(btrim(st.city)) = any($3::text[]))
+        and ($3::text[] is null or sb_city_key(st.city) = any($3::text[]))
       order by similarity(s.name, $1) desc
       limit 8`,
     [sub.name, submissionId, cities],
   );
+  let byMpn: { rows: ScoredRow[] } = { rows: [] };
+  if (sub.mpn_key) {
+    byMpn = await db.query<ScoredRow>(
+      `select p.id, p.sku, p.name, p.description, null::text as city, 'catalog'::text as kind, p.mpn, true as "mpnMatch",
+              similarity(p.name, $2) as "nameSim",
+              p.text_embedding, p.embedding_model, p.image_embedding, p.image_embedding_model
+         from products p
+        where p.is_active and p.mpn_key = $1
+       union all
+       select s.id, null::text, s.name, s.description, st.city, 'submission'::text, s.mpn, true,
+              similarity(s.name, $2),
+              s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
+         from product_submissions s join stores st on st.id = s.store_id
+        where s.status = 'pending' and s.id <> $3 and s.mpn_key = $1
+          and ($4::text[] is null or sb_city_key(st.city) = any($4::text[]))
+        limit 8`,
+      [sub.mpn_key, sub.name, submissionId, cities],
+    );
+  }
   let byImage: { rows: ScoredRow[] } = { rows: [] };
   let pendingByImage: { rows: ScoredRow[] } = { rows: [] };
   if (image && imageVector) {
@@ -344,7 +374,7 @@ export async function findSimilar(db: Db, submissionId: string, cities: CityScop
               s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
          from product_submissions s join stores st on st.id = s.store_id
         where s.status = 'pending' and s.id <> $2 and s.image_embedding_model = $4 and s.image_embedding is not null
-          and ($5::text[] is null or lower(btrim(st.city)) = any($5::text[]))
+          and ($5::text[] is null or sb_city_key(st.city) = any($5::text[]))
         order by s.image_embedding <=> $1::vector
         limit 8`,
       [imageVector, submissionId, sub.name, image.model, cities],
@@ -352,7 +382,7 @@ export async function findSimilar(db: Db, submissionId: string, cities: CityScop
   }
 
   const merged = new Map<string, ScoredRow>();
-  for (const row of [...byVector.rows, ...byTitle.rows, ...pendingByVector.rows, ...pendingByTitle.rows, ...byImage.rows, ...pendingByImage.rows]) {
+  for (const row of [...byMpn.rows, ...byVector.rows, ...byTitle.rows, ...pendingByVector.rows, ...pendingByTitle.rows, ...byImage.rows, ...pendingByImage.rows]) {
     const key = `${row.kind}:${row.id}`;
     const prev = merged.get(key);
     if (!prev) {
@@ -361,6 +391,8 @@ export async function findSimilar(db: Db, submissionId: string, cities: CityScop
     }
     merged.set(key, {
       ...prev,
+      mpn: prev.mpn ?? row.mpn,
+      mpnMatch: Boolean(prev.mpnMatch || row.mpnMatch),
       nameSim: Math.max(Number(prev.nameSim ?? 0), Number(row.nameSim ?? 0)),
       // The same product can surface from the text index and the image index; keep the stronger signal.
       textScore: prev.textScore != null && row.textScore != null ? Math.max(Number(prev.textScore), Number(row.textScore)) : (prev.textScore ?? row.textScore),
@@ -440,12 +472,14 @@ export async function approveSubmission(
   mergeIntoProductId: string | null,
   cities: CityScope = null,
   categoryId: string | null = null,
+  /** When attaching to an existing product, replace its photo with this proposal's. */
+  usePhoto = false,
 ) {
   const approved = await withTransaction(async (c) => {
     const { rows } = await c.query(
       `select s.id, s.status, s.store_id, s.name, s.description, s.category_id, s.brand, s.mrp, s.price, s.stock,
               s.image_key, s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model,
-              st.status as store_status, st.city
+              s.mpn, s.mpn_key, st.status as store_status, st.city
          from product_submissions s join stores st on st.id = s.store_id
         where s.id = $1 and ${cityFilter(2)} for update of s`,
       [id, cities],
@@ -459,14 +493,13 @@ export async function approveSubmission(
     if (!mergeIntoProductId) await requireCategory(c, sub.category_id);
 
     let productId = mergeIntoProductId;
+    let toppedUp = false;
     if (productId) {
-      const product = await c.query<{ mrp: string; category_id: string }>(
-        'select mrp, category_id from products where id = $1 and is_active',
+      const product = await c.query<{ mrp: string; category_id: string; mpn_key: string | null }>(
+        'select mrp, category_id, mpn_key from products where id = $1 and is_active',
         [productId],
       );
       if (!product.rows[0]) throw notFound('Product not found');
-      const existing = await c.query('select 1 from inventory where store_id = $1 and product_id = $2', [sub.store_id, productId]);
-      if (existing.rows[0]) throw conflict('This store already lists that product. Edit it from inventory instead.');
       // The customer sees the catalog product's MRP, so the attached offer must sit under it, the
       // same rule a vendor meets when pricing from inventory.
       if (Number(sub.price) > Number(product.rows[0].mrp)) {
@@ -478,7 +511,53 @@ export async function approveSubmission(
       if (product.rows[0].category_id !== sub.category_id) {
         throw unprocessable('category_mismatch', 'The proposal is in a different category from this product. Approve it as new or reject it.');
       }
+      if (sub.mpn_key && product.rows[0].mpn_key && sub.mpn_key !== product.rows[0].mpn_key) {
+        throw unprocessable('mpn_mismatch', `The proposal's part number ${sub.mpn} differs from this product's. Approve it as new or reject it.`);
+      }
+      // A shop proposing something it already sells is restocking: add the units and take the new price.
+      // An admin hold stays; a price hold lifts because the price was just checked against the MRP.
+      const topUp = await c.query(
+        `update inventory set stock = stock + $3, price = $4,
+                is_listed = case when hold_kind = 'admin' then false else true end,
+                hold_kind = nullif(hold_kind, 'above_mrp'),
+                hold_reason = case when hold_kind = 'above_mrp' then null else hold_reason end,
+                held_at = case when hold_kind = 'above_mrp' then null else held_at end
+          where store_id = $1 and product_id = $2`,
+        [sub.store_id, productId, sub.stock, sub.price],
+      );
+      toppedUp = (topUp.rowCount ?? 0) > 0;
+      if (usePhoto) {
+        await c.query(
+          `update products set image_key = $2, image_url = null, image_embedding = $3::vector, image_embedding_model = $4
+            where id = $1`,
+          [productId, sub.image_key, sub.image_embedding, sub.image_embedding_model],
+        );
+      }
+      if (sub.mpn && !product.rows[0].mpn_key) {
+        await c.query('savepoint mpn');
+        try {
+          await c.query('update products set mpn = $2 where id = $1', [productId, sub.mpn]);
+          await c.query('release savepoint mpn');
+        } catch (err) {
+          // Another product of the same brand already carries it; the attach still goes through.
+          await c.query('rollback to savepoint mpn');
+          await c.query('release savepoint mpn');
+          if ((err as { code?: string }).code !== '23505') throw err;
+        }
+      }
     } else {
+      if (sub.mpn_key) {
+        const taken = await c.query<{ name: string; sku: string }>(
+          `select name, sku from products where mpn_key = $1 and lower(coalesce(brand, '')) = lower(coalesce($2::text, '')) limit 1`,
+          [sub.mpn_key, sub.brand],
+        );
+        if (taken.rows[0]) {
+          throw conflict(
+            `${taken.rows[0].name} (${taken.rows[0].sku}) already has part number ${sub.mpn}. Attach the stock to it instead.`,
+            { code: 'mpn_taken' },
+          );
+        }
+      }
       let inserted = null;
       for (let attempt = 0; attempt < 3 && !inserted; attempt++) {
         // A unique-key failure aborts the transaction in Postgres, so each try gets its own savepoint.
@@ -487,27 +566,33 @@ export async function approveSubmission(
           inserted = await c.query<{ id: string }>(
             `insert into products
                (sku, name, category_id, brand, description, image_key, mrp, is_active,
-                text_embedding, embedding_model, image_embedding, image_embedding_model)
-             values ($1, $2, $3, $4, $5, $6, $7, true, $8::vector, $9, $10::vector, $11)
+                text_embedding, embedding_model, image_embedding, image_embedding_model, mpn)
+             values ($1, $2, $3, $4, $5, $6, $7, true, $8::vector, $9, $10::vector, $11, $12)
              returning id`,
             [newSku(), sub.name, sub.category_id, sub.brand, sub.description, sub.image_key, sub.mrp,
-              sub.text_embedding, sub.embedding_model, sub.image_embedding, sub.image_embedding_model],
+              sub.text_embedding, sub.embedding_model, sub.image_embedding, sub.image_embedding_model, sub.mpn],
           );
           await c.query('release savepoint sku');
         } catch (err) {
           await c.query('rollback to savepoint sku');
           await c.query('release savepoint sku');
-          if ((err as { code?: string }).code !== '23505') throw err;
+          const e = err as { code?: string; constraint?: string };
+          if (e.code !== '23505') throw err;
+          if (e.constraint === 'products_mpn_brand_key') {
+            throw conflict(`Another product already has part number ${sub.mpn}. Attach the stock to it instead.`, { code: 'mpn_taken' });
+          }
         }
       }
       if (!inserted?.rows[0]) throw conflict('Could not allocate a SKU. Try again.');
       productId = inserted.rows[0].id;
     }
 
-    await c.query(
-      `insert into inventory (store_id, product_id, price, stock, is_listed) values ($1, $2, $3, $4, true)`,
-      [sub.store_id, productId, sub.price, sub.stock],
-    );
+    if (!toppedUp) {
+      await c.query(
+        `insert into inventory (store_id, product_id, price, stock, is_listed) values ($1, $2, $3, $4, true)`,
+        [sub.store_id, productId, sub.price, sub.stock],
+      );
+    }
     await c.query(
       `update product_submissions set status = 'approved', product_id = $2, category_id = $3, review_note = null where id = $1`,
       [id, productId, sub.category_id],
@@ -516,6 +601,7 @@ export async function approveSubmission(
       id,
       status: 'approved' as const,
       productId,
+      toppedUp,
       categoryId: sub.category_id as string,
       city: sub.city as string,
       name: sub.name as string,

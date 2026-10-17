@@ -5,8 +5,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@spaceborn/web-core/auth';
 import { SignInPanel } from '@spaceborn/web-core/sign-in';
 
+/**
+ * Only same-site paths. Browsers read `/\evil.com` as `//evil.com`, and tabs or newlines inside a
+ * URL are dropped, so prefix checks alone are not enough: resolve the path and compare origins.
+ */
 function safeRedirect(target: string | null) {
-  return target && target.startsWith('/') && !target.startsWith('//') ? target : '/catalog';
+  const fallback = '/catalog';
+  if (!target || !target.startsWith('/') || /[\\\u0000-\u001f]/.test(target)) return fallback;
+  try {
+    const base = 'https://spaceborn.invalid';
+    const url = new URL(target, base);
+    if (url.origin !== base) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
 }
 
 function AuthContent() {

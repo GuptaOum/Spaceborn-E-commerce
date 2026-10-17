@@ -7,6 +7,7 @@
     "./api": "./src/api.ts",
     "./auth": "./src/auth.tsx",
     "./types": "./src/types.ts",
+    "./city": "./src/city.ts",
     "./format": "./src/format.ts",
     "./sign-in": "./src/SignInPanel.tsx",
     "./use-load": "./src/useLoad.ts",

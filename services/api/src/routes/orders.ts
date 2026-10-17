@@ -47,8 +47,14 @@ ordersRouter.post('/', placeOrderLimiter, async (req, res) => {
 });
 
 ordersRouter.get('/', async (req, res) => {
-  const { limit } = parse(z.object({ limit: z.coerce.number().int().min(1).max(50).default(20) }), req.query);
-  res.json({ orders: await listCustomerOrders(currentUser(req).uid, limit) });
+  const { limit, offset } = parse(
+    z.object({
+      limit: z.coerce.number().int().min(1).max(50).default(20),
+      offset: z.coerce.number().int().min(0).max(100_000).default(0),
+    }),
+    req.query,
+  );
+  res.json({ orders: await listCustomerOrders(currentUser(req).uid, limit, offset) });
 });
 
 ordersRouter.get('/:id', async (req, res) => {

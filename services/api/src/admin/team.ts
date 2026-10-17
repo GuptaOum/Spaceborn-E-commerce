@@ -4,6 +4,7 @@ import { adminScope, currentUser, DEFAULT_ADMIN_EMAILS, forgetUser, normalizeEma
 import { pool, withTransaction } from '../db/pool.js';
 import { conflict, notFound, unprocessable } from '../errors.js';
 import { logger } from '../logger.js';
+import { cityKey } from '../lib/city.js';
 
 export interface AdminMember {
   email: string;
@@ -26,12 +27,12 @@ const MEMBER_FROM = `from admin_members m left join users u on lower(btrim(u.ema
 
 export const memberEmail = z.string().trim().toLowerCase().email().max(200);
 
-/** Store cities, lower-cased and de-duplicated. An empty list is rejected: use null for "all regions". */
+/** Store cities in their one spelling (see cityKey), de-duplicated. An empty list is rejected: use null for "all regions". */
 export const regionList = z
   .array(z.string().trim().min(2).max(60))
   .min(1)
   .max(50)
-  .transform((cities) => [...new Set(cities.map((c) => c.toLowerCase()))]);
+  .transform((cities) => [...new Set(cities.map(cityKey).filter(Boolean))]);
 
 export async function listMembers(): Promise<AdminMember[]> {
   const { rows } = await pool.query<AdminMember>(`select ${MEMBER_COLUMNS} ${MEMBER_FROM} order by m.is_owner desc, m.created_at`);
@@ -41,8 +42,8 @@ export async function listMembers(): Promise<AdminMember[]> {
 /** Cities that currently have a store, so the panel can offer real choices. */
 export async function listRegions(): Promise<{ city: string; stores: number }[]> {
   const { rows } = await pool.query<{ city: string; stores: number }>(
-    `select lower(btrim(city)) as city, count(*)::int as stores from stores where status <> 'rejected'
-      group by lower(btrim(city)) order by 1`,
+    `select sb_city_key(city) as city, count(*)::int as stores from stores where status <> 'rejected'
+      group by sb_city_key(city) order by 1`,
   );
   return rows;
 }
@@ -147,7 +148,7 @@ export async function listAudit(limit: number, cities: string[] | null) {
     `select id, actor_email as "actorEmail", action, target_type as "targetType", target_id as "targetId", city, detail,
             created_at as "createdAt"
        from admin_audit_log
-      where ($2::text[] is null or lower(btrim(city)) = any($2))
+      where ($2::text[] is null or sb_city_key(city) = any($2))
       order by created_at desc limit $1`,
     [limit, cities],
   );

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, Loader2, Lock, ShieldCheck, Store } from 'lucide-react';
 import { api, ApiError, newIdempotencyKey } from '@spaceborn/web-core/api';
 import { useDraft } from '@spaceborn/web-core/use-draft';
+import { cityKey } from '@spaceborn/web-core/city';
 import type { CartResolution, CheckoutPayment, Order } from '@spaceborn/web-core/types';
 import { useStore } from '../context/StoreContext';
 import { payWithRazorpay } from '../lib/razorpay';
@@ -139,9 +140,10 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       setErrorMessage('Enter a valid 6-digit PIN code.');
       return;
     }
-    const pinLabel = location.label.trim().toLowerCase();
-    const typedCity = address.city.trim().toLowerCase();
-    if (pinLabel && pinLabel !== 'current location' && typedCity && pinLabel !== typedCity) {
+    // "Kanpur Nagar", "Civil Lines, Kanpur" and "kanpur" are the same city for this check.
+    const typedCity = cityKey(address.city);
+    const pinPlaces = [location.label, ...location.label.split(','), location.area ?? ''].map(cityKey).filter(Boolean);
+    if (location.label !== 'Current location' && typedCity && pinPlaces.length > 0 && !pinPlaces.includes(typedCity)) {
       setErrorMessage(`The rider is sent to the pin in the header (${location.label}), not to the street you type. Set that pin to ${address.city}, or type ${location.label} as the city.`);
       return;
     }

@@ -5,7 +5,7 @@ import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
 import { useDraft } from '@spaceborn/web-core/use-draft';
-import { useLoad } from '@spaceborn/web-core/use-load';
+import { useLoad, usePagedLoad } from '@spaceborn/web-core/use-load';
 import type { Store } from '@spaceborn/web-core/types';
 import { MapPin, Zap, CheckCircle2 } from 'lucide-react';
 
@@ -20,10 +20,14 @@ interface InventoryItem {
   unitsSold?: number;
   unitsHeld?: number;
   isListed: boolean;
+  /** Set when an admin took this listing off the website. */
+  holdKind?: 'above_mrp' | 'admin' | null;
+  holdReason?: string | null;
 }
 
 type CatalogEntry = Pick<InventoryItem, 'productId' | 'sku' | 'name' | 'imageUrl' | 'mrp'>;
-type Saved = Pick<InventoryItem, 'productId' | 'price' | 'stock' | 'isListed'>;
+type Saved = Pick<InventoryItem, 'productId' | 'price' | 'stock' | 'isListed' | 'holdKind'>;
+const PAGE = 100;
 
 const LOW_STOCK = 5;
 const VIEWS = { all: 'All', low: 'Low stock', hidden: 'Hidden' } as const;
@@ -50,6 +54,8 @@ function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (save
   const priceNumber = Number(price);
   const priceChanged = priceNumber !== item.price;
   const priceValid = priceNumber > 0 && priceNumber <= item.mrp;
+  const aboveMrp = item.price > item.mrp;
+  const adminHold = item.holdKind === 'admin';
   const deltaNumber = Math.trunc(Number(delta));
   const dirty = priceChanged || deltaNumber !== 0;
   const nextStock = Math.max(0, item.stock + deltaNumber);
@@ -69,13 +75,26 @@ function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (save
       <td className="py-2 pr-2">
         <div className="flex items-center gap-2">
           <p className="font-semibold text-slate-900">{item.name}</p>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${item.isListed ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
-            {item.isListed ? 'Live' : 'Hidden'}
-          </span>
+          {item.holdKind ? (
+            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase text-red-800">Removed by admin</span>
+          ) : (
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${item.isListed ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+              {item.isListed ? 'Live' : 'Hidden'}
+            </span>
+          )}
         </div>
         <p className="text-xs text-slate-400">
           {item.sku} · MRP {formatInr(item.mrp)}
         </p>
+        {item.holdKind && (
+          <p className="mt-0.5 text-xs text-red-700">
+            {item.holdReason}
+            {item.holdKind === 'above_mrp' ? ` Set the price to ${formatInr(item.mrp)} or less and save to put it back.` : ' See Messages.'}
+          </p>
+        )}
+        {!item.holdKind && aboveMrp && (
+          <p className="mt-0.5 text-xs font-semibold text-red-700">Above the MRP. Lower it to {formatInr(item.mrp)} or less, or an admin may take it off the website.</p>
+        )}
       </td>
       <td className="py-2 pr-2">
         <input
@@ -131,7 +150,8 @@ function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (save
           {busy ? 'Saving…' : 'Save'}
         </button>
         <button
-          disabled={busy}
+          disabled={busy || Boolean(item.holdKind)}
+          title={item.holdKind ? 'An admin removed this listing' : undefined}
           onClick={() => void update({ isListed: !item.isListed }, item.isListed ? `${item.name} hidden from customers` : `${item.name} is live`)}
           className="rounded border border-slate-300 px-2 py-1 text-xs font-semibold disabled:opacity-40"
         >
@@ -139,7 +159,7 @@ function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (save
         </button>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || adminHold}
           onClick={async () => {
             if (!window.confirm(`Permanently remove ${item.name} from your inventory?`)) return;
             await api(`/vendor/inventory/${item.productId}`, { method: 'DELETE' });
@@ -265,7 +285,12 @@ export function InventoryPanel({ store, onChange }: { store?: Store; onChange: (
   const { toast } = useFeedback();
   const [view, setView] = useDraft<View>('vendor:inv:view', 'all');
   const [search, setSearch] = useDraft('vendor:inv:search', '');
-  const inventory = useLoad(() => api<{ items: InventoryItem[] }>('/vendor/inventory?limit=100').then((r) => r.items), []);
+  const inventory = usePagedLoad(
+    (offset, limit) => api<{ items: InventoryItem[] }>(`/vendor/inventory?limit=${limit}&offset=${offset}`).then((r) => r.items),
+    [],
+    PAGE,
+    (i) => i.productId,
+  );
 
   const apply = (saved: Saved) => {
     inventory.mutate((items) => items?.map((i) => (i.productId === saved.productId ? { ...i, ...saved } : i)) ?? items);
@@ -373,6 +398,17 @@ export function InventoryPanel({ store, onChange }: { store?: Store; onChange: (
         )}
         {!inventory.loading && items.length === 0 && <p className="py-4 text-center text-sm text-slate-500">No products yet. Add some from the catalog below.</p>}
         {!inventory.loading && items.length > 0 && visible.length === 0 && <p className="py-4 text-center text-sm text-slate-500">Nothing matches this filter.</p>}
+        {inventory.hasMore && (
+          <div className="pt-3 text-center">
+            <button
+              onClick={() => void inventory.loadMore()}
+              disabled={inventory.loadingMore}
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-50"
+            >
+              {inventory.loadingMore ? 'Loading…' : `Load more (showing ${items.length})`}
+            </button>
+          </div>
+        )}
       </div>
       <AddFromCatalog store={store} owned={owned} onAdded={added} />
     </section>

@@ -58,6 +58,10 @@ interface StoreContextType {
   catalogStatus: CatalogStatus;
   catalogError: string | null;
   refreshCatalog: () => Promise<void>;
+  /** The nearby catalog arrives a page at a time; more pages exist when this is true. */
+  catalogHasMore: boolean;
+  catalogLoadingMore: boolean;
+  loadMoreProducts: () => Promise<void>;
 
   cart: CartItem[];
   isCartDrawerOpen: boolean;
@@ -90,12 +94,15 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 const PLACEHOLDER_IMAGE = '/spaceborn-logo.svg';
 const MAX_PER_LINE = 50;
+const CATALOG_PAGE = 100;
 
 const KEYS = {
   cart: 'spaceborn_cart_v3',
   location: 'spaceborn_location_v2',
   wishlist: 'spaceborn_wishlist',
   profile: (uid: string) => `spaceborn_profile_${uid}`,
+  /** Who the cart and wishlist on this browser belong to. */
+  owner: 'spaceborn_owner',
 };
 
 function readJson<T>(key: string): T | null {
@@ -217,23 +224,48 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (hydrated) localStorage.setItem(KEYS.cart, JSON.stringify(cart));
   }, [cart, hydrated]);
 
+  // On a shared computer the next person must not see the last one's cart, wishlist or GST details.
+  const forgetPersonalData = useCallback(() => {
+    setCart({ items: [] });
+    setWishlist([]);
+    setGstDetails(EMPTY_GST);
+    setCompareList([]);
+    try {
+      localStorage.removeItem(KEYS.cart);
+      localStorage.removeItem(KEYS.wishlist);
+      localStorage.removeItem(KEYS.owner);
+      sessionStorage.clear();
+    } catch {
+      // Storage blocked: the in-memory state above is already cleared.
+    }
+  }, [setGstDetails, setCompareList]);
+
   useEffect(() => {
     if (!auth.user) {
       setProfileOverrides({});
       return;
     }
     setProfileOverrides(readJson<Partial<UserProfile>>(KEYS.profile(auth.user.uid)) ?? {});
-  }, [auth.user?.uid]);
+    // A guest cart carries over when its owner signs in; another account's leftovers do not.
+    const owner = localStorage.getItem(KEYS.owner);
+    if (owner && owner !== auth.user.uid) forgetPersonalData();
+    localStorage.setItem(KEYS.owner, auth.user.uid);
+  }, [auth.user?.uid, forgetPersonalData]);
+
+  const [catalogHasMore, setCatalogHasMore] = useState(false);
+  const [catalogLoadingMore, setCatalogLoadingMore] = useState(false);
 
   const loadCatalog = useCallback(async (loc: DeliveryLocation) => {
     setCatalogStatus('loading');
     setCatalogError(null);
+    setCatalogHasMore(false);
     try {
       const at = `lat=${loc.latitude}&lng=${loc.longitude}`;
       const [nearby, catalog] = await Promise.all([
         api<{ stores: NearbyStore[] }>(`/stores/nearby?${at}`),
-        api<{ products: CatalogOffer[]; nearbyStores: number; serviceable: boolean }>(`/catalog/products?${at}&limit=100`),
+        api<{ products: CatalogOffer[]; nearbyStores: number; serviceable: boolean }>(`/catalog/products?${at}&limit=${CATALOG_PAGE}`),
       ]);
+      setCatalogHasMore(catalog.products.length === CATALOG_PAGE);
       const nearest = nearby.stores[0] ?? null;
       setServiceArea({ nearbyStores: catalog.nearbyStores, etaMinutes: nearest?.etaMinutes ?? null, nearest });
       if (!catalog.serviceable) {
@@ -253,6 +285,23 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     if (hydrated) void loadCatalog(location);
   }, [location, loadCatalog, hydrated]);
+
+  const loadMoreProducts = async () => {
+    setCatalogLoadingMore(true);
+    try {
+      const at = `lat=${location.latitude}&lng=${location.longitude}`;
+      const page = await api<{ products: CatalogOffer[] }>(`/catalog/products?${at}&limit=${CATALOG_PAGE}&offset=${products.length}`);
+      setCatalogHasMore(page.products.length === CATALOG_PAGE);
+      setProducts((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...page.products.filter((p) => !seen.has(p.id)).map(toProduct)];
+      });
+    } catch (err) {
+      setCatalogError((err as Error).message);
+    } finally {
+      setCatalogLoadingMore(false);
+    }
+  };
 
   // The server ranks by keywords and meaning, and only returns what nearby stores stock.
   useEffect(() => {
@@ -422,6 +471,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     catalogStatus,
     catalogError,
     refreshCatalog: () => loadCatalog(location),
+    catalogHasMore,
+    catalogLoadingMore,
+    loadMoreProducts,
     cart: cartItems,
     isCartDrawerOpen,
     openCart: () => setIsCartDrawerOpen(true),
@@ -435,7 +487,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     authLoading: auth.loading,
     currentUser,
     setCurrentUser,
-    logoutUser: () => void auth.signOut(),
+    logoutUser: () => {
+      forgetPersonalData();
+      void auth.signOut();
+    },
     gstDetails,
     setGstDetails,
     wishlist,

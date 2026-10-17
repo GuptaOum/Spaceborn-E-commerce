@@ -4,6 +4,7 @@ import { getAuth, type Auth } from 'firebase-admin/auth';
 import { config } from './config.js';
 import { pool, type Db } from './db/pool.js';
 import { forbidden, HttpError, unauthorized } from './errors.js';
+import { cityKey } from './lib/city.js';
 import { logger } from './logger.js';
 
 export type Role = 'customer' | 'vendor' | 'admin';
@@ -201,11 +202,11 @@ export function adminScope(req: Request): AdminScope {
   return req.admin;
 }
 
-/** SQL parameter for `($n::text[] is null or lower(btrim(city)) = any($n))`. */
-export const scopeCities = (scope: AdminScope): string[] | null => scope.regions;
+/** SQL parameter for `($n::text[] is null or sb_city_key(city) = any($n))`. */
+export const scopeCities = (scope: AdminScope): string[] | null => scope.regions && scope.regions.map(cityKey);
 
 export const inScope = (scope: AdminScope, city: string | null | undefined) =>
-  scope.regions === null || (!!city && scope.regions.includes(city.trim().toLowerCase()));
+  scope.regions === null || (!!city && scope.regions.map(cityKey).includes(cityKey(city)));
 
 export async function setRoleClaims(uid: string, role: Role, storeId: string | null, db: Db = pool) {
   await db.query('update users set role = $2 where id = $1', [uid, role]);

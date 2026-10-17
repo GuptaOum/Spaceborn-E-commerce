@@ -62,6 +62,7 @@ function Review({
   const corrected = categoryId !== submission.categoryId;
   const chosen = categories.find((c) => c.id === categoryId);
   const hiddenPick = chosen?.isVisible === false;
+  const [usePhoto, setUsePhoto] = useState(false);
 
   const [run, busy] = useAction(
     async (kind: 'new' | 'merge' | 'reject', match?: SimilarMatch) => {
@@ -88,13 +89,20 @@ function Review({
         });
         if (!ok) return '';
       }
-      await api(`/admin/product-submissions/${submission.id}/approve`, {
+      const r = await api<{ submission: { toppedUp?: boolean } }>(`/admin/product-submissions/${submission.id}/approve`, {
         method: 'POST',
-        body: { ...(match ? { mergeIntoProductId: match.id } : {}), ...(corrected ? { categoryId } : {}) },
+        body: {
+          ...(match ? { mergeIntoProductId: match.id, usePhoto } : {}),
+          ...(corrected ? { categoryId } : {}),
+        },
       });
       onDecided(submission, match ? `attached to ${match.name}` : 'approved as a new product');
       const where = corrected && chosen ? ` under ${chosen.name}` : '';
-      return match ? `${submission.name}: stock attached to ${match.name}` : `${submission.name} is now in the catalog${where}`;
+      if (!match) return `${submission.name} is now in the catalog${where}`;
+      const photo = usePhoto ? ' Its photo now shows on the website.' : '';
+      return r.submission.toppedUp
+        ? `${submission.storeName ?? 'The shop'} already sold ${match.name}: added ${submission.stock} units at ${formatInr(submission.price)}.${photo}`
+        : `${submission.name}: stock attached to ${match.name}.${photo}`;
     },
     { success: (msg) => msg as string },
   );
@@ -119,7 +127,12 @@ function Review({
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-slate-800">
-                {match.name} {match.likelyDuplicate && <span className="text-amber-700">· likely duplicate</span>}
+                {match.name}{' '}
+                {match.mpnMatch ? (
+                  <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">same part number {match.mpn}</span>
+                ) : (
+                  match.likelyDuplicate && <span className="text-amber-700">· likely duplicate</span>
+                )}
               </p>
               <p className="text-slate-500">
                 {match.kind === 'catalog' ? `Catalog ${match.sku ?? ''}` : `Pending submission${match.city ? ` · ${match.city}` : ''}`} · overall {pct(match.score)}
@@ -136,6 +149,12 @@ function Review({
           </li>
         ))}
       </ul>
+      {submission.status === 'pending' && detail.data?.similar.some((m) => m.kind === 'catalog') && (
+        <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+          <input type="checkbox" checked={usePhoto} onChange={(e) => setUsePhoto(e.target.checked)} />
+          When attaching, use this proposal’s photo for the catalog item (needs an all-regions admin)
+        </label>
+      )}
       {submission.status === 'pending' && (
         <label className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
           Category on the website
@@ -227,7 +246,8 @@ export function ProductSubmissionsTab({ counts, onDecided }: { counts?: Record<s
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
                       <span className="font-semibold text-slate-700">{s.categoryName ?? s.categoryId}</span>
-                      {s.brand && <> · {s.brand}</>} · MRP {formatInr(s.mrp)} · price {formatInr(s.price)} · stock {s.stock}
+                      {s.brand && <> · {s.brand}</>}
+                      {s.mpn && <> · part no. <span className="font-mono">{s.mpn}</span></>} · MRP {formatInr(s.mrp)} · price {formatInr(s.price)} · stock {s.stock}
                     </p>
                     <p className="mt-1 text-xs text-slate-600">{s.description}</p>
                     {s.reviewNote && <p className="mt-1 text-xs text-amber-700">Note: {s.reviewNote}</p>}
