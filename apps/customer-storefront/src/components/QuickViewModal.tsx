@@ -112,8 +112,6 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
             <div>
               <div className="flex items-center space-x-2 text-xs font-semibold text-[#7a6274] mb-1">
                 <span className="text-[#e2434b] font-bold uppercase tracking-wider">{product.category}</span>
-                <span>•</span>
-                <span>{product.brand}</span>
               </div>
 
               <h2 className="text-base sm:text-lg font-bold text-[#34222e] leading-snug mb-2">

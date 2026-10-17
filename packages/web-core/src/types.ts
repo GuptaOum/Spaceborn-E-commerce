@@ -84,7 +84,9 @@ export interface CartResolution {
   /** Which shop sends which items, nearest first. Empty until the whole cart can be filled. */
   dispatches?: {
     storeName: string;
+    addressLine: string;
     city: string;
+    pincode: string;
     distanceKm: number;
     etaMinutes: number;
     items: { productId: string; quantity: number }[];

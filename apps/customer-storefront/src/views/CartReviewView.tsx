@@ -2,6 +2,7 @@
 import React from 'react';
 import { CartItem, GstDetails } from '../types';
 import { estimateTotals, FREE_DELIVERY_THRESHOLD } from '../lib/pricing';
+import { CartDispatches } from '../components/CartDispatches';
 import { 
   Trash2, 
   ArrowRight, 
@@ -136,6 +137,11 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                   + Add More Components
                 </button>
               </div>
+              {cart.length > 0 && (
+                <div className="border-b border-slate-200 bg-white px-4 py-3 sm:px-5">
+                  <CartDispatches cart={cart} />
+                </div>
+              )}
 
               {/* Items List */}
               <div className="divide-y divide-slate-100">

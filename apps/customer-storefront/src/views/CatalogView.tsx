@@ -770,11 +770,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         />
                       </div>
                       <div>
-                        <div className="flex items-center space-x-2 text-[10px] text-[#7a6274] mb-0.5">
-                          <span className="font-semibold text-[#e2434b]">{product.brand}</span>
-                          <span>•</span>
-                          <span>SKU: {product.sku}</span>
-                        </div>
+                        <div className="mb-0.5 text-[10px] text-[#7a6274]">SKU: {product.sku}</div>
                         <h3 className="text-xs sm:text-sm font-bold text-[#34222e] leading-snug">
                           {product.name}
                         </h3>

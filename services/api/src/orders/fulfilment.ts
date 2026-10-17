@@ -41,7 +41,9 @@ export interface Resolution {
 
 export interface Dispatch {
   storeName: string;
+  addressLine: string;
   city: string;
+  pincode: string;
   distanceKm: number;
   etaMinutes: number;
   items: { productId: string; quantity: number }[];
@@ -59,7 +61,9 @@ export interface SliceLine {
 export interface StoreSlice {
   storeId: string;
   storeName: string;
+  addressLine: string;
   city: string;
+  pincode: string;
   distanceKm: number;
   prepMinutes: number;
   lines: SliceLine[];
@@ -68,7 +72,9 @@ export interface StoreSlice {
 interface OfferRow {
   store_id: string;
   store_name: string;
+  address_line: string;
   city: string;
+  pincode: string;
   km: number;
   prep: number;
   product_id: string;
@@ -88,7 +94,7 @@ export async function allocateNearest(
 ): Promise<{ slices: StoreSlice[]; short: { productId: string; wanted: number; available: number }[] }> {
   const ids = [...quantities.keys()];
   const { rows } = await db.query<OfferRow>(
-    `select s.id as store_id, s.name as store_name, s.city, d.km, s.avg_prep_minutes as prep,
+    `select s.id as store_id, s.name as store_name, s.address_line, s.city, s.pincode, d.km, s.avg_prep_minutes as prep,
             i.product_id, i.price, i.stock, p.name, p.sku, p.image_url
        from stores s
        cross join lateral (select ${distanceSql('$1', '$2')} as km) d
@@ -116,7 +122,9 @@ export async function allocateNearest(
       slice = {
         storeId: row.store_id,
         storeName: row.store_name,
+        addressLine: row.address_line,
         city: row.city,
+        pincode: row.pincode,
         distanceKm: Number(row.km),
         prepMinutes: row.prep,
         lines: [],
@@ -338,7 +346,9 @@ function resolutionFromSlices(slices: StoreSlice[]): Resolution {
     deliveries: slices.length,
     dispatches: slices.map((slice) => ({
       storeName: slice.storeName,
+      addressLine: slice.addressLine,
       city: slice.city,
+      pincode: slice.pincode,
       distanceKm: Math.round(slice.distanceKm * 10) / 10,
       etaMinutes: etaMinutes(slice.prepMinutes, slice.distanceKm),
       items: slice.lines.map((line) => ({ productId: line.productId, quantity: line.quantity })),

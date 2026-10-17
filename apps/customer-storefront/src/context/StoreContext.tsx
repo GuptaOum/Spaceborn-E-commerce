@@ -209,7 +209,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   useEffect(() => {
     const savedLocation = readJson<DeliveryLocation>(KEYS.location);
-    if (savedLocation) setLocationState(savedLocation);
+    if (savedLocation) {
+      const preset = LOCATION_PRESETS.find(
+        (item) => item.latitude === savedLocation.latitude && item.longitude === savedLocation.longitude,
+      );
+      setLocationState(preset ?? savedLocation);
+    }
     const savedCart = readJson<StoredCart>(KEYS.cart);
     if (savedCart?.items) setCart(savedCart);
     const savedWishlist = readJson<Product[]>(KEYS.wishlist);

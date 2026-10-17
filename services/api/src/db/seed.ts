@@ -16,10 +16,10 @@ const CATEGORIES: Record<string, { id: string; name: string; sort: number }> = {
 };
 
 const DEMO_STORES = [
-  { owner: 'seed-vendor-kanpur', name: 'Kanpur Robotics Hub', city: 'Kanpur', pincode: '208001', lat: 26.4499, lng: 80.3319 },
-  { owner: 'seed-vendor-bengaluru', name: 'Koramangala Electronics', city: 'Bengaluru', pincode: '560034', lat: 12.9352, lng: 77.6245 },
-  { owner: 'seed-vendor-chennai', name: 'Chennai Maker Labs', city: 'Chennai', pincode: '600001', lat: 13.0827, lng: 80.2707 },
-  { owner: 'seed-vendor-pune', name: 'Pune Maker Store', city: 'Pune', pincode: '411001', lat: 18.5204, lng: 73.8567 },
+  { owner: 'seed-vendor-kanpur', name: 'Kanpur Robotics Hub', address: '14/116 Mall Road', city: 'Kanpur', pincode: '208001', lat: 26.4499, lng: 80.3319 },
+  { owner: 'seed-vendor-bengaluru', name: 'Koramangala Electronics', address: '80 Feet Road, Koramangala 4th Block', city: 'Bengaluru', pincode: '560034', lat: 12.9352, lng: 77.6245 },
+  { owner: 'seed-vendor-chennai', name: 'Chennai Maker Labs', address: '22 NSC Bose Road, Parrys Corner', city: 'Chennai', pincode: '600001', lat: 13.0827, lng: 80.2707 },
+  { owner: 'seed-vendor-pune', name: 'Pune Maker Store', address: '5 MG Road, Camp', city: 'Pune', pincode: '411001', lat: 18.5204, lng: 73.8567 },
 ];
 
 export async function seed() {
@@ -59,9 +59,9 @@ export async function seed() {
       const { rows } = await c.query<{ id: string }>(
         `insert into stores (owner_id, name, phone, address_line, city, pincode, latitude, longitude, status, is_online, delivery_radius_km)
          values ($1, $2, '9876543210', $3, $4, $5, $6, $7, 'approved', true, 8)
-         on conflict (owner_id) do update set name = excluded.name
+         on conflict (owner_id) do update set name = excluded.name, address_line = excluded.address_line
          returning id`,
-        [store.owner, store.name, `${store.name}, Main Road`, store.city, store.pincode, store.lat, store.lng],
+        [store.owner, store.name, store.address, store.city, store.pincode, store.lat, store.lng],
       );
       const storeId = rows[0]!.id;
       for (const [i, product] of products.entries()) {

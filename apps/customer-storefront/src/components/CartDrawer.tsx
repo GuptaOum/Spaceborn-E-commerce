@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { CartItem } from '../types';
 import { X, Trash2, ShoppingBag, ArrowRight, ShieldCheck, Zap, Plus, Minus, Lock } from 'lucide-react';
 import { estimateTotals, FREE_DELIVERY_THRESHOLD } from '../lib/pricing';
+import { CartDispatches } from './CartDispatches';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -120,10 +121,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'}
                 </span>
               </div>
-              <p className="text-[10.5px] sm:text-[11px] text-[#059669] font-semibold flex items-center gap-1 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#059669] animate-pulse"></span>
-                <span>Delivered from stock near you</span>
-              </p>
+              <CartDispatches cart={cart} />
             </div>
           </div>
           <button

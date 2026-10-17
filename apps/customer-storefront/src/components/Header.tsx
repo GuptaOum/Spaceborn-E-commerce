@@ -56,8 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   products,
   onSelectProduct,
 }) => {
-  const { location, setLocation, locateMe, locateByPincode, searchPlaces, serviceArea, catalogStatus, searchResults: rankedResults } =
-    useStore();
+  const { location, setLocation, locateMe, locateByPincode, searchPlaces, searchResults: rankedResults } = useStore();
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -65,14 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [locateBusy, setLocateBusy] = useState(false);
   const [placeQuery, setPlaceQuery] = useState('');
   const [placeResults, setPlaceResults] = useState<DeliveryLocation[]>([]);
-  const deliveryLabel =
-    catalogStatus === 'loading'
-      ? 'Checking delivery here…'
-      : serviceArea.etaMinutes
-        ? `Delivery in about ${serviceArea.etaMinutes} mins${
-            serviceArea.nearbyStores > 1 ? ` · ${serviceArea.nearbyStores} shops nearby` : ''
-          }`
-        : 'Not serviceable here yet';
+  const cityName = location.label === 'Current location' ? 'Current location' : location.label;
 
   const submitPlace = async () => {
     const q = placeQuery.trim();
@@ -202,21 +194,13 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Delivery Location Selector (tablet and up; phones get a chip in the search row) */}
-            <div 
+            <div
               onClick={() => setShowLocationModal(true)}
-              className="hidden md:flex flex-col text-left cursor-pointer group pl-2 sm:pl-3 border-l border-[#f9bf8f]/60"
+              className="hidden md:flex items-center gap-1 text-left cursor-pointer group pl-2 sm:pl-3 border-l border-[#f9bf8f]/60"
             >
-              <div className="flex items-center space-x-1 text-[#059669] font-bold text-xs">
-                <span>{deliveryLabel}</span>
-              </div>
-              <div className="flex items-center space-x-1 text-xs text-[#34222e]/80 font-medium">
-                <MapPin className="w-3.5 h-3.5 text-[#e2434b]" />
-                <span className="truncate max-w-[200px]">
-                  <span className="text-[#7a6274]">Deliver to </span>
-                  {location.area}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 text-[#34222e]/60 group-hover:translate-y-0.5 transition-transform" />
-              </div>
+              <MapPin className="w-3.5 h-3.5 text-[#e2434b]" />
+              <span className="truncate max-w-[160px] text-xs font-bold text-[#34222e]">{cityName}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#34222e]/60 group-hover:translate-y-0.5 transition-transform" />
             </div>
           </div>
 
@@ -444,12 +428,8 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex w-full items-center gap-1 text-left cursor-pointer min-w-0 py-0.5"
           >
             <MapPin className="w-3.5 h-3.5 text-[#e2434b] shrink-0" />
-            <span className="text-xs font-bold text-[#34222e] truncate max-w-[45%]">
-              <span className="font-medium text-[#7a6274]">To </span>
-              {location.area}
-            </span>
+            <span className="truncate text-xs font-bold text-[#34222e]">{cityName}</span>
             <ChevronDown className="w-3 h-3 text-[#34222e]/60 shrink-0" />
-            <span className="ml-auto text-[10.5px] font-bold text-[#059669] truncate shrink-0 max-w-[50%]">{deliveryLabel}</span>
           </button>
           <div className="relative">
             <div className="flex items-center rounded-xl bg-[#fee9d7]/50 border border-[#f9bf8f]/70 px-2.5 py-1.5 focus-within:bg-white focus-within:border-[#059669] transition-all">

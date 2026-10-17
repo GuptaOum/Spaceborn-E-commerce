@@ -141,15 +141,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Body Details */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          {/* Brand & Stock warning */}
-          <div className="flex items-center justify-between text-[10px] text-[#7a6274] mb-0.5">
-            <span className="truncate max-w-[120px] font-semibold uppercase tracking-wider text-[#34222e]/70">
-              {product.brand || product.category}
-            </span>
-            {product.stock > 0 && product.stock <= 5 && (
-              <span className="font-bold text-[#e2434b] text-[9.5px]">Only {product.stock} left</span>
-            )}
-          </div>
+          {product.stock > 0 && product.stock <= 5 && (
+            <div className="mb-0.5 text-right text-[9.5px] font-bold text-[#e2434b]">Only {product.stock} left</div>
+          )}
 
           {/* Product Title (2-line clamped) */}
           <h3 className="text-xs sm:text-[13px] font-bold text-[#34222e] line-clamp-2 leading-snug group-hover:text-[#0c831f] transition-colors mb-1 min-h-[32px]">

@@ -245,7 +245,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
           <div>
             <h2 className="mb-1 font-semibold text-[#34222e]">Delivery details</h2>
             <p className="mb-3 text-xs text-[#7a6274]">
-              The rider is sent to the pin in the header ({location.label}), not to a street we look up. City and PIN should match that pin. Delivering to <b>{location.area}</b>
+              The rider is sent to the pin in the header ({location.label}), not to a street we look up. City and PIN should match that pin. Delivering to <b>{location.label}</b>
               {resolution?.store
                 ? ` · about ${resolution.store.etaMinutes} min${(resolution.deliveries ?? 1) > 1 ? `, ${resolution.deliveries} deliveries` : ''}`
                 : resolving
@@ -303,9 +303,14 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
                 {resolution.dispatches.map((dispatch, i) => (
                   <div key={`${dispatch.storeName}-${i}`} className="rounded-xl border border-[#f9bf8f]/50 bg-white p-2.5 text-xs">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="flex items-start gap-1 font-bold text-[#34222e]">
+                      <span className="flex items-start gap-1 text-[#34222e]">
                         <Store className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#059669]" />
-                        {dispatch.storeName}, {dispatch.city}
+                        <span>
+                          <span className="block font-bold">{dispatch.storeName}</span>
+                          <span className="block text-[#7a6274]">
+                            {[dispatch.addressLine, dispatch.city, dispatch.pincode].filter(Boolean).join(', ')}
+                          </span>
+                        </span>
                       </span>
                       <span className="shrink-0 text-[#7a6274]">
                         {dispatch.distanceKm} km · ~{dispatch.etaMinutes} min

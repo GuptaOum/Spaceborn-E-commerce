@@ -124,6 +124,9 @@ describe('location-first catalog', () => {
     expect(both.body.dispatches).toHaveLength(2);
     expect(both.body.dispatches[0]).toMatchObject({
       storeName: 'Swaroop Nagar Electronics',
+      addressLine: 'Swaroop Nagar',
+      city: 'Kanpur',
+      pincode: '208002',
       items: [{ productId: productA, quantity: 1 }],
     });
     expect(both.body.dispatches[0].distanceKm).toBeLessThan(both.body.dispatches[1].distanceKm);
