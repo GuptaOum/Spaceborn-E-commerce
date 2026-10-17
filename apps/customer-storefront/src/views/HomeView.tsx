@@ -143,7 +143,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       if (trending.length === 0) return null;
       return (
         <section key={section.id} className={SECTION_CARD}>
-          {sectionHeader(section, 'See all', () => onNavigate('catalog'))}
+          {sectionHeader({ ...section, title: section.title || 'Trending Electronics' }, 'See all', () => onNavigate('catalog'))}
           {productGrid(trending)}
         </section>
       );

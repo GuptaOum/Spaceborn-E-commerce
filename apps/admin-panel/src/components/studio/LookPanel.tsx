@@ -21,6 +21,7 @@ interface LiveLook {
 
 const MAX_SLIDES = 6;
 const MAX_SECTIONS = 12;
+const SECTION_FALLBACK: Partial<Record<HomeSection['type'], string>> = { categories: 'Shop by Category', trending: 'Trending Electronics' };
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -380,7 +381,7 @@ export function LookPanel({ categories }: { categories: AdminCategory[] }) {
                     <input
                       value={section.title}
                       maxLength={60}
-                      placeholder="Title"
+                      placeholder={`Title (blank shows "${SECTION_FALLBACK[section.type] ?? categories.find((c) => c.id === section.categoryId)?.name ?? 'the category name'}")`}
                       onChange={(e) => setSections((list) => list.map((x) => (x.id === section.id ? { ...x, title: e.target.value } : x)))}
                       className={`${input} min-w-40 flex-1`}
                     />
