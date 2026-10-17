@@ -1,0 +1,62 @@
+# Local infrastructure for the API: `docker compose up -d redis kafka`.
+# The Python services join with the "ai" profile: `docker compose --profile ai up -d`
+# (they read services/copilot/.env and services/cad-worker/.env; see the .env.example files).
+services:
+  redis:
+    image: redis:7.4-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.9.1
+    ports: ["9092:9092"]
+    environment:
+      CLUSTER_ID: c3BhY2Vib3JuLWthZmthMQ
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:19092,EXTERNAL://:9092,CONTROLLER://:9093
+      # Containers use kafka:19092, processes on the host use localhost:9092.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+
+  copilot:
+    profiles: ["ai"]
+    build:
+      context: .
+      dockerfile: services/copilot/Dockerfile
+    ports: ["8000:8000"]
+    env_file: services/copilot/.env
+    environment:
+      CATALOG_API_URL: http://host.docker.internal:4000
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ~/.aws:/home/copilot/.aws:ro
+
+  cad-worker:
+    profiles: ["ai"]
+    build:
+      context: .
+      dockerfile: services/cad-worker/Dockerfile
+    env_file: services/cad-worker/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DB_HOST: host.docker.internal
+      UPLOAD_DIR: /uploads
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - ./services/api/.uploads:/uploads:ro
+    depends_on:
+      redis:
+        condition: service_healthy

@@ -12,6 +12,8 @@ interface CartDrawerProps {
   onRemoveItem: (productId: string) => void;
   onProceedToCart: () => void;
   onProceedToCheckout: () => void;
+  notice?: string | null;
+  onDismissNotice?: () => void;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -22,6 +24,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onProceedToCart,
   onProceedToCheckout,
+  notice,
+  onDismissNotice,
 }) => {
   // Prevent background scrolling and suppress floating demo banner while cart bottom sheet is open
   useEffect(() => {
@@ -66,8 +70,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const totalAmount = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const totalItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totals = estimateTotals(totalAmount);
-  const amountNeededForFreeShipping = totals.amountToFreeDelivery;
-  const progressPercent = Math.min(100, Math.round((totalAmount / FREE_DELIVERY_THRESHOLD) * 100));
 
   return (
     <div 
@@ -133,24 +135,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </button>
         </div>
 
+        {notice && (
+          <div className="flex items-start justify-between gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-950">
+            <span>{notice}</span>
+            {onDismissNotice && (
+              <button type="button" onClick={onDismissNotice} className="font-bold text-amber-800">
+                OK
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Free Shipping Progress Meter */}
         <div className="px-4 py-2.5 sm:p-3.5 bg-[#ecfdf5] border-b border-[#10b981]/20 shrink-0">
           <div className="flex items-center justify-between text-xs mb-1.5 font-medium">
             <span className="text-[#34222e] flex items-center space-x-1.5">
               <Zap className="w-4 h-4 text-[#059669] fill-[#059669]" />
-              {amountNeededForFreeShipping === 0 ? (
-                <span className="text-[#059669] font-bold">Free delivery on this cart</span>
-              ) : (
-                <span>Add <strong className="text-[#059669] font-bold">₹{amountNeededForFreeShipping.toFixed(0)}</strong> more for free delivery</span>
-              )}
+              <span>Delivery is free above ₹{FREE_DELIVERY_THRESHOLD} on each dispatch. Checkout shows the real fee.</span>
             </span>
-            <span className="text-[11px] font-bold text-[#059669]">{progressPercent}%</span>
-          </div>
-          <div className="w-full bg-[#d1fae5] rounded-full h-1.5 sm:h-2 overflow-hidden border border-[#10b981]/20">
-            <div 
-              className="bg-[#10b981] h-full rounded-full transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
           </div>
         </div>
 
@@ -296,7 +298,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 }}
                 className="w-full bg-white hover:bg-[#fffbf7] text-[#34222e] border border-[#f9bf8f] py-2.5 sm:py-2 px-4 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition cursor-pointer active:scale-[0.99]"
               >
-                <span>Review Cart & GST Invoice Details</span>
+                <span>Review cart</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -307,7 +309,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <span>256-Bit SSL Encrypted</span>
               </span>
               <span>•</span>
-              <span>GST Compliant Invoicing</span>
+              <span>Prices include GST</span>
             </div>
           </div>
         )}

@@ -18,7 +18,7 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "service" {
-  for_each          = toset(["api", "worker", "migrate", "storefront", "vendor-hub", "admin-panel"])
+  for_each          = toset(["api", "worker", "migrate", "storefront", "vendor-hub", "admin-panel", "copilot", "cad-worker", "kafka", "consumer"])
   name              = "/ecs/${local.name}/${each.key}"
   retention_in_days = var.log_retention_days
 }
@@ -133,7 +133,7 @@ locals {
   db_secret_arn  = aws_db_instance.main.master_user_secret[0].secret_arn
   app_secret_arn = aws_secretsmanager_secret.app.arn
 
-  backend_environment = [
+  backend_environment = concat([
     { name = "NODE_ENV", value = "production" },
     { name = "PORT", value = "4000" },
     { name = "AWS_REGION", value = var.aws_region },
@@ -154,16 +154,16 @@ locals {
     { name = "PUBLIC_ORIGIN", value = local.public_origin },
     { name = "VENDOR_ORIGIN", value = local.vendor_origin },
     { name = "REDIS_URL", value = "redis://${aws_elasticache_cluster.redis.cache_nodes[0].address}:6379" },
-  ]
+  ], local.streams_backend_environment)
 
-  backend_secrets = [
+  backend_secrets = concat([
     { name = "DB_USER", valueFrom = "${local.db_secret_arn}:username::" },
     { name = "DB_PASSWORD", valueFrom = "${local.db_secret_arn}:password::" },
     { name = "FIREBASE_SERVICE_ACCOUNT_JSON", valueFrom = "${local.app_secret_arn}:FIREBASE_SERVICE_ACCOUNT_JSON::" },
     { name = "RAZORPAY_KEY_ID", valueFrom = "${local.app_secret_arn}:RAZORPAY_KEY_ID::" },
     { name = "RAZORPAY_KEY_SECRET", valueFrom = "${local.app_secret_arn}:RAZORPAY_KEY_SECRET::" },
     { name = "RAZORPAY_WEBHOOK_SECRET", valueFrom = "${local.app_secret_arn}:RAZORPAY_WEBHOOK_SECRET::" },
-  ]
+  ], local.streams_backend_secrets)
 
   web_environment = [
     { name = "NODE_ENV", value = "production" },
@@ -173,6 +173,8 @@ locals {
 
   image = { for k, repo in aws_ecr_repository.app : k => "${repo.repository_url}:${var.image_tag}" }
 
+  # `discovery` registers the tasks as <name>.spaceborn.internal. `min_healthy`/`max_percent` control
+  # rolling deploys; Kafka is stopped before its replacement starts so two brokers never share a name.
   services = {
     api = {
       image         = local.image["api"], cpu = 512, memory = 1024, port = 4000
@@ -180,30 +182,63 @@ locals {
       task_role     = aws_iam_role.backend_task.arn, sg = aws_security_group.api.id
       desired       = var.api_desired_count
       target_groups = [aws_lb_target_group.api_public.arn, aws_lb_target_group.api_internal.arn]
+      discovery     = "api", min_healthy = 100, max_percent = 200
     }
     worker = {
       image     = local.image["api"], cpu = 256, memory = 512, port = null
       command   = ["node", "dist/worker.js"], environment = local.backend_environment, secrets = local.backend_secrets
       task_role = aws_iam_role.backend_task.arn, sg = aws_security_group.worker.id
       desired   = 1, target_groups = []
+      discovery = null, min_healthy = 100, max_percent = 200
+    }
+    consumer = {
+      image     = local.image["api"], cpu = 256, memory = 512, port = null
+      command   = ["node", "dist/consumer.js"], environment = local.backend_environment, secrets = local.backend_secrets
+      task_role = aws_iam_role.backend_task.arn, sg = aws_security_group.worker.id
+      desired   = 1, target_groups = []
+      discovery = null, min_healthy = 0, max_percent = 100
+    }
+    copilot = {
+      image     = local.image["copilot"], cpu = 512, memory = 1024, port = 8000
+      command   = null, environment = local.copilot_environment, secrets = local.copilot_secrets
+      task_role = aws_iam_role.copilot_task.arn, sg = aws_security_group.copilot.id
+      desired   = var.copilot_desired_count, target_groups = []
+      discovery = "copilot", min_healthy = 100, max_percent = 200
+    }
+    cad-worker = {
+      image     = local.image["cad-worker"], cpu = 1024, memory = 2048, port = null
+      command   = null, environment = local.cad_worker_environment, secrets = local.cad_worker_secrets
+      task_role = aws_iam_role.cad_worker_task.arn, sg = aws_security_group.worker.id
+      desired   = 1, target_groups = []
+      discovery = null, min_healthy = 100, max_percent = 200
+    }
+    kafka = {
+      image     = var.kafka_image, cpu = 512, memory = 2048, port = 9092
+      command   = null, environment = local.kafka_environment, secrets = []
+      task_role = aws_iam_role.kafka_task.arn, sg = aws_security_group.kafka.id
+      desired   = 1, target_groups = []
+      discovery = "kafka", min_healthy = 0, max_percent = 100
     }
     storefront = {
       image     = local.image["storefront"], cpu = 512, memory = 1024, port = 3000
       command   = null, environment = local.web_environment, secrets = []
       task_role = aws_iam_role.web_task.arn, sg = aws_security_group.web.id
       desired   = var.storefront_desired_count, target_groups = [aws_lb_target_group.storefront.arn]
+      discovery = null, min_healthy = 100, max_percent = 200
     }
     vendor-hub = {
       image     = local.image["vendor-hub"], cpu = 256, memory = 512, port = 3000
       command   = null, environment = local.web_environment, secrets = []
       task_role = aws_iam_role.web_task.arn, sg = aws_security_group.web.id
       desired   = 1, target_groups = [aws_lb_target_group.vendor_hub.arn]
+      discovery = null, min_healthy = 100, max_percent = 200
     }
     admin-panel = {
       image     = local.image["admin-panel"], cpu = 256, memory = 512, port = 3000
       command   = null, environment = local.web_environment, secrets = []
       task_role = aws_iam_role.web_task.arn, sg = aws_security_group.web.id
       desired   = 1, target_groups = [aws_lb_target_group.admin_panel.arn]
+      discovery = null, min_healthy = 100, max_percent = 200
     }
   }
 }
@@ -252,7 +287,17 @@ resource "aws_ecs_service" "service" {
   enable_execute_command = true
   propagate_tags         = "SERVICE"
 
+  deployment_minimum_healthy_percent = each.value.min_healthy
+  deployment_maximum_percent         = each.value.max_percent
+
   health_check_grace_period_seconds = length(each.value.target_groups) > 0 ? 60 : null
+
+  dynamic "service_registries" {
+    for_each = each.value.discovery == null ? [] : [each.value.discovery]
+    content {
+      registry_arn = aws_service_discovery_service.internal[service_registries.value].arn
+    }
+  }
 
   network_configuration {
     subnets          = aws_subnet.app[*].id
@@ -318,6 +363,7 @@ locals {
   autoscaled = {
     api        = var.api_max_count
     storefront = var.storefront_max_count
+    copilot    = var.copilot_max_count
   }
 }
 

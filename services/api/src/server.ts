@@ -3,6 +3,7 @@ import { closeCache, connectCache } from './cache.js';
 import { config } from './config.js';
 import { pool } from './db/pool.js';
 import { logger } from './logger.js';
+import { closeKafka } from './streams/kafka.js';
 
 await connectCache();
 const server = createApp().listen(config.PORT, () => {
@@ -16,7 +17,10 @@ server.headersTimeout = 66_000;
 function shutdown(signal: string) {
   logger.info({ signal }, 'shutting down');
   server.close(() => {
-    closeCache().finally(() => pool.end()).finally(() => process.exit(0));
+    closeKafka()
+      .finally(() => closeCache())
+      .finally(() => pool.end())
+      .finally(() => process.exit(0));
   });
   setTimeout(() => process.exit(1), 15_000).unref();
 }

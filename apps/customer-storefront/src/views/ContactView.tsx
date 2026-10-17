@@ -165,7 +165,7 @@ export const ContactView: React.FC<ContactViewProps> = ({ onNavigate }) => {
                       <option value="technical_spec">Datasheet, Pinouts & Firmware Help</option>
                       <option value="b2b_quote">Institutional Bulk Quote / Purchase Order</option>
                       <option value="fabrication">Custom PCB / Wire Harness Prototyping</option>
-                      <option value="order_tracking">Order Tracking & BlueDart Transit</option>
+                      <option value="order_tracking">Order tracking and store delivery</option>
                       <option value="gst_invoice">GST E-Invoice & B2B Tax Credit</option>
                     </select>
                   </div>

@@ -6,12 +6,14 @@ import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
 import type { Order, OrderStatus } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
+import { RiderShare } from './RiderShare';
 
+// Your shop delivers its own orders: "Dispatch" means your rider has left with the parcel.
 const NEXT_STEP: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> = {
   placed: { to: 'accepted', label: 'Accept order' },
   accepted: { to: 'packing', label: 'Start packing' },
   packing: { to: 'ready_for_pickup', label: 'Ready for delivery' },
-  ready_for_pickup: { to: 'out_for_delivery', label: 'Dispatch for delivery' },
+  ready_for_pickup: { to: 'out_for_delivery', label: 'Rider has left (dispatch)' },
   out_for_delivery: { to: 'delivered', label: 'Confirm customer code' },
 };
 
@@ -106,7 +108,7 @@ function printPackingSlip(order: Order) {
   win.document.close();
 }
 
-const VENDOR_CAN_CANCEL: OrderStatus[] = ['placed', 'accepted', 'packing'];
+const VENDOR_CAN_CANCEL: OrderStatus[] = ['placed', 'accepted', 'packing', 'ready_for_pickup', 'out_for_delivery'];
 const ACTIVE_STATUSES: OrderStatus[] = ['placed', 'accepted', 'packing', 'ready_for_pickup', 'out_for_delivery'];
 
 const FILTERS = {
@@ -184,7 +186,10 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
       if (to === 'cancelled') {
         const reason = await prompt({
           title: `Cancel order #${order.orderNumber}?`,
-          body: 'The customer is refunded in full and sees your reason.',
+          body:
+            order.paymentStatus === 'captured' || order.paymentStatus === 'refund_pending'
+              ? 'The customer is refunded in full and sees your reason.'
+              : 'No payment was taken. The customer sees your reason.',
           label: 'Reason',
           minLength: 3,
           multiline: true,
@@ -199,6 +204,7 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
         const r = await api<{ order: Order }>(`/vendor/orders/${order.id}/transition`, { method: 'POST', body });
         replace(r.order);
         onChange();
+        if (to === 'out_for_delivery') return `#${order.orderNumber} is on the road. Share the rider's location so the customer can follow it.`;
         return `#${order.orderNumber} ${ORDER_STATUS_LABEL[r.order.status].toLowerCase()}`;
       } finally {
         setBusyId(null);
@@ -297,6 +303,8 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
             </ul>
             {order.cancelReason && <p className="mt-2 text-xs text-red-600">Cancelled: {order.cancelReason}</p>}
 
+            {atDoor && <RiderShare order={order} />}
+
             {atDoor && (
               <p className="mt-2 text-xs text-slate-600">
                 {codeLive && order.handoverOtpExpiresAt
@@ -343,7 +351,7 @@ export function OrdersPanel({ onChange }: { onChange: () => void }) {
                   onClick={() => void transition(order, 'cancelled')}
                   className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {order.status === 'out_for_delivery' || order.status === 'ready_for_pickup' ? "Couldn't deliver" : 'Cancel'}
                 </button>
               )}
             </div>

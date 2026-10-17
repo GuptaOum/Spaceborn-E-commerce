@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
-import type { Order, OrderStatus, OrderItem } from '@spaceborn/web-core/types';
+import type { CheckoutPayment, Order, OrderStatus, OrderItem } from '@spaceborn/web-core/types';
+import { payWithRazorpay } from '../../lib/razorpay';
 import { useLoad } from '@spaceborn/web-core/use-load';
 import { useStore } from '../../context/StoreContext';
+import { LiveDelivery } from '../../components/LiveDelivery';
 import {
   Package,
   Truck,
@@ -71,18 +73,26 @@ function getStatusTheme(status: OrderStatus) {
       dot: 'bg-emerald-500',
     };
   }
-  if (status === 'cancelled' || status === 'expired' || status === 'pending_payment') {
+  if (status === 'pending_payment') {
+    return {
+      badgeBg: 'bg-amber-50 text-amber-800 border-amber-200/80',
+      icon: Clock,
+      label: 'Awaiting payment',
+      dot: 'bg-amber-500',
+    };
+  }
+  if (status === 'cancelled' || status === 'expired') {
     return {
       badgeBg: 'bg-rose-50 text-rose-800 border-rose-200/80',
       icon: AlertCircle,
-      label: 'Cancelled',
+      label: status === 'expired' ? 'Expired' : 'Cancelled',
       dot: 'bg-rose-500',
     };
   }
   return {
     badgeBg: 'bg-blue-50 text-blue-800 border-blue-200/80',
     icon: Truck,
-    label: 'In Transit',
+    label: ORDER_STATUS_LABEL[status] || status,
     dot: 'bg-blue-500 animate-pulse',
   };
 }
@@ -236,6 +246,31 @@ function OrderCard({
   const [reviewedItems, setReviewedItems] = useState<Record<string, { rating: number; title: string }>>({});
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [reordered, setReordered] = useState(false);
+  const [paying, setPaying] = useState(false);
+
+  const refunding =
+    order.paymentStatus === 'captured' || order.paymentStatus === 'refund_pending' || order.paymentStatus === 'refunded';
+
+  const resumePay = async () => {
+    setPaying(true);
+    try {
+      const placed = await api<{ order: Order; payment: CheckoutPayment }>(`/orders/${order.id}/pay`, { method: 'POST', body: {} });
+      if (placed.payment.provider === 'razorpay') {
+        const result = await payWithRazorpay(placed.payment, `Order #${order.orderNumber}`, {
+          name: order.deliveryAddress.fullName,
+          contact: order.deliveryAddress.phone,
+        });
+        await api('/payments/razorpay/verify', { method: 'POST', body: { orderId: order.id, ...result } });
+      } else {
+        await api('/payments/mock/confirm', { method: 'POST', body: { orderId: order.id } });
+      }
+      onCancelled();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const theme = getStatusTheme(order.status);
   const isTerminal = ['delivered', 'cancelled', 'expired'].includes(order.status);
@@ -359,11 +394,13 @@ function OrderCard({
                 <span>Delivery Tracking</span>
               </span>
               {order.status === 'delivered' ? (
-                <span className="text-[#0c831f] font-bold">✓ Delivered</span>
-              ) : (
+                <span className="text-[#0c831f] font-bold">Delivered</span>
+              ) : order.status === 'out_for_delivery' ? (
                 <span className="text-[#0c831f] font-bold">
-                  ⚡ In Transit (~{order.etaMinutes} mins)
+                  Out for delivery{order.etaMinutes ? ` · about ${order.etaMinutes} min` : ''}
                 </span>
+              ) : (
+                <span className="text-[#0c831f] font-bold">{ORDER_STATUS_LABEL[order.status]}</span>
               )}
             </div>
 
@@ -406,12 +443,37 @@ function OrderCard({
                 />
               </div>
             </div>
+
+            {/* Live map: the store's own rider, from their counter to your door */}
+            {isActive && (
+              <div className="pt-2 border-t border-[#f9bf8f]/40">
+                <LiveDelivery orderId={order.id} status={order.status} onStatusChange={onCancelled} />
+              </div>
+            )}
+          </div>
+        ) : order.status === 'pending_payment' ? (
+          <div className="p-3.5 sm:p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 flex flex-wrap items-center justify-between gap-3">
+            <span>Payment was not finished. The items stay reserved for a short time.</span>
+            <button
+              type="button"
+              onClick={() => void resumePay()}
+              disabled={paying}
+              className="rounded-lg bg-[#0c831f] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+            >
+              {paying ? 'Opening payment…' : 'Pay now'}
+            </button>
           </div>
         ) : (
           <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50/70 border border-rose-200/60 text-xs text-rose-800 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span>This order is cancelled. No payment was charged.</span>
+              <span>
+                {refunding
+                  ? order.paymentStatus === 'refunded'
+                    ? 'This order is cancelled. The refund has been sent to your payment method.'
+                    : 'This order is cancelled. A refund is on its way to your payment method.'
+                  : 'This order is cancelled. No payment was charged.'}
+              </span>
             </div>
             <button
               onClick={handleReorder}
@@ -431,7 +493,7 @@ function OrderCard({
                 <span>Security Handover Code</span>
               </div>
               <p className="text-xs text-[#fee9d7]/80">
-                Share this 4-digit verification code with the delivery partner upon arrival.
+                Read this 4-digit code to the store's rider when they arrive. They cannot complete the delivery without it.
               </p>
             </div>
             <div className="flex items-center gap-2.5">
@@ -567,7 +629,7 @@ function OrderCard({
             <span>{formatInr(order.itemsTotal)}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span>Fast Hub Delivery</span>
+            <span>Store delivery</span>
             <span>
               {order.deliveryFee === 0 ? (
                 <span className="font-bold text-[#0c831f] bg-[#f2fcf4] px-1.5 py-0.5 rounded border border-[#0c831f]/20">
@@ -592,13 +654,21 @@ function OrderCard({
             <span className="text-[#7a6274]">
               Payment Status:{' '}
               <b className="text-[#34222e] uppercase">
-                {order.status === 'cancelled' || order.status === 'expired' || order.status === 'pending_payment'
-                  ? 'Cancelled (Not Charged)'
-                  : order.paymentStatus?.replace('_', ' ') || 'Paid'}
+                {order.status === 'pending_payment'
+                  ? 'Awaiting payment'
+                  : order.paymentStatus === 'refunded'
+                    ? 'Refunded'
+                    : order.paymentStatus === 'refund_pending'
+                      ? 'Refund in progress'
+                      : order.paymentStatus === 'captured'
+                        ? 'Paid'
+                        : order.status === 'cancelled' || order.status === 'expired'
+                          ? 'Not charged'
+                          : order.paymentStatus?.replace('_', ' ') || 'Paid'}
               </b>
             </span>
             {order.status === 'delivered' && (
-              <span className="text-[#0c831f] font-semibold">✓ GST Compliant Invoice</span>
+              <span className="text-[#0c831f] font-semibold">Receipt</span>
             )}
           </div>
           {order.cancelReason && !order.cancelReason.toLowerCase().includes('payment') && !order.cancelReason.toLowerCase().includes('time') && (
@@ -764,7 +834,7 @@ export default function OrdersPage() {
     } else if (activeFilter === 'delivered') {
       list = list.filter((o) => o.status === 'delivered');
     } else if (activeFilter === 'cancelled') {
-      list = list.filter((o) => ['cancelled', 'expired', 'pending_payment'].includes(o.status));
+      list = list.filter((o) => ['cancelled', 'expired'].includes(o.status));
     }
 
     if (searchQuery.trim()) {
@@ -785,7 +855,7 @@ export default function OrdersPage() {
     const all = orders.data?.length || 0;
     const active = orders.data?.filter((o) => ACTIVE_STATUSES.includes(o.status)).length || 0;
     const delivered = orders.data?.filter((o) => o.status === 'delivered').length || 0;
-    const cancelled = orders.data?.filter((o) => ['cancelled', 'expired', 'pending_payment'].includes(o.status)).length || 0;
+    const cancelled = orders.data?.filter((o) => ['cancelled', 'expired'].includes(o.status)).length || 0;
     return { all, active, delivered, cancelled };
   }, [orders.data]);
 
@@ -845,7 +915,7 @@ export default function OrdersPage() {
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {[
             { id: 'all', label: 'All Orders', count: counts.all },
-            { id: 'active', label: 'In Transit', count: counts.active },
+            { id: 'active', label: 'Active', count: counts.active },
             { id: 'delivered', label: 'Delivered', count: counts.delivered },
             { id: 'cancelled', label: 'Cancelled', count: counts.cancelled },
           ].map((tab) => {

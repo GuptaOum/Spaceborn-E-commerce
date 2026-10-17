@@ -25,13 +25,13 @@ export const formatDateTime = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
-  pending_payment: 'Cancelled',
-  placed: 'In Transit',
-  accepted: 'In Transit',
-  packing: 'In Transit',
-  ready_for_pickup: 'In Transit',
-  out_for_delivery: 'In Transit',
+  pending_payment: 'Awaiting payment',
+  placed: 'Placed',
+  accepted: 'Accepted',
+  packing: 'Being packed',
+  ready_for_pickup: 'Ready for delivery',
+  out_for_delivery: 'Out for delivery',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
-  expired: 'Cancelled',
+  expired: 'Expired',
 };

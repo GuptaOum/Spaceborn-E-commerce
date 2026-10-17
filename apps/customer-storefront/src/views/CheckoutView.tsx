@@ -119,6 +119,16 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       setErrorMessage('Enter a valid 6-digit PIN code.');
       return;
     }
+    const pinLabel = location.label.trim().toLowerCase();
+    const typedCity = address.city.trim().toLowerCase();
+    if (pinLabel && pinLabel !== 'current location' && typedCity && pinLabel !== typedCity) {
+      setErrorMessage(`The rider is sent to the pin in the header (${location.label}), not to the street you type. Set that pin to ${address.city}, or type ${location.label} as the city.`);
+      return;
+    }
+    if (location.pincode && address.pincode !== location.pincode) {
+      setErrorMessage(`The pin is in PIN ${location.pincode}. The rider goes there. Change the header location if the parcel should go to ${address.pincode}.`);
+      return;
+    }
 
     setIsProcessing(true);
     setProcessingStep('Reserving your items…');
@@ -149,6 +159,10 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
           setProcessingStep('Confirming test payment…');
           await api('/payments/mock/confirm', { method: 'POST', body: { orderId: placed.order.id } });
         }
+      } else if (placed.order.status === 'expired' || placed.order.status === 'cancelled') {
+        idempotencyKey.current = newIdempotencyKey();
+        setErrorMessage('That checkout expired before payment. Review the cart and place it again.');
+        return;
       }
 
       clearCart();
@@ -231,7 +245,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
           <div>
             <h2 className="mb-1 font-semibold text-[#34222e]">Delivery details</h2>
             <p className="mb-3 text-xs text-[#7a6274]">
-              Delivering near <b>{location.area}</b>
+              The rider is sent to the pin in the header ({location.label}), not to a street we look up. City and PIN should match that pin. Delivering near <b>{location.area}</b>
               {resolution?.store
                 ? ` · about ${resolution.store.etaMinutes} min${(resolution.deliveries ?? 1) > 1 ? `, ${resolution.deliveries} deliveries` : ''}`
                 : resolving
@@ -305,8 +319,10 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
                         className="mt-0.5 text-xs font-semibold text-[#e2434b] underline cursor-pointer"
                       >
                         {splitOnly
-                          ? 'Not enough in stock near you for this quantity · remove or reduce'
-                          : 'Not available near you right now · remove'}
+                          ? `Only ${line?.available ?? 0} in stock at the store covering the rest of this cart · remove or reduce`
+                          : (line?.available ?? 0) > 0
+                            ? `Only ${line?.available} available near you · remove or reduce`
+                            : 'Not available near you right now · remove'}
                       </button>
                     )}
                   </div>

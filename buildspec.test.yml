@@ -15,6 +15,7 @@ phases:
   install:
     runtime-versions:
       nodejs: 20
+      python: 3.12
     commands:
       - set -e
       # pgvector is required: migrations run `create extension vector`, which plain postgres:16 lacks.
@@ -35,3 +36,8 @@ phases:
       - set -e
       - npm run typecheck
       - npm test
+      # Python services: locked runtime dependencies plus the test tools.
+      - python3 -m venv /tmp/copilot && /tmp/copilot/bin/pip install -q -r services/copilot/requirements.lock pytest pytest-asyncio respx
+      - (cd services/copilot && /tmp/copilot/bin/python -m pytest -q)
+      - python3 -m venv /tmp/cad && /tmp/cad/bin/pip install -q -r services/cad-worker/requirements.lock pytest
+      - (cd services/cad-worker && /tmp/cad/bin/python -m pytest -q)

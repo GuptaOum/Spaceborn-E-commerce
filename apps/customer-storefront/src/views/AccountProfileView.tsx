@@ -742,7 +742,7 @@ export function AccountProfileView({
             {user.gstDetails?.verified && (
               <div className="flex items-center space-x-1.5 px-3 py-1 bg-[#f2fcf4] text-[#0c831f] border border-[#0c831f]/30 rounded-xl text-xs font-bold">
                 <ShieldCheck className="w-4 h-4 text-[#0c831f]" />
-                <span>Verified GSTIN</span>
+                <span>GSTIN on this profile</span>
               </div>
             )}
           </div>
@@ -777,9 +777,9 @@ export function AccountProfileView({
               <div className="p-4 bg-[#f2fcf4] border border-[#0c831f]/30 rounded-2xl text-[#0c831f] flex items-start space-x-3 text-xs">
                 <CheckCircle2 className="w-4 h-4 text-[#0c831f] shrink-0 mt-0.5" />
                 <div>
-                  <h5 className="font-bold">Input Tax Credit (ITC) Enabled</h5>
+                  <h5 className="font-bold">GSTIN saved on this profile only</h5>
                   <p className="text-[#34222e]/80 mt-0.5 leading-relaxed">
-                    Every order placed on this account includes an official GST tax invoice containing verifiable QR codes and HSN code classification for your company accounting.
+                    Listed prices already include GST. Spaceborn does not issue a GST tax invoice, so this number is not printed on a receipt and cannot be used for input tax credit.
                   </p>
                 </div>
               </div>
@@ -790,31 +790,9 @@ export function AccountProfileView({
               <div>
                 <h4 className="text-xs font-bold text-[#34222e]">No GSTIN Linked</h4>
                 <p className="text-[11px] text-[#7a6274] max-w-md mx-auto mt-1 leading-relaxed">
-                  If you are buying for a business, university laboratory, or engineering startup, attach your 15-digit GSTIN to receive automatic GST invoices.
+                  A GSTIN saved here stays on your profile. Spaceborn does not turn it into a tax invoice.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onUpdateProfile({
-                    ...user,
-                    accountType: 'business',
-                    companyName: user.companyName || 'Spaceborn Robotics Lab',
-                    gstDetails: {
-                      enabled: true,
-                      legalName: user.companyName || 'Spaceborn Robotics Labs LLP',
-                      gstin: '29AABCA9482Q1Z7',
-                      pan: 'AABCA9482Q',
-                      stateCode: '29',
-                      verified: true
-                    }
-                  });
-                  showNotification('Verified sample GSTIN linked successfully!');
-                }}
-                className="px-4 py-2 bg-[#0c831f] hover:bg-[#0a6e1a] text-white rounded-xl text-xs font-bold cursor-pointer transition shadow-xs"
-              >
-                Attach Verified Sample GSTIN (29AABCA9482Q1Z7)
-              </button>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 locals {
-  images = toset(["api", "storefront", "vendor-hub", "admin-panel"])
+  images = toset(["api", "storefront", "vendor-hub", "admin-panel", "copilot", "cad-worker"])
 }
 
 resource "aws_ecr_repository" "app" {

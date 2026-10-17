@@ -4,6 +4,7 @@ import { config } from './config.js';
 import { pool } from './db/pool.js';
 import { errorHandler, forbidden, notFound } from './errors.js';
 import { adminRouter } from './routes/admin.js';
+import { aiRouter } from './routes/ai.js';
 import { catalogRouter } from './routes/catalog.js';
 import { fabricationRouter } from './routes/fabrication.js';
 import { geoRouter } from './routes/geo.js';
@@ -15,7 +16,7 @@ import { vendorRouter } from './routes/vendor.js';
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', 1);
+  app.set('trust proxy', config.TRUST_PROXY_HOPS);
   app.use(helmet());
 
   if (config.CORS_ORIGIN) {
@@ -67,6 +68,7 @@ export function createApp() {
   v1.use(fabricationRouter);
   v1.use(catalogRouter);
   v1.use(geoRouter);
+  v1.use(aiRouter);
 
   app.use('/v1', v1);
   app.use(() => {

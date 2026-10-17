@@ -199,10 +199,33 @@ export interface ServiceListing {
   ownerEmail?: string;
 }
 
+/** Written by the CAD worker. Estimates are a starting point for the vendor's quote, not a price. */
+export interface FabFileAnalysis {
+  status: 'done' | 'failed' | 'unsupported';
+  metrics: {
+    format: string;
+    dimensionsMm: [number, number, number];
+    volumeCm3: number;
+    surfaceAreaCm2: number;
+    triangles: number;
+    watertight: boolean;
+    fitsBuildVolume: boolean | null;
+  } | null;
+  estimate: {
+    kind: string;
+    material: string;
+    massGrams: number;
+    machineHours: number;
+    priceInr: number;
+  } | null;
+  analyzedAt: string;
+}
+
 export interface FabFile {
   id: string;
   fileName: string;
   sizeBytes: number;
+  analysis?: FabFileAnalysis | null;
 }
 
 export interface FabJob {
@@ -238,6 +261,10 @@ export interface FabJob {
   createdAt: string;
   paymentStatus: string | null;
   files: FabFile[];
+  /** Customer view only: sum of the CAD worker's per-file estimates, until the maker quotes. */
+  instantEstimateInr?: number | null;
+  /** True when some files could not be priced, so the estimate covers only the rest. */
+  instantEstimatePartial?: boolean | null;
 }
 
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected';

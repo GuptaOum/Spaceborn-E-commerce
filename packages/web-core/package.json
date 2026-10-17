@@ -10,7 +10,8 @@
     "./format": "./src/format.ts",
     "./sign-in": "./src/SignInPanel.tsx",
     "./use-load": "./src/useLoad.ts",
-    "./feedback": "./src/feedback.tsx"
+    "./feedback": "./src/feedback.tsx",
+    "./geo-map": "./src/GeoMap.tsx"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -21,7 +22,9 @@
     "react": "^19.0.0"
   },
   "dependencies": {
+    "@types/leaflet": "^1.9.20",
     "@types/react": "^19.1.0",
+    "leaflet": "^1.9.4",
     "typescript": "^5.8.0"
   }
 }

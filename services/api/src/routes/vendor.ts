@@ -14,8 +14,11 @@ import {
   updateSubmission,
 } from '../catalog/submissions.js';
 import { pool } from '../db/pool.js';
-import { badRequest, conflict, forbidden, notFound, parse, unprocessable } from '../errors.js';
+import { badRequest, conflict, forbidden, HttpError, notFound, parse, unprocessable } from '../errors.js';
+import { distanceSql } from '../lib/geo.js';
+import { consume } from '../lib/rateLimit.js';
 import { listStoreOrders, requestHandoverOtp, transitionOrder } from '../orders/service.js';
+import { recordRiderPosition } from '../orders/tracking.js';
 import { HOLDS_STOCK, ORDER_STATUSES } from '../orders/status.js';
 import { getJob, getJobFile, listStoreJobs, quoteJob, transitionJob } from '../fabrication/service.js';
 import { SERVICE_KINDS } from '../fabrication/status.js';
@@ -448,6 +451,48 @@ vendorRouter.post('/orders/:id/transition', requireApprovedStore, async (req, re
     actor: { role: 'vendor', uid: user.uid, storeId: user.storeId },
   });
   res.json({ order });
+});
+
+// The store's own rider, out with the parcel, shares their position from the Seller Hub. Pings are
+// a few per minute at most; anything faster is a runaway client, not a faster bike.
+vendorRouter.post('/orders/:id/location', requireApprovedStore, async (req, res) => {
+  const orderId = parse(uuid, req.params.id);
+  const body = parse(z.object({ lat: latitude, lng: longitude }), req.body);
+  const user = currentUser(req);
+  const limit = await consume(`rider:${orderId.toLowerCase()}`, [{ name: 'rider', seconds: 60, max: 30 }]);
+  if (!limit.allowed) {
+    res.setHeader('Retry-After', String(limit.retryAfter));
+    throw new HttpError(429, 'rate_limited', 'Location is being sent too often');
+  }
+  res.json(await recordRiderPosition(orderId, user.storeId!, body.lat, body.lng));
+});
+
+// What customers nearby asked the copilot for and could not get from any store close to them.
+// Scoped to the shop's own delivery area so the list reads as "restock these", not city trivia.
+vendorRouter.get('/demand', requireApprovedStore, async (req, res) => {
+  const store = await pool.query<{ latitude: number | null; longitude: number | null; radius: number }>(
+    `select latitude::float8 as latitude, longitude::float8 as longitude, delivery_radius_km::float8 as radius
+       from stores where id = $1`,
+    [storeId(req)],
+  );
+  const s = store.rows[0];
+  if (!s || s.latitude == null || s.longitude == null) {
+    res.json({ signals: [], radiusKm: s?.radius ?? 0, center: null });
+    return;
+  }
+  const radiusKm = s.radius || 0;
+  const { rows } = await pool.query(
+    `select s.query, s.area_label as "areaLabel", s.area_lat::float8 as lat, s.area_lng::float8 as lng, s.misses,
+            s.last_seen as "lastSeen", round(d.km::numeric, 1)::float8 as "distanceKm"
+       from (select *, area_lat::float8 as latitude, area_lng::float8 as longitude from ai_demand_signals) s
+      cross join lateral (select ${distanceSql('$1::float8', '$2::float8')} as km) d
+      where s.last_seen >= now() - interval '30 days'
+        and d.km <= $3::float8
+      order by s.misses desc, s.last_seen desc
+      limit 60`,
+    [s.latitude, s.longitude, radiusKm],
+  );
+  res.json({ signals: rows, radiusKm, center: { lat: s.latitude, lng: s.longitude } });
 });
 
 const messageBody = z.object({ body: z.string().trim().min(1).max(2000) });

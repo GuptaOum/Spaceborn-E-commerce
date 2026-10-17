@@ -137,6 +137,28 @@ variable "mail_from" {
   default     = ""
 }
 
+variable "copilot_model_id" {
+  type        = string
+  description = "Bedrock model or inference profile the shopping copilot uses (Converse API with tool use)."
+  default     = "global.amazon.nova-2-lite-v1:0"
+}
+
+variable "copilot_desired_count" {
+  type    = number
+  default = 1
+}
+
+variable "copilot_max_count" {
+  type    = number
+  default = 4
+}
+
+variable "kafka_image" {
+  type        = string
+  description = "Kafka broker image (KRaft mode). kafkajs speaks the 3.x protocol, so stay on 3.x."
+  default     = "apache/kafka:3.9.1"
+}
+
 variable "log_retention_days" {
   type    = number
   default = 30

@@ -22,6 +22,9 @@ if (process.env.DATABASE_URL) {
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().default(4000),
+  // Proxies in front of the API that append to X-Forwarded-For: 1 for the load balancer alone, 2 with
+  // CloudFront in front of it. Too low and every customer shares the proxy's IP for rate limits.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   DATABASE_URL: z.string().optional().transform(unset),
   DB_HOST: z.string().min(1),
   DB_PORT: z.coerce.number().int().default(5432),
@@ -48,6 +51,22 @@ const schema = z.object({
   // Empty in local dev: a deterministic local embedder is used. Set these in AWS to use Bedrock.
   BEDROCK_TEXT_MODEL: z.string().optional().transform(unset),
   BEDROCK_IMAGE_MODEL: z.string().optional().transform(unset),
+  // Internal URL of the FastAPI copilot service and the shared secret both sides check. Unset: the
+  // chat endpoint answers with plain nearby search results and no language model.
+  COPILOT_URL: z.preprocess((v) => unset(v as string | undefined), z.string().url().optional()),
+  COPILOT_TOKEN: z.preprocess((v) => unset(v as string | undefined), z.string().min(24).optional()),
+  // How long to wait for the copilot to start answering before falling back to search.
+  COPILOT_HEADERS_TIMEOUT_MS: z.coerce.number().int().min(100).max(60_000).default(10_000),
+  // DynamoDB table for copilot conversations. Unset: Redis, or process memory without Redis.
+  AI_MEMORY_TABLE: z.string().optional().transform(unset),
+  AI_CHAT_PER_10_MIN: z.coerce.number().int().min(1).max(1000).default(20),
+  AI_CHAT_PER_DAY: z.coerce.number().int().min(1).max(10_000).default(150),
+  // Comma-separated brokers inside the VPC. Unset: nothing is streamed and the outbox relay stays idle.
+  KAFKA_BROKERS: z.string().optional().transform(unset),
+  KAFKA_TOPIC_PREFIX: z.string().regex(/^[a-z0-9._-]+$/).default('spaceborn'),
+  // Hands fabrication uploads to the Python CAD worker (Celery) over REDIS_URL.
+  CAD_ANALYSIS_ENABLED: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+  CELERY_CAD_QUEUE: z.string().regex(/^[\w.-]+$/).default('cad'),
   MAIL_PROVIDER: z.enum(['log', 'ses']).default('log'),
   MAIL_FROM: z.string().optional().transform(unset),
   MAIL_CONFIGURATION_SET: z.string().optional().transform(unset),
@@ -81,6 +100,8 @@ function load() {
     throw new Error('UPLOADS_BUCKET is required in production (or set UPLOADS_ALLOW_LOCAL=true for self-hosted disk storage)');
   }
   if (env.MAIL_PROVIDER === 'ses' && !env.MAIL_FROM) throw new Error('MAIL_FROM is required when MAIL_PROVIDER=ses');
+  if (env.CAD_ANALYSIS_ENABLED && !env.REDIS_URL) throw new Error('CAD_ANALYSIS_ENABLED needs REDIS_URL (the Celery broker)');
+  if (env.COPILOT_URL && !env.COPILOT_TOKEN) throw new Error('COPILOT_URL needs COPILOT_TOKEN');
 
   return {
     ...env,

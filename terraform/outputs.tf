@@ -58,6 +58,19 @@ output "ecr_repositories" {
   value = { for k, repo in aws_ecr_repository.app : k => repo.repository_url }
 }
 
+output "internal_service_names" {
+  description = "Cloud Map names used between services inside the VPC."
+  value = {
+    api     = "api.${local.internal_domain}:4000"
+    copilot = local.copilot_url
+    kafka   = local.kafka_bootstrap
+  }
+}
+
+output "ai_memory_table" {
+  value = aws_dynamodb_table.ai_memory.name
+}
+
 output "db_endpoint" {
   value = aws_db_instance.main.address
 }

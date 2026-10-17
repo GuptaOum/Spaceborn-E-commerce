@@ -14,6 +14,8 @@ export interface AuthUser {
   name: string | null;
   role: Role;
   storeId: string | null;
+  /** False until the identity provider has confirmed the address. Admin access requires this. */
+  emailVerified: boolean;
 }
 
 /** Which cities an admin may act on. `regions` are lower-cased store cities; null means all of them. */
@@ -75,8 +77,9 @@ async function syncUser(user: AuthUser) {
   const seenAt = knownUsers.get(user.uid);
   if (seenAt && Date.now() - seenAt < USER_SYNC_TTL_MS) return;
 
-  // 'admin' is only ever persisted for team members; a forged or stale admin claim is downgraded.
-  const isAdmin = (await loadAdminScope(user.email)) !== null;
+  // 'admin' is only ever persisted for team members with a verified email. A forged claim, a stale
+  // row, or an unverified signup of an invited address is downgraded.
+  const isAdmin = user.emailVerified && (await loadAdminScope(user.email)) !== null;
   const effectiveRole: Role = isAdmin ? 'admin' : user.role === 'admin' ? 'customer' : user.role;
 
   await pool.query(
@@ -103,16 +106,17 @@ async function resolveUser(header: string | undefined): Promise<AuthUser | null>
   if (scheme === 'Dev' && config.AUTH_DEV_BYPASS && !config.isProd) {
     const [uid, role, storeId] = value.split(':');
     if (!uid) return null;
-    return { uid, email: `${uid}@dev.local`, name: uid, role: toRole(role), storeId: storeId || null };
+    return { uid, email: `${uid}@dev.local`, name: uid, role: toRole(role), storeId: storeId || null, emailVerified: true };
   }
   if (scheme !== 'Bearer') return null;
 
   try {
     const token = await firebaseAuth.verifyIdToken(value);
     const emailLower = normalizeEmail(token.email);
+    const emailVerified = token.email_verified === true;
 
     let role = toRole(token.role);
-    if (await loadAdminScope(emailLower)) {
+    if (emailVerified && (await loadAdminScope(emailLower))) {
       role = 'admin';
     } else {
       const { rows: dbUsers } = await pool.query<{ role: Role }>(`select role from users where id = $1 limit 1`, [token.uid]);
@@ -134,6 +138,7 @@ async function resolveUser(header: string | undefined): Promise<AuthUser | null>
       name: (token.name as string | undefined) ?? null,
       role,
       storeId,
+      emailVerified,
     };
   } catch {
     throw new HttpError(401, 'invalid_token', 'Your session has expired. Please sign in again.');
@@ -166,6 +171,7 @@ export async function optionalAuth(req: Request, _res: Response, next: NextFunct
 // Token claims live for up to an hour; membership is read on every request so removal is immediate.
 export async function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   const user = currentUser(req);
+  if (!user.emailVerified) throw forbidden('Verify your email address before using the admin panel');
   const scope = await loadAdminScope(user.email);
   if (!scope) throw forbidden();
   user.role = 'admin';

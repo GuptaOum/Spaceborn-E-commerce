@@ -93,6 +93,14 @@ resource "aws_security_group" "api" {
     security_groups = [aws_security_group.public_alb.id, aws_security_group.admin_alb.id]
   }
 
+  ingress {
+    description     = "Catalog tools from the copilot"
+    from_port       = 4000
+    to_port         = 4000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.copilot.id]
+  }
+
   egress {
     description = "Outbound (RDS, Firebase, Razorpay)"
     from_port   = 0

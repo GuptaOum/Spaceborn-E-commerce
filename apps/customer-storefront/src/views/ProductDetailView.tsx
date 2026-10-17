@@ -49,39 +49,6 @@ interface ReviewItem {
   verified?: boolean;
 }
 
-const DEFAULT_REVIEWS: ReviewItem[] = [
-  {
-    name: 'Rajesh Sharma',
-    org: 'Robotics Lab, IIT Kanpur',
-    date: '2 weeks ago',
-    title: 'Rock solid precision and rapid delivery',
-    comment:
-      'Delivered to our lab bench in 12 minutes flat. High build quality, clean waveform, and zero jitter on quadrature channels. Re-ordering for the entire robotics batch.',
-    rating: 5,
-    verified: true,
-  },
-  {
-    name: 'Ananya Deshmukh',
-    org: 'Drone Tech Club, BITS Pilani',
-    date: '3 weeks ago',
-    title: 'Genuine component, exact specs match datasheet',
-    comment:
-      'Far superior to local market clones. Genuine IC branding, correct thermal resistance, and verified pinout. The 10-minute dispatch saved our hardware hackathon project.',
-    rating: 5,
-    verified: true,
-  },
-  {
-    name: 'Vikramaditya Verma',
-    org: 'Embedded Systems Lead, Bengaluru',
-    date: '1 month ago',
-    title: 'Input Tax Credit GST invoice was seamless',
-    comment:
-      'Company GST invoice was generated automatically at checkout. Hardware passed all burn-in tests without failure.',
-    rating: 5,
-    verified: true,
-  },
-];
-
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
 type TabKey = 'description' | 'documents' | 'reviews';
@@ -105,7 +72,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
   // Review System State
   const { user } = useAuth();
-  const [reviews, setReviews] = useState<ReviewItem[]>(DEFAULT_REVIEWS);
+  const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [canReview, setCanReview] = useState(false);
   const [hasPurchased, setHasPurchased] = useState(false);
   const [eligibleOrderNumber, setEligibleOrderNumber] = useState<number | null>(null);
@@ -159,11 +126,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           rating: r.rating,
           verified: true,
         }));
-        if (mapped.length > 0) {
-          setReviews([...mapped, ...DEFAULT_REVIEWS]);
-        } else {
-          setReviews(DEFAULT_REVIEWS);
-        }
+        setReviews(mapped);
 
         setCanReview(Boolean(res.canReview));
         setHasPurchased(Boolean(res.hasPurchased));
@@ -178,7 +141,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         }
       } catch (err) {
         console.error('Failed to fetch reviews', err);
-        setReviews(DEFAULT_REVIEWS);
+        setReviews([]);
       }
     };
     fetchReviews();
@@ -220,7 +183,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const totalReviewsCount = reviews.length;
   const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / (totalReviewsCount || 1)).toFixed(1);
 
-  const setQty = (n: number) => setQuantity(Math.max(1, Math.min(Math.max(product.stock, 1), n)));
+  const lineCap = Math.min(Math.max(product.stock, 1), 50);
+  const setQty = (n: number) => setQuantity(Math.max(1, Math.min(lineCap, n)));
 
   const handleAdd = () => {
     onAddToCart(product, quantity);
@@ -260,7 +224,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         (offer.nearbyStock ?? offer.stock) > 0
           ? {
               tone: 'ok',
-              text: `Delivers to ${pincode} in about ${offer.etaMinutes} min. ${offer.nearbyStock ?? offer.stock} in stock at nearest dark store.`,
+              text: `Delivers to ${pincode} in about ${offer.etaMinutes} min. ${offer.nearbyStock ?? offer.stock} in stock near you.`,
             }
           : { tone: 'warn', text: `This item is listed near ${pincode} but is currently out of stock.` },
       );
@@ -282,11 +246,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     try {
       await api(`/catalog/products/${product.id}/reviews`, {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           rating: newRating,
           title: newTitle.trim(),
           content: newComment.trim(),
-        }),
+        },
       });
       
       const newRev: ReviewItem = {
@@ -415,7 +379,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </div>
                 <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
                   <Receipt className="w-4 h-4 text-[#0c831f] shrink-0" />
-                  <span className="font-semibold text-[#34222e] text-[11px]">GST Invoice Available</span>
+                  <span className="font-semibold text-[#34222e] text-[11px]">Price includes GST</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-white border border-[#f9bf8f]/50 flex items-center gap-2">
                   <Truck className="w-4 h-4 text-[#0c831f] shrink-0" />
@@ -463,10 +427,12 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                         />
                       ))}
                     </div>
-                    <span className="text-xs font-bold text-[#34222e]">{avgRating}</span>
+                    <span className="text-xs font-bold text-[#34222e]">{totalReviewsCount ? avgRating : 'No reviews yet'}</span>
+                    {totalReviewsCount > 0 && (
                     <span className="text-xs text-[#7a6274] group-hover:text-[#0c831f] group-hover:underline">
                       ({totalReviewsCount} Reviews)
                     </span>
+                    )}
                   </button>
 
                   <button
@@ -513,7 +479,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   {inStock ? (
                     <span className={`font-bold ${lowStock ? 'text-[#e2434b]' : 'text-[#0c831f]'}`}>
                       {lowStock
-                        ? `Only ${product.stock} units left in dark store`
+                        ? `Only ${product.stock} units left near you`
                         : `✓ In stock (${product.stock} units available)`}
                     </span>
                   ) : (
@@ -540,7 +506,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 <div className="rounded-xl border border-[#f9bf8f]/60 bg-[#fee9d7]/30 p-2.5 text-xs">
                   <div className="font-semibold text-[#34222e] mb-1.5 flex items-center justify-between">
                     <span>Bulk / Maker Lab Pricing</span>
-                    <span className="text-[10px] text-[#0c831f] font-bold">Auto-applied in cart</span>
+                    <span className="text-[10px] text-[#7a6274] font-bold">Listed price is what you pay</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">
                     {product.tierPricing.map((tier, idx) => (
@@ -579,7 +545,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <input
                       type="number"
                       min={1}
-                      max={product.stock}
+                      max={lineCap}
                       value={quantity}
                       onChange={(e) => setQty(parseInt(e.target.value, 10) || 1)}
                       disabled={!inStock}
@@ -589,7 +555,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                       type="button"
                       aria-label="Increase quantity"
                       onClick={() => setQty(quantity + 1)}
-                      disabled={!inStock || quantity >= product.stock}
+                      disabled={!inStock || quantity >= lineCap}
                       className="flex h-9 w-9 items-center justify-center hover:bg-[#fee9d7] disabled:opacity-40 cursor-pointer transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5 text-[#34222e]" />
@@ -601,10 +567,13 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <span className="text-lg sm:text-xl font-black text-[#34222e]">{inr(total)}</span>
                   </div>
                 </div>
+                {product.stock > 50 && (
+                  <p className="text-[11px] text-[#7a6274]">One order can include at most 50 of this part.</p>
+                )}
 
                 {spillsOver && (
                   <p className="text-[11px] text-[#7a6274] bg-[#fee9d7]/50 p-2 rounded-lg border border-[#f9bf8f]/40">
-                    ℹ️ {product.nearestStock} units available at nearest dark store. Additional units pooled from adjacent hub.
+                    {product.nearestStock} units at the nearest store. The rest, if any, comes from another store near you and may be a separate delivery.
                   </p>
                 )}
 
@@ -808,8 +777,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 </div>
 
                 <div className="flex flex-wrap gap-3">
+                  {product.datasheetUrl ? (
                   <a
-                    href={product.datasheetUrl || `https://spaceborn.in/datasheets/${product.sku.toLowerCase()}.pdf`}
+                    href={product.datasheetUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-xs font-bold text-white bg-[#0c831f] hover:bg-[#0a701a] px-4 py-2.5 rounded-xl transition cursor-pointer shadow-xs"
@@ -817,6 +787,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     <Download className="w-4 h-4" />
                     <span>Download Datasheet (PDF)</span>
                   </a>
+                  ) : (
+                    <p className="text-xs text-[#7a6274]">No datasheet has been uploaded for this part.</p>
+                  )}
 
                   {product.cadModelUrl && (
                     <a
@@ -867,7 +840,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-white rounded-xl border border-[#f9bf8f]/60">
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl font-black text-[#34222e]">{avgRating}</span>
+                    <span className="text-4xl font-black text-[#34222e]">{totalReviewsCount ? avgRating : '—'}</span>
                     <div>
                       <div className="flex text-amber-400">
                         {[...Array(5)].map((_, i) => (
@@ -875,7 +848,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                         ))}
                       </div>
                       <span className="text-xs text-[#7a6274] font-medium block mt-0.5">
-                        Based on {totalReviewsCount} maker & customer reviews
+                        {totalReviewsCount ? `Based on ${totalReviewsCount} customer reviews` : 'No reviews yet'}
                       </span>
                     </div>
                   </div>

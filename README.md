@@ -45,6 +45,8 @@ flowchart TD
         STORE["🛒 Customer Storefront<br/>(Next.js 16 :3000)"]:::app
         VENDOR["📦 Vendor Hub Portal<br/>(Next.js 16 :3000)"]:::app
         API["⚙️ Core Express API<br/>(Node.js :4000)"]:::app
+        COPILOT["💬 Shopping Copilot<br/>(Python, private)"]:::app
+        CAD["🖨️ CAD Worker<br/>(quote from uploaded files)"]:::app
         WORKER["🔄 Outbox Worker<br/>(Event Poller & Refunds)"]:::app
         ADMIN_APP["📊 Admin Dashboard<br/>(Isolated Internal ALB)"]:::security
     end
@@ -73,6 +75,8 @@ flowchart TD
     API -->|Read / Write| RDS
     API -->|Pre-signed URLs| S3
     
+    API -->|Chat| COPILOT
+    API -->|Analyse uploads| CAD
     API -.->|Transactional Events| WORKER
     WORKER -->|Send OTP| SES
     WORKER -->|Reconcile & Refund| PAY
@@ -89,7 +93,9 @@ flowchart TD
 | **Compute** | ECS Fargate Docker | Runs all 3 Next.js applications and the Express API in private subnets with **no public IPs**. |
 | **Admin Shield** | Internal ALB & Bastion | Keeps the Admin Dashboard **physically invisible** from the public internet (accessible only via AWS SSM). |
 | **Database** | RDS PostgreSQL 16 | Stores orders, users, and 55 product catalog entries with Multi-AZ failover and auto-rotated secrets. |
-| **Workers** | Asynchronous Outbox | Handles 4-digit handover OTP emails via SES and auto-refunds via Razorpay with zero checkout delays. |
+| **Workers** | Asynchronous Outbox | Handles handover OTP mail via SES and auto-refunds via Razorpay without blocking checkout. |
+| **Delivery** | The store's own rider | The shop dispatches and delivers. The rider's phone, signed into Seller Hub, shares a live position. There is no courier fleet. |
+| **Copilot & CAD** | Private Fargate tasks | The copilot answers product questions. The CAD worker measures an uploaded file and suggests a price the maker still has to confirm. |
 
 ---
 
@@ -129,12 +135,9 @@ Spaceborn-E-commerce/
 │   ├── vendor-hub/           # Seller order management & stock management portal (Next.js 16)
 │   └── admin-panel/          # Platform telemetry, inventory governance & audit dashboard (Next.js 16)
 ├── services/
-│   └── api/                  # Core REST API & Asynchronous Outbox Worker (Express + Node.js)
-│       ├── migrations/       # PostgreSQL schema migrations
-│       └── src/
-│           ├── db/           # Connection pool & 55-product seed catalog
-│           ├── orders/       # Order state machine & fulfillment logic
-│           └── payments/     # Razorpay integration & webhook handlers
+│   ├── api/                  # Core REST API, outbox worker, and order tracking (Express + Node.js)
+│   ├── copilot/              # Shopping assistant. The API is the only caller.
+│   └── cad-worker/           # Measures uploaded CAD files and suggests a print price.
 ├── packages/
 │   └── web-core/             # Shared TypeScript types, API clients, and UI design primitives
 ├── ops/
@@ -203,7 +206,16 @@ The production environment is provisioned with high-availability safeguards:
 
 ---
 
-## 🌐 Live Demo
+## What this copy does
 
-The platform demo is hosted live on Render:
-- **Live URL**: [https://spacebornecomdemo-1.onrender.com](https://spacebornecomdemo-1.onrender.com)
+The store delivers its own orders. After dispatch, the rider's phone shares its location and the customer follows it on the order page. The handover code is created at the door, expires, and locks out after repeated wrong guesses.
+
+Vendors see unmet copilot searches inside their own delivery radius. A fabrication upload can show an instant estimate; the maker sends the real quote, and the customer pays only after accepting it.
+
+Listed prices are what checkout charges. There is no volume discount and no GST tax invoice. A regional admin sees only their own cities.
+
+## 🌐 Where it runs
+
+This repository is the production codebase. `elbotrob.me` is attached in Route 53 and CloudFront. The Fargate services behind that name are started with Terraform when the stack is brought up.
+
+The separate demo app is on Render: [https://spacebornecomdemo-1.onrender.com](https://spacebornecomdemo-1.onrender.com)

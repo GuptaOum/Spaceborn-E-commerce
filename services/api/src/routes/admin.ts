@@ -8,7 +8,7 @@ import {
 import { addMember, audit, listAudit, listMembers, listRegions, memberEmail, regionList, removeMember, updateMember } from '../admin/team.js';
 import { approveSubmission, findSimilar, getAdminSubmission, listAdminSubmissions, pipeImage, rejectSubmission, submissionImage } from '../catalog/submissions.js';
 import { pool, withTransaction } from '../db/pool.js';
-import { conflict, notFound, parse } from '../errors.js';
+import { conflict, forbidden, notFound, parse } from '../errors.js';
 import { listAllOrders, orderCity, transitionOrder } from '../orders/service.js';
 import { getJobFile, jobCity, listAllJobs, transitionJob } from '../fabrication/service.js';
 import { LISTING_COLUMNS, streamFile } from './fabrication.js';
@@ -66,6 +66,26 @@ adminRouter.get('/queue', async (req, res) => {
   const queue: Record<string, Record<string, number>> = { stores: {}, services: {}, submissions: {} };
   for (const r of rows) queue[r.queue]![r.status] = r.n;
   res.json({ queue });
+});
+
+/** Copilot usage and unmet demand, materialised from the Kafka streams by the analytics consumer. */
+adminRouter.get('/ai/insights', requireGlobalAdmin, async (_req, res) => {
+  const [demand, usage, funnel] = await Promise.all([
+    pool.query(
+      `select query, area_label as "areaLabel", area_lat::float as "lat", area_lng::float as "lng", misses,
+              last_seen as "lastSeen"
+         from ai_demand_signals where last_seen >= now() - interval '14 days'
+        order by misses desc, last_seen desc limit 50`,
+    ),
+    pool.query(
+      `select day::text, mode, chats, answered,
+              input_tokens::float8 as "inputTokens", output_tokens::float8 as "outputTokens",
+              case when chats > 0 then (latency_ms_total / chats)::int else 0 end as "avgLatencyMs"
+         from ai_usage_daily where day >= current_date - 13 order by day desc, mode`,
+    ),
+    pool.query(`select day::text, status, events from order_funnel_daily where day >= current_date - 13 order by day desc, status`),
+  ]);
+  res.json({ demand: demand.rows, usage: usage.rows, funnel: funnel.rows });
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -273,7 +293,7 @@ const PRODUCT_COLUMNS = `
   mrp, gst_rate as "gstRate", hsn, specs, badges, ('our_pick' = any(badges)) as "isChoice",
   is_active as "isActive", updated_at as "updatedAt"`;
 
-adminRouter.get('/products', async (req, res) => {
+adminRouter.get('/products', requireGlobalAdmin, async (req, res) => {
   const q = parse(pagination.extend({ q: z.string().trim().max(80).optional() }), req.query);
   const search = q.q ? `%${escapeLike(q.q)}%` : null;
   const { rows } = await pool.query(
@@ -396,11 +416,14 @@ adminRouter.get('/product-submissions/:id/image', async (req, res) => {
 adminRouter.get('/product-submissions/:id', async (req, res) => {
   const id = parse(uuid, req.params.id);
   const submission = await getAdminSubmission(id, scopeCities(adminScope(req)));
-  res.json({ submission, similar: await findSimilar(pool, id) });
+  res.json({ submission, similar: await findSimilar(pool, id, scopeCities(adminScope(req))) });
 });
 
 adminRouter.post('/product-submissions/:id/approve', async (req, res) => {
   const body = parse(z.object({ mergeIntoProductId: uuid.optional() }), req.body ?? {});
+  if (!body.mergeIntoProductId && adminScope(req).regions !== null) {
+    throw forbidden('Approving a new catalog product needs an admin with access to all regions. Merge it into an existing product instead.');
+  }
   const submission = await approveSubmission(parse(uuid, req.params.id), body.mergeIntoProductId ?? null, scopeCities(adminScope(req)));
   await audit(req, 'submission.approve', { type: 'product_submission', id: submission.id, city: submission.city }, {
     name: submission.name, productId: submission.productId, merged: !!body.mergeIntoProductId,

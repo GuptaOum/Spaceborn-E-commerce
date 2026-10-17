@@ -6,6 +6,7 @@ import { useAction } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
 import type { Store } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
+import { DemandPanel } from './DemandPanel';
 import { FabJobsPanel } from './FabJobsPanel';
 import { InventoryPanel } from './InventoryPanel';
 import { OrdersPanel } from './OrdersPanel';
@@ -13,13 +14,14 @@ import { ProductsPanel } from './ProductsPanel';
 import { MessagesPanel } from './MessagesPanel';
 import { ServicesPanel } from './ServicesPanel';
 
-type Tab = 'orders' | 'inventory' | 'products' | 'fab-jobs' | 'services' | 'messages';
+type Tab = 'orders' | 'inventory' | 'products' | 'fab-jobs' | 'services' | 'demand' | 'messages';
 const TABS: [Tab, string][] = [
   ['orders', 'Orders'],
   ['inventory', 'Inventory'],
   ['products', 'My products'],
   ['fab-jobs', 'Print jobs'],
   ['services', 'Services'],
+  ['demand', 'Demand nearby'],
   ['messages', 'Messages'],
 ];
 
@@ -108,7 +110,7 @@ export function Dashboard({ initialStore }: { initialStore: Store }) {
         <div>
           <h1 className="text-xl font-bold">{store.name}</h1>
           <p className="text-sm text-slate-500">
-            {store.city} · delivers within {store.deliveryRadiusKm} km · ~{store.prepMinutes} min prep
+            {store.city} · your rider delivers within {store.deliveryRadiusKm} km · ~{store.prepMinutes} min prep
           </p>
         </div>
         <button
@@ -151,6 +153,7 @@ export function Dashboard({ initialStore }: { initialStore: Store }) {
       {tab === 'products' && <ProductsPanel />}
       {tab === 'fab-jobs' && <FabJobsPanel />}
       {tab === 'services' && <ServicesPanel store={store} />}
+      {tab === 'demand' && <DemandPanel store={store} />}
       {tab === 'messages' && <MessagesPanel />}
     </main>
   );

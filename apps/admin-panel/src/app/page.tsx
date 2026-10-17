@@ -6,6 +6,7 @@ import { useAuth } from '@spaceborn/web-core/auth';
 import { SignInPanel } from '@spaceborn/web-core/sign-in';
 import type { AdminScope } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
+import { AiInsightsTab } from '@/components/AiInsightsTab';
 import { FabJobsTab } from '@/components/FabJobsTab';
 import { Overview, type OverviewData } from '@/components/Overview';
 import { ServicesTab } from '@/components/ServicesTab';
@@ -16,7 +17,7 @@ import { StoresTab } from '@/components/StoresTab';
 import { TeamTab } from '@/components/TeamTab';
 import { useQueue } from '@/hooks/useQueue';
 
-export type TabId = 'stores' | 'services' | 'submissions' | 'orders' | 'fab-jobs' | 'products' | 'team';
+export type TabId = 'stores' | 'services' | 'submissions' | 'orders' | 'fab-jobs' | 'products' | 'ai' | 'team';
 
 interface NavPillar {
   title: string;
@@ -43,15 +44,12 @@ const PILLARS: NavPillar[] = [
     title: 'Platform Management',
     tabs: [
       { id: 'products', label: 'Master catalog', globalOnly: true },
+      { id: 'ai', label: 'AI insights', globalOnly: true },
       { id: 'team', label: 'Admin team' },
     ],
   },
 ];
 
-const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
-  .split(',')
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
 const QUEUE_REFRESH_MS = 30_000;
 
 const titleCase = (city: string) => city.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -60,11 +58,7 @@ export default function AdminHome() {
   const { user, loading, signOut } = useAuth();
   const [tab, setTab] = useState<TabId>('stores');
   // The API decides authoritatively via the admin_members table.
-  const looksAdmin =
-    !!user &&
-    (user.role === 'admin' ||
-      ADMIN_EMAILS.length === 0 ||
-      (!!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())));
+  const looksAdmin = user?.role === 'admin';
   const scope = useLoad<AdminScope | null>(
     () => (looksAdmin ? api<{ admin: AdminScope }>('/admin/whoami').then((r) => r.admin).catch(() => null) : Promise.resolve(null)),
     [looksAdmin, user?.uid],
@@ -185,6 +179,7 @@ export default function AdminHome() {
         {tab === 'orders' && <OrdersTab />}
         {tab === 'fab-jobs' && <FabJobsTab />}
         {tab === 'products' && me.isGlobal && <ProductsTab />}
+        {tab === 'ai' && me.isGlobal && <AiInsightsTab />}
         {tab === 'team' && <TeamTab me={me} />}
       </main>
     </div>

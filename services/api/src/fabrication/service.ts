@@ -30,11 +30,18 @@ const JOB_SELECT = `
          j.notes, j.status, j.quote_amount as "quoteAmount", j.quote_note as "quoteNote",
          j.ready_in_hours as "readyInHours", j.quote_expires_at as "quoteExpiresAt", j.delivery_fee as "deliveryFee",
          j.platform_fee as "platformFee", j.grand_total as "grandTotal", j.delivery_address as "deliveryAddress",
-         j.distance_km as "distanceKm", j.handover_otp as "handoverOtp", j.close_reason as "closeReason",
+         j.distance_km as "distanceKm",
+         case when j.handover_otp_expires_at > now() then j.handover_otp end as "handoverOtp",
+         j.close_reason as "closeReason",
          j.quoted_at as "quotedAt", j.paid_at as "paidAt", j.delivered_at as "deliveredAt", j.created_at as "createdAt",
          p.status as "paymentStatus",
          coalesce((
-           select json_agg(json_build_object('id', f.id, 'fileName', f.file_name, 'sizeBytes', f.size_bytes) order by f.created_at)
+           select json_agg(json_build_object(
+                    'id', f.id, 'fileName', f.file_name, 'sizeBytes', f.size_bytes,
+                    'analysis', (select json_build_object('status', a.status, 'metrics', a.metrics, 'estimate', a.estimate,
+                                                          'analyzedAt', a.analyzed_at)
+                                   from fab_file_analysis a where a.file_id = f.id)
+                  ) order by f.created_at)
              from fab_files f where f.job_id = j.id
          ), '[]'::json) as files
     from fab_jobs j
@@ -55,13 +62,41 @@ export type JobView = Record<string, unknown> & {
   deliveryAddress: DeliveryAddress;
 };
 
+// The worker's per-file breakdown (mass, machine hours, material rate) is for the maker. Until the
+// maker quotes, the customer gets one number: the sum of the file estimates, clearly labelled as an
+// instant estimate so nobody mistakes it for the price. Once a quote exists it is dropped.
+function customerView(job: JobView): JobView {
+  const files = job.files;
+  if (!Array.isArray(files)) return job;
+  let total = 0;
+  let estimated = 0;
+  const stripped = files.map((file) => {
+    if (!file || typeof file !== 'object') return file;
+    const analysis = (file as { analysis?: Record<string, unknown> | null }).analysis;
+    if (!analysis || typeof analysis !== 'object') return file;
+    const { estimate, ...rest } = analysis;
+    const price = (estimate as { priceInr?: unknown } | null | undefined)?.priceInr;
+    if (typeof price === 'number' && Number.isFinite(price)) {
+      total += price;
+      estimated += 1;
+    }
+    return { ...(file as Record<string, unknown>), analysis: rest };
+  });
+  const quoted = (job as { quoteAmount?: unknown }).quoteAmount != null;
+  const instantEstimateInr = !quoted && estimated > 0 ? Math.round(total) : null;
+  const instantEstimatePartial = !quoted && estimated > 0 && estimated < files.length;
+  const visible = job.status === 'out_for_delivery' ? job : { ...job, handoverOtp: undefined };
+  return { ...visible, files: stripped, instantEstimateInr, instantEstimatePartial };
+}
+
 // Vendors only see the full address once the customer has paid and the job is theirs to deliver.
 function forViewer(job: JobView, viewer: ActorContext): JobView {
-  if (viewer.role === 'customer') return job;
+  if (viewer.role === 'customer') return customerView(job);
   const { handoverOtp: _otp, ...rest } = job;
   if (viewer.role === 'vendor' && FAB_PRE_PAYMENT.includes(job.status)) {
     const { city, pincode } = job.deliveryAddress;
-    return { ...rest, deliveryAddress: { city, pincode } } as unknown as JobView;
+    const { customerEmail: _email, customerPhone: _phone, ...hidden } = rest;
+    return { ...hidden, deliveryAddress: { city, pincode } } as unknown as JobView;
   }
   return rest as JobView;
 }
@@ -89,7 +124,7 @@ export async function listCustomerJobs(customerId: string, limit: number) {
     customerId,
     limit,
   ]);
-  return rows;
+  return rows.map((j) => forViewer(j, { role: 'customer', uid: customerId }));
 }
 
 export async function listStoreJobs(storeId: string, statuses: FabStatus[] | null, limit: number) {
@@ -195,20 +230,15 @@ export async function createJob(input: CreateJobInput) {
       throw unprocessable('material_unavailable', 'This material is not offered by the service');
     }
     const distanceKm = haversineKm(input.address.latitude, input.address.longitude, listing.latitude, listing.longitude);
-    const sameCity = Boolean(
-      listing.city &&
-      input.address.city &&
-      listing.city.trim().toLowerCase() === input.address.city.trim().toLowerCase()
-    );
-    if (distanceKm > Number(listing.delivery_radius_km) && !sameCity) {
+    if (distanceKm > Number(listing.delivery_radius_km)) {
       throw unprocessable('out_of_range', 'This service does not deliver to your address');
     }
 
     const inserted = await c.query<{ id: string }>(
-      `insert into fab_jobs (customer_id, listing_id, store_id, kind, material, quantity, notes, delivery_address, distance_km, handover_otp)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
+      `insert into fab_jobs (customer_id, listing_id, store_id, kind, material, quantity, notes, delivery_address, distance_km)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`,
       [input.customerId, listing.id, listing.store_id, listing.kind, input.material, input.quantity, input.notes,
-        JSON.stringify(input.address), round2(distanceKm), crypto.randomInt(1000, 10000).toString()],
+        JSON.stringify(input.address), round2(distanceKm)],
     );
     const id = inserted.rows[0]!.id;
 
@@ -221,6 +251,8 @@ export async function createJob(input: CreateJobInput) {
     }
     await recordStatus(c, id, null, 'submitted', { role: 'customer', uid: input.customerId });
     await enqueue(c, 'fab_job.submitted', { jobId: id, storeId: listing.store_id });
+    // Its own outbox row, so a broker outage retries the analysis without re-sending the vendor email.
+    await enqueue(c, 'fab_job.analyze', { jobId: id });
     return id;
   });
   return getJob(pool, jobId, { role: 'customer', uid: input.customerId });
@@ -332,10 +364,14 @@ export interface JobTransitionInput {
   otp?: string;
 }
 
+const FAB_OTP_TTL_MINUTES = 10;
+const FAB_OTP_MAX_ATTEMPTS = 5;
+
 export async function transitionJob(input: JobTransitionInput) {
-  await withTransaction(async (c) => {
+  const outcome = await withTransaction(async (c) => {
     const { rows } = await c.query(
       `select j.id, j.status, j.customer_id, j.store_id, j.handover_otp,
+              (j.handover_otp is not null and j.handover_otp_expires_at > now()) as otp_live,
               p.id as payment_id, p.status as payment_status, p.provider_payment_id, p.amount_paise
          from fab_jobs j left join payments p on p.fab_job_id = j.id
         where j.id = $1
@@ -351,9 +387,21 @@ export async function transitionJob(input: JobTransitionInput) {
     const from = job.status as FabStatus;
     if (!canTransitionJob(from, input.to, actor.role)) throw conflict(`Job cannot move from ${from} to ${input.to}`);
     if (input.to === 'delivered') {
+      const code = typeof job.handover_otp === 'string' ? job.handover_otp : '';
+      if (!code || !job.otp_live) throw conflict('The delivery code is not active. It is sent when the rider leaves and lasts 10 minutes.');
       const otp = input.otp ?? '';
-      const matches = otp.length === job.handover_otp.length && crypto.timingSafeEqual(Buffer.from(otp), Buffer.from(job.handover_otp));
-      if (!matches) throw forbidden('Handover code does not match');
+      const matches = otp.length === code.length && crypto.timingSafeEqual(Buffer.from(otp), Buffer.from(code));
+      if (!matches) {
+        await c.query(
+          `update fab_jobs
+              set handover_otp_attempts = handover_otp_attempts + 1,
+                  handover_otp = case when handover_otp_attempts + 1 >= $2 then null else handover_otp end,
+                  handover_otp_expires_at = case when handover_otp_attempts + 1 >= $2 then null else handover_otp_expires_at end
+            where id = $1`,
+          [job.id, FAB_OTP_MAX_ATTEMPTS],
+        );
+        return 'mismatch' as const;
+      }
     }
     const closing = input.to === 'cancelled' || input.to === 'declined';
     if (closing && actor.role !== 'customer' && !input.reason) {
@@ -379,8 +427,21 @@ export async function transitionJob(input: JobTransitionInput) {
         amountPaise: job.amount_paise,
       });
     }
+    if (input.to === 'out_for_delivery') {
+      await c.query(
+        `update fab_jobs
+            set handover_otp = $2,
+                handover_otp_sent_at = now(),
+                handover_otp_expires_at = now() + make_interval(mins => $3),
+                handover_otp_attempts = 0
+          where id = $1`,
+        [job.id, crypto.randomInt(1000, 10000).toString(), FAB_OTP_TTL_MINUTES],
+      );
+    }
     await enqueue(c, 'fab_job.status_changed', { jobId: job.id, from, to: input.to });
+    return 'ok' as const;
   });
+  if (outcome === 'mismatch') throw forbidden('Handover code does not match');
   return getJob(pool, input.jobId, input.actor);
 }
 

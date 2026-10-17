@@ -223,10 +223,10 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                      Buying for a business? Add your GSTIN
+                      Buying for a business?
                     </h3>
                     <p className="text-[11px] text-slate-500">
-                      Your GSTIN and business name are printed on the invoice.
+                      Listed prices already include GST. Spaceborn does not issue a GST tax invoice yet, so a GSTIN entered here is not printed on one.
                     </p>
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                   </div>
 
                   <p className="sm:col-span-2 text-[11px] text-slate-500">
-                    The GSTIN is printed on your invoice. Tax is charged at each product's own GST rate.
+                    Tax is included at each product's own GST rate. This is not a tax invoice.
                   </p>
                 </div>
               )}

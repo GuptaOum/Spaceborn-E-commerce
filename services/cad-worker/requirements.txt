@@ -1,0 +1,9 @@
+celery[redis]>=5.4
+trimesh>=4.5
+numpy>=2.0
+scipy>=1.13
+networkx>=3.3
+lxml>=5.3
+cascadio>=0.0.13
+psycopg[binary]>=3.2
+boto3>=1.38

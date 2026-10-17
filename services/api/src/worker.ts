@@ -1,5 +1,9 @@
+import { closeCache, connectCache } from './cache.js';
 import { backfillProductEmbeddings } from './catalog/search.js';
 import { config } from './config.js';
+import { sendCeleryTask } from './streams/celery.js';
+import { closeKafka, kafkaEnabled } from './streams/kafka.js';
+import { relayOutbox } from './streams/relay.js';
 import { pool, withTransaction } from './db/pool.js';
 import { logger } from './logger.js';
 import { expireQuotes, removeOrphanFiles } from './fabrication/service.js';
@@ -10,6 +14,7 @@ import { refundPayment } from './payments/razorpay.js';
 
 const POLL_MS = 3_000;
 const MAX_ATTEMPTS = 8;
+const CAD_TASK = 'spaceborn.analyze_cad_file';
 
 interface OutboxRow {
   id: number;
@@ -78,6 +83,18 @@ async function handle(row: OutboxRow) {
     case 'fab_job.submitted':
       await notifyJobSubmitted(row.payload.jobId as string);
       return;
+    case 'fab_job.analyze': {
+      if (!config.CAD_ANALYSIS_ENABLED) return;
+      const files = await pool.query<{ id: string }>(
+        `select f.id from fab_files f
+          where f.job_id = $1 and not exists (select 1 from fab_file_analysis a where a.file_id = f.id)
+          order by f.created_at`,
+        [row.payload.jobId],
+      );
+      // A retry after a partial send repeats some tasks; the worker's upsert makes that harmless.
+      for (const file of files.rows) await sendCeleryTask(CAD_TASK, [file.id], config.CELERY_CAD_QUEUE);
+      return;
+    }
     case 'fab_job.paid':
       await notifyJobStatus(row.payload.jobId as string, 'in_production');
       return;
@@ -118,7 +135,7 @@ async function drainOutbox(batchSize = 20): Promise<number> {
         logger.error({ err, id: row.id, topic: row.topic, attempts }, giveUp ? 'outbox event failed permanently' : 'outbox event failed');
         await c.query(
           `update outbox set attempts = $2, last_error = $3,
-                  next_attempt_at = now() + make_interval(secs => power(2, $2)::int * 5),
+                  next_attempt_at = now() + make_interval(secs => (power(2::float8, $2::float8) * 5)::int),
                   failed_at = case when $4 then now() else null end
             where id = $1`,
           [row.id, attempts, String((err as Error).message ?? err).slice(0, 1000), giveUp],
@@ -136,8 +153,27 @@ let lastOrphanSweep = 0;
 const EMBED_SWEEP_MS = 60_000;
 let lastEmbedSweep = 0;
 
+// Kafka being down must not hold up refunds and emails, so the relay backs off on its own clock.
+const RELAY_BACKOFF_MS = 30_000;
+let relayPausedUntil = 0;
+
+async function relay(): Promise<number> {
+  if (!kafkaEnabled() || Date.now() < relayPausedUntil) return 0;
+  try {
+    return await relayOutbox();
+  } catch (err) {
+    relayPausedUntil = Date.now() + RELAY_BACKOFF_MS;
+    logger.warn({ err }, 'outbox relay to kafka failed, retrying in 30s');
+    return 0;
+  }
+}
+
 async function loop() {
-  logger.info({ payments: config.paymentsMode, mail: config.MAIL_PROVIDER }, 'worker started');
+  await connectCache();
+  logger.info(
+    { payments: config.paymentsMode, mail: config.MAIL_PROVIDER, kafka: kafkaEnabled(), cad: config.CAD_ANALYSIS_ENABLED },
+    'worker started',
+  );
   while (running) {
     try {
       const expired = await expireReservations();
@@ -155,12 +191,15 @@ async function loop() {
         if (embedded) logger.info({ embedded }, 'embedded catalog products for search');
       }
       const processed = await drainOutbox();
-      if (processed === 0 && expired === 0 && expiredQuotes === 0) await new Promise((r) => setTimeout(r, POLL_MS));
+      const streamed = await relay();
+      if (processed === 0 && streamed === 0 && expired === 0 && expiredQuotes === 0) await new Promise((r) => setTimeout(r, POLL_MS));
     } catch (err) {
       logger.error({ err }, 'worker iteration failed');
       await new Promise((r) => setTimeout(r, POLL_MS));
     }
   }
+  await closeKafka();
+  await closeCache();
   await pool.end();
 }
 

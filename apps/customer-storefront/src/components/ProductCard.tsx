@@ -85,8 +85,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
       : null;
 
-  const ratingScore = product.rating || 4.8;
-  const reviewsCount = product.reviewsCount || 42;
+  const ratingScore = product.rating || 0;
+  const reviewsCount = product.reviewsCount || 0;
 
   return (
     <article
@@ -156,14 +156,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.name}
           </h3>
 
-          {/* Customer Rating */}
-          <div className="flex items-center gap-1 text-[10px] text-[#7a6274] mb-2">
-            <div className="flex items-center text-amber-400">
-              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+          {reviewsCount > 0 ? (
+            <div className="flex items-center gap-1 text-[10px] text-[#7a6274] mb-2">
+              <div className="flex items-center text-amber-400">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              </div>
+              <span className="font-bold text-[#34222e]">{ratingScore}</span>
+              <span className="text-[#7a6274]">({reviewsCount})</span>
             </div>
-            <span className="font-bold text-[#34222e]">{ratingScore}</span>
-            <span className="text-[#7a6274]">({reviewsCount})</span>
-          </div>
+          ) : (
+            <p className="mb-2 text-[10px] text-[#7a6274]">No reviews yet</p>
+          )}
         </div>
 
         {/* Pricing & Add to Cart Action */}

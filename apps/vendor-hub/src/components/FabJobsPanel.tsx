@@ -4,8 +4,33 @@ import { useEffect, useState } from 'react';
 import { api, downloadFile } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { FAB_STATUS_LABEL, formatBytes, formatDateTime, formatInr, SERVICE_KIND_LABEL } from '@spaceborn/web-core/format';
-import type { FabJob, FabStatus } from '@spaceborn/web-core/types';
+import type { FabFileAnalysis, FabJob, FabStatus } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
+
+function AnalysisLine({ fileName, analysis }: { fileName: string; analysis: FabFileAnalysis }) {
+  const { metrics, estimate } = analysis;
+  if (analysis.status !== 'done' || !metrics) {
+    return (
+      <li className="text-xs text-slate-500">
+        <span className="font-mono">{fileName}</span>:{' '}
+        {analysis.status === 'unsupported' ? 'no automatic analysis for this file type' : 'could not be analysed automatically'}
+      </li>
+    );
+  }
+  const [x, y, z] = metrics.dimensionsMm;
+  return (
+    <li className="text-xs text-slate-600">
+      <span className="font-mono">{fileName}</span>: {x} × {y} × {z} mm · {metrics.volumeCm3} cm³
+      {!metrics.watertight && <span className="text-amber-600"> · mesh not watertight (volume approximate)</span>}
+      {metrics.fitsBuildVolume === false && <span className="text-red-600"> · larger than your build volume</span>}
+      {estimate && (
+        <span className="text-emerald-700">
+          {' '}· suggested {formatInr(estimate.priceInr)} ({estimate.material}, {estimate.massGrams} g, ~{estimate.machineHours} h)
+        </span>
+      )}
+    </li>
+  );
+}
 
 const FILTERS = {
   new: 'submitted,quoted,pending_payment',
@@ -29,6 +54,23 @@ function QuoteForm({ job, onQuoted }: { job: FabJob; onQuoted: (job: FabJob) => 
   const [hours, setHours] = useState(job.readyInHours ? String(job.readyInHours) : '6');
   const [note, setNote] = useState(job.quoteNote ?? '');
 
+  // The CAD worker's estimate across every file, already multiplied by quantity. One tap fills the form;
+  // the maker still presses Send, so the number they put their name to is theirs.
+  const suggested = (() => {
+    const estimates = job.files.map((f) => f.analysis?.estimate).filter((e): e is NonNullable<typeof e> => !!e);
+    if (estimates.length === 0 || estimates.length !== job.files.length) return null;
+    const price = Math.round(estimates.reduce((sum, e) => sum + e.priceInr, 0));
+    const machineHours = estimates.reduce((sum, e) => sum + e.machineHours, 0);
+    // Machine time plus a working day of queue, finishing and handover; whole hours, at least 2.
+    const readyIn = Math.max(2, Math.ceil(machineHours + 8));
+    return { price, machineHours, readyIn };
+  })();
+  const useSuggested = () => {
+    if (!suggested) return;
+    setAmount(String(suggested.price));
+    setHours(String(Math.min(720, suggested.readyIn)));
+  };
+
   const [send, saving] = useAction(
     async () => {
       const r = await api<{ job: FabJob }>(`/vendor/fab-jobs/${job.id}/quote`, {
@@ -42,6 +84,17 @@ function QuoteForm({ job, onQuoted }: { job: FabJob; onQuoted: (job: FabJob) => 
 
   return (
     <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg bg-slate-50 p-3">
+      {suggested && job.status !== 'quoted' && (
+        <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+          <span>
+            From the files: about <b>{formatInr(suggested.price)}</b> for all {job.quantity}, ~{suggested.machineHours.toFixed(1)} h of machine time.
+            The customer was shown this as an estimate.
+          </span>
+          <button type="button" onClick={useSuggested} className="rounded bg-emerald-600 px-2.5 py-1 font-semibold text-white hover:bg-emerald-500">
+            Use {formatInr(suggested.price)} · ready in {suggested.readyIn} h
+          </button>
+        </div>
+      )}
       <label className="text-xs font-semibold text-slate-600">
         Price for all {job.quantity} (₹)
         <input type="number" min="1" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 block w-28 rounded border border-slate-300 px-2 py-1" />
@@ -94,7 +147,12 @@ export function FabJobsPanel() {
       if (to === 'declined' || to === 'cancelled') {
         const reason = await prompt({
           title: to === 'declined' ? `Decline job #${job.jobNumber}?` : `Cancel job #${job.jobNumber}?`,
-          body: to === 'declined' ? 'Tell the customer why you cannot take it.' : 'The customer is refunded in full and sees your reason.',
+          body:
+            to === 'declined'
+              ? 'Tell the customer why you cannot take it.'
+              : job.status === 'in_production' || job.status === 'ready' || job.status === 'out_for_delivery'
+                ? 'The customer is refunded in full and sees your reason.'
+                : 'The customer sees your reason. Nothing has been charged yet.',
           label: 'Reason',
           minLength: 3,
           multiline: true,
@@ -207,13 +265,18 @@ export function FabJobsPanel() {
                   );
                 })}
               </div>
+              {job.files.some((f) => f.analysis) && (
+                <ul className="mt-2 space-y-1">
+                  {job.files.map((f) => (f.analysis ? <AnalysisLine key={f.id} fileName={f.fileName} analysis={f.analysis} /> : null))}
+                </ul>
+              )}
             </div>
             {job.closeReason && <p className="mt-2 text-xs text-red-600">{job.closeReason}</p>}
 
             {(job.status === 'submitted' || job.status === 'quoted') && <QuoteForm key={job.status} job={job} onQuoted={replace} />}
             {job.status === 'pending_payment' && <p className="mt-2 text-xs text-slate-500">Quote accepted, waiting for the customer to pay.</p>}
 
-            {(next || job.status === 'submitted' || job.status === 'quoted' || job.status === 'in_production') && (
+            {(next || job.status === 'submitted' || job.status === 'quoted' || job.status === 'in_production' || job.status === 'ready' || job.status === 'out_for_delivery') && (
               <div className="mt-3 flex gap-2">
                 {next && (
                   <button disabled={busy} onClick={() => void transition(job, next.to)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
@@ -225,9 +288,9 @@ export function FabJobsPanel() {
                     Decline
                   </button>
                 )}
-                {job.status === 'in_production' && (
+                {(job.status === 'in_production' || job.status === 'ready' || job.status === 'out_for_delivery') && (
                   <button disabled={busy} onClick={() => void transition(job, 'cancelled')} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-semibold text-red-700 disabled:opacity-50">
-                    Cancel & refund
+                    {job.status === 'out_for_delivery' ? "Couldn't deliver" : 'Cancel & refund'}
                   </button>
                 )}
               </div>

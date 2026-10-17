@@ -94,9 +94,30 @@ The chatbot reads the customer's active cart state and flags missing critical co
   3. `addToCart(productId, quantity)`
   4. `navigateTo(path)`
 
-#### C. Implementation Plan for Next Machine
-1. **Frontend**: Floating drawer component in `apps/customer-storefront` using `@google/genai` or Vercel AI SDK (`useChat`), rendering streaming markdown and clickable product tiles.
-2. **Backend**: Endpoint `POST /v1/ai/chat` in `services/api` equipped with Gemini function calling wired to `catalog/search.ts` and PostGIS store queries.
+#### C. Old plan (superseded)
+The notes above this heading were the design sketch. Section 3.3 is what was actually built. Do not add a Gemini or Vercel AI SDK client in the storefront.
+
+### 3.3 What shipped (October 2026, code + Terraform only, not deployed)
+
+Location is taken from the storefront and checked by the API. The model never chooses the customer's coordinates.
+
+* **Storefront** `apps/customer-storefront/src/components/ChatCopilot.tsx`: floating "Ask Spaceborn" drawer. Streams `POST /v1/ai/chat`. Product cards, a Confirm button before anything is added to the cart, and a button (not an automatic redirect) for page links. Conversation is restored from `sessionStorage` only after auth settles, and it is scoped to the signed-in user.
+* **Gateway** `services/api` `POST /v1/ai/chat`: optional Firebase auth, Redis rate limit with an in-process fallback, DynamoDB conversation memory with Redis then process-memory fallback, cart names loaded from Postgres, SSE proxy, circuit breaker. If the model is down, the same turn falls back to nearby in-stock search.
+* **Copilot** `services/copilot`: FastAPI + LangGraph + `ChatBedrockConverse`. Model is `global.amazon.nova-2-lite-v1:0` until Claude billing is fixed. Tools call the Node catalog over HTTP. The shopper's token is forwarded only to the orders tool. Internal auth is `X-Internal-Token` compared with `hmac.compare_digest`.
+* **Kafka**: transactional outbox relay, then an analytics consumer. Idempotency is a `stream_inbox` row keyed by event id (a broker reset must not skip or double-apply). Admin → AI insights reads `ai_demand_signals`, `ai_usage_daily`, and `order_funnel_daily`.
+* **Celery**: the API LPUSHes a protocol-v2 message to Redis queue `cad`. `services/cad-worker` measures an uploaded mesh with trimesh and writes `fab_file_analysis`. Vendors see dimensions, volume, watertight, fit, and a suggested price. Customers see dimensions, volume, and fit or gap warnings.
+* **Terraform** `terraform/streams_ai.tf` plus the ECS, ECR, and security changes: Cloud Map `spaceborn.internal`, copilot, cad-worker, kafka (KRaft, single broker), analytics consumer, DynamoDB `ai_memory`, and the copilot token in Secrets Manager. Migration `services/api/migrations/012_streams_and_cad.sql` runs with the existing migrate task.
+* **Verified on the devbox** (`i-0da4bee10b0448561`, not deployed): API typecheck and 79 tests, copilot 25 tests, CAD worker 9 tests, `terraform validate`, production `next build` of storefront, admin panel, and vendor hub. Live path: STL upload → outbox → Celery → analysis visible on the job, and a live Nova chat through the gateway with a follow-up answered from memory.
+
+### 3.4 Delivery model and the three follow-on features (October 2026, code only, not deployed)
+
+Decision: **the store delivers its own orders**. There is no courier fleet or driver role. "Dispatch" in the Seller Hub means the shop's own rider left with the parcel; the handover code is read to that rider. Copy in both apps says so.
+
+* **Live order tracking** (`services/api/src/orders/tracking.ts`, migration `013_delivery_tracking.sql` adds `rider_lat/rider_lng/rider_at` to `orders`). Vendor `POST /v1/vendor/orders/:id/location {lat,lng}` is accepted only while `out_for_delivery`, from the owning store, at most 30/min per order; it returns remaining km and an ETA (18 km/h, city two-wheeler). Customer `GET /v1/orders/:id/track` is an SSE stream: `snapshot` (status, destination, store position rounded to 3 decimals, rider), then `position` and `status` frames, a 7 s DB poll as backup, 15 s pings, closes on a terminal status or after 30 min. Fan-out is Redis pub/sub (`track:<orderId>`, separate subscriber client in `cache.ts`) with an in-process EventEmitter when Redis is absent. `transitionOrder` publishes a status nudge after commit. UI: `apps/vendor-hub/src/components/RiderShare.tsx` (`watchPosition`, sends every ≥8 s or >25 m, auto-starts after Dispatch, resumes from `sessionStorage`, Google Maps directions link) and `apps/customer-storefront/src/components/LiveDelivery.tsx` (reconnecting stream, Leaflet map over OSM tiles via shared `@spaceborn/web-core/geo-map`).
+* **Vendor demand heatmap** `GET /v1/vendor/demand`: `ai_demand_signals` within max(store radius, 8 km), last 30 days, ordered by misses. Seller Hub tab "Demand nearby" (`DemandPanel.tsx`) shows a map of weighted circles plus a table.
+* **Instant print quote**: the customer view of a fab job now carries `instantEstimateInr` (sum of the CAD worker's per-file `priceInr`, only before a maker quote); per-file mass/hours stay vendor-only. Storefront shows "Instant estimate: about ₹X … the maker confirms the final price". Vendor `QuoteForm` has a one-tap "Use ₹X · ready in N h" that fills the form; the maker still presses Send.
+* Dependencies: `leaflet` + `@types/leaflet` (web-core, both apps); `leaflet/dist/leaflet.css` imported in each app's root layout. `streamEvents` in web-core now wraps `streamServerEvents`, which yields `{event, data}` for named SSE frames.
+* Verified on the devbox: API typecheck, 83/83 tests (new `test/tracking.integration.test.ts`: 409/404/400 on bad location posts, owner-only stream with position + ETA, stream closes on delivery, demand scoped to the store), typecheck of web-core/storefront/vendor-hub/admin, production `next build` of storefront and vendor hub.
 
 ---
 
@@ -115,8 +136,8 @@ The chatbot reads the customer's active cart state and flags missing critical co
   - Converts CAD files into lightweight web-viewable `.glb` assets for interactive 3D Three.js browser inspection.
 
 ### 4.3 Where Apache Kafka Fits In (Streaming Tier)
-* **Real-Time Telemetry**: Streaming GPS, battery, and speed data from autonomous delivery rovers and couriers.
-* **Event Sourcing & Decoupling**: Replayable distributed commit log for downstream analytics, fraud monitoring, and audit consumers without putting read load on primary databases.
+* **Shipped use**: the outbox relay publishes order and copilot events. The analytics consumer fills the admin AI-insights tables. One self-hosted KRaft broker on ECS (`apache/kafka:3.9.1`), advertised as `kafka.spaceborn.internal:9092`.
+* **Not built**: rover GPS telemetry. Do not add that unless asked.
 
 ---
 

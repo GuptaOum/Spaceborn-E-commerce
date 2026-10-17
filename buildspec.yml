@@ -1,6 +1,6 @@
 version: 0.2
 
-# Builds the four container images on AWS CodeBuild and pushes them to ECR.
+# Builds the six container images on AWS CodeBuild and pushes them to ECR.
 # Required environment variables (set on the CodeBuild project):
 #   AWS_ACCOUNT_ID, IMAGE_TAG, NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
 #   NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_APP_ID, NEXT_PUBLIC_VENDOR_HUB_URL
@@ -21,6 +21,8 @@ phases:
   build:
     commands:
       - docker build -f services/api/Dockerfile -t "$REGISTRY/spaceborn/api:$IMAGE_TAG" .
+      - docker build -f services/copilot/Dockerfile -t "$REGISTRY/spaceborn/copilot:$IMAGE_TAG" .
+      - docker build -f services/cad-worker/Dockerfile -t "$REGISTRY/spaceborn/cad-worker:$IMAGE_TAG" .
       - |
         set -e
         for app in customer-storefront:storefront vendor-hub:vendor-hub admin-panel:admin-panel; do
@@ -36,5 +38,5 @@ phases:
   post_build:
     commands:
       - set -e
-      - for repo in api storefront vendor-hub admin-panel; do docker push "$REGISTRY/spaceborn/$repo:$IMAGE_TAG" || exit 1; done
+      - for repo in api copilot cad-worker storefront vendor-hub admin-panel; do docker push "$REGISTRY/spaceborn/$repo:$IMAGE_TAG" || exit 1; done
       - echo "Pushed $IMAGE_TAG"

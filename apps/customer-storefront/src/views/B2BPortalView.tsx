@@ -6,7 +6,6 @@ import {
   FileSpreadsheet, 
   CheckCircle2, 
   FileText, 
-  Download, 
   ArrowRight, 
   ShoppingCart, 
   Plus, 
@@ -80,7 +79,7 @@ SEN-TF-LUNA-LIDAR, 5`
   const handleAddAllToCart = () => {
     bomItems.forEach(item => {
       if (item.matchedProduct && item.quantity > 0) {
-        onAddToCart(item.matchedProduct, item.quantity);
+        onAddToCart(item.matchedProduct, Math.min(item.quantity, 50));
       }
     });
     onNavigate('cart');
@@ -89,21 +88,17 @@ SEN-TF-LUNA-LIDAR, 5`
   // Calculate pricing metrics
   const totalTaxable = bomItems.reduce((sum, item) => {
     if (!item.matchedProduct) return sum;
-    const basePrice = item.matchedProduct.price / 1.18;
-    // apply bulk 10% discount if qty >= 10
-    const discounted = item.quantity >= 10 ? basePrice * 0.9 : basePrice;
-    return sum + discounted * item.quantity;
+    const quantity = Math.min(item.quantity, 50);
+    return sum + item.matchedProduct.price * quantity;
   }, 0);
-
-  const totalGst = totalTaxable * 0.18;
-  const grandTotal = totalTaxable + totalGst;
+  const grandTotal = totalTaxable;
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-10">
         
         {/* Header */}
-        <div className="bg-white rounded-2xl p-8 md:p-10 text-white border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="bg-slate-900 rounded-2xl p-8 md:p-10 text-white border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-2xl space-y-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-bold uppercase">
               <Building2 className="w-3.5 h-3.5" />
@@ -113,20 +108,20 @@ SEN-TF-LUNA-LIDAR, 5`
               Rapid Bill of Materials (BOM) & Volume RFQ Engine
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-              Designed for hardware incubation labs, universities, drone manufacturers, and robotics startups. Paste your component part numbers or upload your spreadsheet to receive instant bulk tier discounts and GST e-invoices.
+              Paste part numbers to match them against stock near you. Prices are the same as the catalog. One line is capped at 50 units, and a cart at 40 lines. There is no volume discount and no GST tax invoice.
             </p>
           </div>
 
           <div className="bg-slate-800/80 border border-slate-700 rounded-xl p-5 shrink-0 space-y-2 text-xs">
             <div className="flex items-center space-x-2 text-emerald-400 font-bold">
               <Percent className="w-4 h-4" />
-              <span>Institutional Volume Discount Tiers</span>
+              <span>What a club order can do today</span>
             </div>
             <div className="space-y-1 text-slate-300">
-              <p>• 10+ Units: <strong>5% Instant Off</strong></p>
-              <p>• 25+ Units: <strong>10% Instant Off</strong></p>
-              <p>• 50+ Units: <strong>15% Instant Off</strong></p>
-              <p>• 100+ Units: <strong>Contract PO Pricing</strong></p>
+              <p>• Listed price, no bulk discount</p>
+              <p>• Up to 50 units of one part</p>
+              <p>• Up to 40 different parts</p>
+              <p>• Larger buys: write to the store from Contact</p>
             </div>
           </div>
         </div>
@@ -163,7 +158,7 @@ SEN-TF-LUNA-LIDAR, 5`
               </button>
 
               <div className="border-t border-slate-100 pt-3">
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Company GSTIN for 18% Input Credit</label>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">GSTIN (kept on this page only, not turned into a tax invoice)</label>
                 <input 
                   type="text" 
                   value={appliedGstin}
@@ -180,7 +175,7 @@ SEN-TF-LUNA-LIDAR, 5`
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">Matched Component Items ({bomItems.length})</h3>
-                <p className="text-slate-500 text-xs">Verified against Spaceborn Pune & Bengaluru Warehouses</p>
+                <p className="text-slate-500 text-xs">Matched against stock near the location in the header. Over 50 units of one part is cut to 50.</p>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -257,8 +252,7 @@ SEN-TF-LUNA-LIDAR, 5`
             {/* Total Summary */}
             <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-xs text-slate-600 space-y-0.5">
-                <p>Taxable Subtotal: <strong className="text-slate-900 font-mono">₹{totalTaxable.toFixed(2)}</strong></p>
-                <p>18% GST Input Credit (Claimable): <strong className="text-emerald-600 font-mono">₹{totalGst.toFixed(2)}</strong></p>
+                <p>Listed total, GST included, no volume discount: <strong className="text-slate-900 font-mono">₹{totalTaxable.toFixed(2)}</strong></p>
               </div>
 
               <div className="text-right">
@@ -276,24 +270,21 @@ SEN-TF-LUNA-LIDAR, 5`
           <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 border border-slate-200 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="font-bold text-slate-900 text-base">Spaceborn Official Proforma RFQ</h3>
-                <button onClick={() => setShowRfqModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold">âœ•</button>
+                <h3 className="font-bold text-slate-900 text-base">This is not a quotation</h3>
+                <button onClick={() => setShowRfqModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer font-bold">Close</button>
               </div>
 
               <div className="space-y-3 text-xs text-slate-700">
-                <p><strong>Quotation Ref:</strong> SPBN-B2B-{Math.floor(100000 + Math.random() * 900000)}</p>
-                <p><strong>GSTIN Entity:</strong> {appliedGstin} (Verified 18% ITC)</p>
-                <p><strong>Valid For:</strong> 30 Days from issue</p>
+                <p>No reference number is issued. Add the parts to the cart and pay there. {appliedGstin ? `GSTIN ${appliedGstin} is not verified and is not printed on an invoice.` : ''}</p>
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <p className="font-semibold text-slate-900 mb-1">Items Included: {bomItems.length} SKUs</p>
-                  <p>Grand Total: <strong className="font-mono text-slate-900">₹{grandTotal.toFixed(2)} (Inclusive of 18% GST)</strong></p>
+                  <p className="font-semibold text-slate-900 mb-1">Items on this page: {bomItems.length}</p>
+                  <p>Listed total: <strong className="font-mono text-slate-900">₹{grandTotal.toFixed(2)}</strong></p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-3 pt-2">
-                <span className="flex-1 bg-slate-100 text-slate-500 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center space-x-2">
-                  <Download className="w-4 h-4" />
-                  <span>Quotation PDF not available yet</span>
+                <span className="flex-1 bg-slate-100 text-slate-500 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center">
+                  No quotation PDF is issued
                 </span>
                 <button 
                   onClick={() => setShowRfqModal(false)}

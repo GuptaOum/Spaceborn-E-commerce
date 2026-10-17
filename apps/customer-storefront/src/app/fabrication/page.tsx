@@ -286,6 +286,33 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
           );
         })}
       </div>
+      {job.files.some((f) => f.analysis?.status === 'done') && (
+        <ul className="mt-1.5 space-y-0.5 text-[11px] text-[#7a6274]">
+          {job.files.map((f) => {
+            const m = f.analysis?.status === 'done' ? f.analysis.metrics : null;
+            if (!m) return null;
+            return (
+              <li key={f.id}>
+                {f.fileName}: {m.dimensionsMm.join(' × ')} mm, {m.volumeCm3} cm³
+                {m.fitsBuildVolume === false && <span className="font-semibold text-red-600"> · larger than this maker&apos;s machine</span>}
+                {!m.watertight && <span className="text-amber-700"> · model has gaps, the maker may ask for a fixed file</span>}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {job.quoteAmount == null && job.instantEstimateInr != null && job.status === 'submitted' && (
+        <div className="mt-3 rounded-2xl border border-dashed border-[#0c831f]/40 bg-[#f2fcf4] p-3 text-sm text-[#34222e]">
+          <p>
+            Instant estimate: <b>about {formatInr(job.instantEstimateInr)}</b> for all {job.quantity}
+            {job.instantEstimatePartial ? ' (for the files we could measure)' : ''}
+          </p>
+          <p className="text-xs text-[#7a6274]">
+            Worked out from your files in seconds. The maker confirms the final price; you pay nothing until you accept their quote.
+          </p>
+        </div>
+      )}
 
       {job.quoteAmount != null && (
         <div className="mt-3 rounded-2xl bg-white p-3 text-sm text-[#34222e]">
@@ -301,7 +328,7 @@ function JobCard({ job, onChange }: { job: FabJob; onChange: () => void }) {
         </div>
       )}
 
-      {job.handoverOtp && ['in_production', 'ready', 'out_for_delivery'].includes(job.status) && (
+      {job.handoverOtp && job.status === 'out_for_delivery' && (
         <p className="mt-3 rounded-xl bg-[#34222e] px-4 py-3 text-sm text-[#fee9d7]">
           Delivery code: <b className="font-mono text-lg tracking-widest">{job.handoverOtp}</b>
         </p>

@@ -246,6 +246,9 @@ describe('order lifecycle across roles', () => {
     expect(burned.body.order.handoverOtp ?? null).toBeNull();
 
     await db.pool.query(`update orders set handover_otp_sent_at = now() - interval '2 minutes' where id = $1`, [orderId]);
+    const tooSoon = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {});
+    expect(tooSoon.status).toBe(409);
+    await db.pool.query(`update orders set handover_otp_sent_at = now() - interval '16 minutes' where id = $1`, [orderId]);
     const sentAgain = await call(vendorBlr(), 'POST', `/v1/vendor/orders/${orderId}/handover-otp`, {});
     expect(sentAgain.status).toBe(200);
     const fresh = await call('cust-c:customer', 'GET', `/v1/orders/${orderId}`);
@@ -444,7 +447,7 @@ describe('fabrication services', () => {
 
   it('quote, pay and deliver with the customer’s code', async () => {
     const job = (await submitJob('fab-d')).body.job;
-    const otp = job.handoverOtp;
+    expect(job.handoverOtp).toBeFalsy();
 
     expect((await call('fab-d:customer', 'POST', `/v1/fabrication/jobs/${job.id}/accept`)).status).toBe(409);
     expect((await call('fab-d:customer', 'POST', `/v1/vendor/fab-jobs/${job.id}/quote`, { amount: 300, readyInHours: 4 })).status).toBe(403);
@@ -470,6 +473,8 @@ describe('fabrication services', () => {
     for (const to of ['ready', 'out_for_delivery']) {
       expect((await call(vendorBlr(), 'POST', `/v1/vendor/fab-jobs/${job.id}/transition`, { to })).status, to).toBe(200);
     }
+    const minted = await db.pool.query<{ handover_otp: string }>(`select handover_otp from fab_jobs where id = $1`, [job.id]);
+    const otp = minted.rows[0]!.handover_otp;
     const wrongCode = otp === '1234' ? '4321' : '1234';
     expect((await call(vendorBlr(), 'POST', `/v1/vendor/fab-jobs/${job.id}/transition`, { to: 'delivered', otp: wrongCode })).status).toBe(403);
     const delivered = await call(vendorBlr(), 'POST', `/v1/vendor/fab-jobs/${job.id}/transition`, { to: 'delivered', otp });

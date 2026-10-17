@@ -6,6 +6,7 @@ export type OutboxTopic =
   | 'order.handover_otp'
   | 'refund.requested'
   | 'fab_job.submitted'
+  | 'fab_job.analyze'
   | 'fab_job.paid'
   | 'fab_job.status_changed';
 

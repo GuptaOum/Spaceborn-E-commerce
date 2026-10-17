@@ -253,7 +253,7 @@ function scoreRow(
   };
 }
 
-export async function findSimilar(db: Db, submissionId: string): Promise<SimilarMatch[]> {
+export async function findSimilar(db: Db, submissionId: string, cities: CityScope = null): Promise<SimilarMatch[]> {
   const { rows } = await db.query(
     `select name, description, text_embedding, embedding_model, image_embedding, image_embedding_model
        from product_submissions where id = $1`,
@@ -303,9 +303,10 @@ export async function findSimilar(db: Db, submissionId: string): Promise<Similar
             s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
        from product_submissions s join stores st on st.id = s.store_id
       where s.status = 'pending' and s.id <> $2 and s.embedding_model = $4 and s.text_embedding is not null
+        and ($5::text[] is null or lower(btrim(st.city)) = any($5::text[]))
       order by s.text_embedding <=> $1::vector
       limit 8`,
-    [vector, submissionId, sub.name, text.model],
+    [vector, submissionId, sub.name, text.model, cities],
   );
   const pendingByTitle = await db.query<ScoredRow>(
     `select s.id, null::text as sku, s.name, s.description, st.city, 'submission'::text as kind,
@@ -313,9 +314,10 @@ export async function findSimilar(db: Db, submissionId: string): Promise<Similar
             s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
        from product_submissions s join stores st on st.id = s.store_id
       where s.status = 'pending' and s.id <> $2
+        and ($3::text[] is null or lower(btrim(st.city)) = any($3::text[]))
       order by similarity(s.name, $1) desc
       limit 8`,
-    [sub.name, submissionId],
+    [sub.name, submissionId, cities],
   );
   let byImage: { rows: ScoredRow[] } = { rows: [] };
   let pendingByImage: { rows: ScoredRow[] } = { rows: [] };
@@ -338,9 +340,10 @@ export async function findSimilar(db: Db, submissionId: string): Promise<Similar
               s.text_embedding, s.embedding_model, s.image_embedding, s.image_embedding_model
          from product_submissions s join stores st on st.id = s.store_id
         where s.status = 'pending' and s.id <> $2 and s.image_embedding_model = $4 and s.image_embedding is not null
+          and ($5::text[] is null or lower(btrim(st.city)) = any($5::text[]))
         order by s.image_embedding <=> $1::vector
         limit 8`,
-      [imageVector, submissionId, sub.name, image.model],
+      [imageVector, submissionId, sub.name, image.model, cities],
     );
   }
 

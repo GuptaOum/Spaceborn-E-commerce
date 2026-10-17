@@ -11,6 +11,7 @@ import { createProviderOrder } from '../payments/razorpay.js';
 import { allocateNearest, availabilityNearby, classifyShortfall, rankStores, type StoreSlice } from './fulfilment.js';
 import { deliveryFee, etaMinutes, MAX_ITEMS_PER_LINE, PLATFORM_FEE, RESERVATION_MINUTES, toPaise } from './pricing.js';
 import { canTransition, HOLDS_STOCK, PAID_STATUSES, type Actor, type OrderStatus } from './status.js';
+import { publishTracking } from './tracking.js';
 
 export interface DeliveryAddress {
   fullName: string;
@@ -555,7 +556,7 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
               set handover_otp_attempts = handover_otp_attempts + 1,
                   handover_otp = case when handover_otp_attempts + 1 >= $2 then null else handover_otp end,
                   handover_otp_expires_at = case when handover_otp_attempts + 1 >= $2 then null else handover_otp_expires_at end,
-                  handover_otp_sent_at = case when handover_otp_attempts + 1 >= $2 then null else handover_otp_sent_at end
+                  handover_otp_sent_at = case when handover_otp_attempts + 1 >= $2 then now() else handover_otp_sent_at end
             where id = $1
             returning (handover_otp is null) as cleared`,
           [order.id, HANDOVER_OTP_MAX_ATTEMPTS],
@@ -611,12 +612,16 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
     );
   }
   if (input.to === 'cancelled' || input.to === 'expired') void bumpCatalog();
+  // Best effort nudge to any open tracking stream. The stream also polls, so a lost nudge only delays.
+  void publishTracking(result.id, { type: 'status', status: input.to }).catch(() => undefined);
   return getOrder(db ?? pool, result.id, input.actor);
 }
 
 export const HANDOVER_OTP_TTL_MINUTES = 10;
 export const HANDOVER_OTP_RESEND_SECONDS = 45;
 export const HANDOVER_OTP_MAX_ATTEMPTS = 5;
+export const HANDOVER_OTP_MAX_MINTS = 3;
+export const HANDOVER_OTP_BURN_WAIT_SECONDS = 15 * 60;
 
 export interface HandoverOtpReceipt {
   orderId: string;
@@ -635,10 +640,12 @@ export async function requestHandoverOtp(orderId: string, actor: ActorContext): 
       store_id: string;
       handover_otp: string | null;
       otp_live: boolean;
+      attempts: number;
+      mints: number;
       sent_at: Date | null;
       resend_in: number | null;
     }>(
-      `select id, status, store_id, handover_otp,
+      `select id, status, store_id, handover_otp, handover_otp_attempts as attempts, handover_otp_mints as mints,
               (handover_otp is not null and handover_otp_expires_at > now()) as otp_live,
               handover_otp_sent_at as sent_at,
               greatest(0, ceil(extract(epoch from (handover_otp_sent_at + make_interval(secs => $2) - now()))))::int as resend_in
@@ -650,20 +657,30 @@ export async function requestHandoverOtp(orderId: string, actor: ActorContext): 
     if (actor.role === 'vendor' && order.store_id !== actor.storeId) throw notFound('Order not found');
     if (actor.role !== 'vendor') throw forbidden('Only the delivering store can send the code');
     if (order.status !== 'out_for_delivery') throw conflict('The delivery code can be sent once the order is out for delivery');
-    if (order.sent_at && order.resend_in && order.resend_in > 0) {
+    const burned = !order.otp_live && order.attempts >= HANDOVER_OTP_MAX_ATTEMPTS;
+    if (burned && order.sent_at) {
+      const wait = Math.ceil((order.sent_at.getTime() + HANDOVER_OTP_BURN_WAIT_SECONDS * 1000 - Date.now()) / 1000);
+      if (wait > 0) throw conflict(`Too many wrong codes. Wait ${wait}s before sending a new one.`, { retryAfterSeconds: wait });
+    }
+    if (order.otp_live && order.sent_at && order.resend_in && order.resend_in > 0) {
       throw conflict(`A code was just sent. Try again in ${order.resend_in}s`, { retryAfterSeconds: order.resend_in });
     }
+    const reusing = Boolean(order.otp_live && order.handover_otp);
+    if (!reusing && order.mints >= HANDOVER_OTP_MAX_MINTS) {
+      throw conflict('This order has had too many delivery codes. Contact support.');
+    }
 
-    const code = order.otp_live && order.handover_otp ? order.handover_otp : crypto.randomInt(1000, 10000).toString();
+    const code = reusing && order.handover_otp ? order.handover_otp : crypto.randomInt(1000, 10000).toString();
     const stamped = await c.query<{ sent_at: Date; expires_at: Date }>(
       `update orders
           set handover_otp = $2,
               handover_otp_sent_at = now(),
               handover_otp_expires_at = case when $4 then handover_otp_expires_at else now() + make_interval(mins => $3) end,
-              handover_otp_attempts = case when $4 then handover_otp_attempts else 0 end
+              handover_otp_attempts = case when $4 then handover_otp_attempts else 0 end,
+              handover_otp_mints = case when $4 then handover_otp_mints else handover_otp_mints + 1 end
         where id = $1
         returning handover_otp_sent_at as sent_at, handover_otp_expires_at as expires_at`,
-      [order.id, code, HANDOVER_OTP_TTL_MINUTES, order.otp_live && !!order.handover_otp],
+      [order.id, code, HANDOVER_OTP_TTL_MINUTES, reusing],
     );
     await enqueue(c, 'order.handover_otp', { orderId: order.id, code });
     const row = stamped.rows[0]!;

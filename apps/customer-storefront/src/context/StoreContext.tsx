@@ -64,6 +64,8 @@ interface StoreContextType {
   openCart: () => void;
   closeCart: () => void;
   addToCart: (product: Product, quantity?: number) => void;
+  cartNotice: string | null;
+  clearCartNotice: () => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
@@ -118,8 +120,8 @@ export function toProduct(p: CatalogOffer): Product {
     hsn: seed?.hsn || '85423100',
     gstRate: p.gstRate || 18,
     stock: p.nearbyStock ?? p.stock,
-    rating: seed?.rating || 4.8,
-    reviewsCount: seed?.reviewsCount || 42,
+    rating: seed?.rating || 0,
+    reviewsCount: seed?.reviewsCount || 0,
     image: p.imageUrl ?? seed?.image ?? PLACEHOLDER_IMAGE,
     gallery: seed?.gallery && seed.gallery.length > 0 ? seed.gallery : p.imageUrl ? [p.imageUrl] : [PLACEHOLDER_IMAGE],
     description: p.description || seed?.description || '',
@@ -139,12 +141,7 @@ export function toProduct(p: CatalogOffer): Product {
       '1 x Anti-Static ESD Protective Shield Bag',
       '1 x Spaceborn QC Verification Certificate'
     ],
-    tierPricing: seed?.tierPricing || [
-      { minQty: 1, maxQty: 4, price: p.price, savings: 'Standard' },
-      { minQty: 5, maxQty: 19, price: Math.round(p.price * 0.94), savings: 'Save 6%' },
-      { minQty: 20, maxQty: 49, price: Math.round(p.price * 0.88), savings: 'Save 12%' },
-      { minQty: 50, price: Math.round(p.price * 0.82), savings: 'Save 18%' },
-    ],
+    tierPricing: undefined,
     specifications: {
       ...(seed?.specifications || {}),
       ...(p.specs || {}),
@@ -153,7 +150,7 @@ export function toProduct(p: CatalogOffer): Product {
       'Authentication': 'Spaceborn Genuine 100%',
     },
     pinout: seed?.pinout,
-    datasheetUrl: seed?.datasheetUrl || `https://spaceborn.in/datasheets/${p.sku.toLowerCase()}.pdf`,
+    datasheetUrl: seed?.datasheetUrl,
     cadModelUrl: seed?.cadModelUrl,
     deliveryMins: p.etaMinutes || 10,
     isChoice: p.badges ? p.badges.includes('our_pick') : (p.isChoice ?? seed?.isChoice ?? false),
@@ -200,6 +197,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const [cart, setCart] = useState<StoredCart>({ items: [] });
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
 
   const [profileOverrides, setProfileOverrides] = useState<Partial<UserProfile>>({});
   const [gstDetails, setGstDetails] = useState<GstDetails>(EMPTY_GST);
@@ -335,12 +333,21 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // The cart is a list of products, not a store's basket: the server picks the vendor at checkout.
   const addToCart = (product: Product, quantity = 1) => {
+    const limit = Math.min(Math.max(product.stock, 0), MAX_PER_LINE);
     setCart((prev) => {
       const existing = prev.items.find((i) => i.product.id === product.id);
-      const limit = Math.min(product.stock, MAX_PER_LINE);
+      const wanted = (existing?.quantity ?? 0) + quantity;
+      const nextQty = Math.min(limit, wanted);
+      if (nextQty < wanted) {
+        setCartNotice(
+          limit <= 0
+            ? `${product.name} is out of stock near you.`
+            : `Only ${nextQty} of ${product.name} can go in one order (limit ${limit}).`,
+        );
+      }
       const next = existing
-        ? prev.items.map((i) => (i.product.id === product.id ? { ...i, quantity: Math.min(limit, i.quantity + quantity) } : i))
-        : [...prev.items, { product, quantity: Math.min(limit, quantity), unitPrice: product.price }];
+        ? prev.items.map((i) => (i.product.id === product.id ? { ...i, quantity: nextQty } : i))
+        : [...prev.items, { product, quantity: nextQty, unitPrice: product.price }];
       return { items: next.filter((i) => i.quantity > 0) };
     });
     setIsCartDrawerOpen(true);
@@ -424,6 +431,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     openCart: () => setIsCartDrawerOpen(true),
     closeCart: () => setIsCartDrawerOpen(false),
     addToCart,
+    cartNotice,
+    clearCartNotice: () => setCartNotice(null),
     updateQuantity,
     removeFromCart,
     clearCart,

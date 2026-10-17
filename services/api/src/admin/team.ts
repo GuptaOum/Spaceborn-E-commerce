@@ -74,14 +74,19 @@ export async function updateMember(
   actor: AdminScope,
 ) {
   const lower = normalizeEmail(email);
-  const { rows: current } = await pool.query<{ is_owner: boolean; regions: string[] | null }>(
-    'select is_owner, regions from admin_members where email = $1',
+  const { rows: current } = await pool.query<{ is_owner: boolean; regions: string[] | null; display_name: string | null; note: string | null }>(
+    'select is_owner, regions, display_name, note from admin_members where email = $1',
     [lower],
   );
   if (!current[0]) throw notFound('Admin not found');
   const isOwner = patch.isOwner ?? current[0].is_owner;
   const regions = patch.regions === undefined ? current[0].regions : patch.regions;
+  const displayName = patch.displayName === undefined ? current[0].display_name : patch.displayName;
+  const note = patch.note === undefined ? current[0].note : patch.note;
   if (isOwner && regions !== null) throw unprocessable('owner_scope', 'Owners always have access to every region');
+  if (!isOwner && regions === null) {
+    throw unprocessable('regions_required', 'Choose the regions this admin should keep before removing owner access');
+  }
   if (lower === actor.email && !isOwner) throw conflict('You cannot remove your own owner access');
   if (DEFAULT_ADMIN_EMAILS.has(lower) && (!isOwner || regions !== null)) {
     throw conflict('The founding owner cannot be restricted');
@@ -91,7 +96,7 @@ export async function updateMember(
        update admin_members set display_name = $2, regions = $3, is_owner = $4, note = $5 where email = $1 returning *
      )
      select ${MEMBER_COLUMNS} from updated m left join users u on lower(btrim(u.email)) = m.email`,
-    [lower, patch.displayName === undefined ? null : patch.displayName, regions, isOwner, patch.note === undefined ? null : patch.note],
+    [lower, displayName, regions, isOwner, note],
   );
   if (!rows[0]) throw notFound('Admin not found');
   return rows[0];

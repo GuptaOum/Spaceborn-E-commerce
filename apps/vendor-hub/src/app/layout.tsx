@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { AuthProvider } from '@spaceborn/web-core/auth';
 import { FeedbackProvider } from '@spaceborn/web-core/feedback';
+import 'leaflet/dist/leaflet.css';
 import './globals.css';
 
 export const metadata: Metadata = {
