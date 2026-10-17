@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
@@ -128,7 +129,7 @@ const STATUS_TONE: Partial<Record<OrderStatus, string>> = {
 
 export function OrdersPanel({ onChange }: { onChange: () => void }) {
   const { prompt } = useFeedback();
-  const [filter, setFilter] = useState<keyof typeof FILTERS>('active');
+  const [filter, setFilter] = useDraft<keyof typeof FILTERS>('vendor:orders:filter', 'active');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const orders = useLoad(() => api<{ orders: Order[] }>(`/vendor/orders?status=${FILTERS[filter]}`).then((r) => r.orders), [filter]);

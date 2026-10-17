@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { formatDateTime } from '@spaceborn/web-core/format';
 
@@ -15,7 +16,7 @@ interface Note {
 export function MessagesPanel() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [after, setAfter] = useState(0);
-  const [text, setText] = useState('');
+  const [text, setText] = useDraft('vendor:messages:text', '');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

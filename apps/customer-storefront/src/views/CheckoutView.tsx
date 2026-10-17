@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, Loader2, Lock, ShieldCheck, Store } from 'lucide-react';
 import { api, ApiError, newIdempotencyKey } from '@spaceborn/web-core/api';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import type { CartResolution, CheckoutPayment, Order } from '@spaceborn/web-core/types';
 import { useStore } from '../context/StoreContext';
 import { payWithRazorpay } from '../lib/razorpay';
@@ -36,7 +37,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   const [resolution, setResolution] = useState<CartResolution | null>(null);
   const [resolving, setResolving] = useState(false);
 
-  const [address, setAddress] = useState<AddressForm>({
+  const [address, setAddress, clearAddress] = useDraft<AddressForm>('checkout:address', {
     fullName: '',
     phone: '',
     line1: '',
@@ -166,6 +167,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       }
 
       clearCart();
+      clearAddress();
       idempotencyKey.current = newIdempotencyKey();
       navigateTo('orders');
     } catch (error) {

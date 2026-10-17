@@ -5,6 +5,7 @@ import { api } from '@spaceborn/web-core/api';
 import { useAction } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
 import type { Store } from '@spaceborn/web-core/types';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { useLoad } from '@spaceborn/web-core/use-load';
 import { DemandPanel } from './DemandPanel';
 import { FabJobsPanel } from './FabJobsPanel';
@@ -58,7 +59,7 @@ const SUMMARY_REFRESH_MS = 20_000;
 
 export function Dashboard({ initialStore }: { initialStore: Store }) {
   const [store, setStore] = useState(initialStore);
-  const [tab, setTab] = useState<Tab>('orders');
+  const [tab, setTab] = useDraft<Tab>('vendor:tab', 'orders');
   const summary = useLoad(() => api<{ summary: Summary }>('/vendor/summary').then((r) => r.summary), []);
 
   useEffect(() => {

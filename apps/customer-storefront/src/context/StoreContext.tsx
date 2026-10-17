@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import type { CatalogOffer, GeoPoint, NearbyStore } from '@spaceborn/web-core/types';
 import type { CartItem, GstDetails, Product, UserProfile } from '../types';
 import { INITIAL_PRODUCTS } from '../data/products';
@@ -167,8 +168,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>('loading');
   const [catalogError, setCatalogError] = useState<string | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useDraft('store:category', 'All Categories');
+  const [searchQuery, setSearchQuery] = useDraft('store:search', '');
 
   const handleSetSearchQuery = useCallback((query: string) => {
     setSearchQuery(query);
@@ -189,10 +190,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [cartNotice, setCartNotice] = useState<string | null>(null);
 
   const [profileOverrides, setProfileOverrides] = useState<Partial<UserProfile>>({});
-  const [gstDetails, setGstDetails] = useState<GstDetails>(EMPTY_GST);
+  const [gstDetails, setGstDetails] = useDraft<GstDetails>('store:gst', EMPTY_GST);
 
   const [wishlist, setWishlist] = useState<Product[]>([]);
-  const [compareList, setCompareList] = useState<Product[]>([]);
+  const [compareList, setCompareList] = useDraft<Product[]>('store:compare', []);
 
   const [hydrated, setHydrated] = useState(false);
 

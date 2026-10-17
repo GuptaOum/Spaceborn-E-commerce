@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 import { firebaseAuth } from './firebase';
 import type { Role } from './types';
+import { clearDrafts } from './useDraft';
 
 export interface SessionUser {
   uid: string;
@@ -121,7 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await updateProfile(created, { displayName: name });
         setUser(await toSessionUser(created, true));
       },
-      signOut: () => firebaseSignOut(firebaseAuth()),
+      signOut: async () => {
+        await firebaseSignOut(firebaseAuth());
+        clearDrafts();
+      },
     }),
     [user, loading, refreshClaims],
   );

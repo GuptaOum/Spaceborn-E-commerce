@@ -8,7 +8,7 @@ import { Product } from '../../types';
 
 export default function WishlistPage() {
   const router = useRouter();
-  const { wishlist, removeFromWishlist, addToCart, setSelectedProduct } = useStore();
+  const { wishlist, products, removeFromWishlist, addToCart, setSelectedProduct } = useStore();
 
   const handleSelectProduct = (prod: Product) => {
     setSelectedProduct(prod);
@@ -18,6 +18,7 @@ export default function WishlistPage() {
   return (
     <WishlistView
       wishlist={wishlist}
+      liveProducts={products}
       onRemoveFromWishlist={removeFromWishlist}
       onAddToCart={addToCart}
       onNavigate={(view) => {

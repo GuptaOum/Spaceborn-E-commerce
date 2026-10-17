@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, SERVICE_KIND_LABEL } from '@spaceborn/web-core/format';
@@ -16,7 +17,7 @@ const VERB: Record<Decision, string> = { approve: 'approved', reject: 'rejected'
 
 export function ServicesTab({ counts, onDecided }: { counts?: Record<string, number>; onDecided: () => void }) {
   const { prompt, confirm } = useFeedback();
-  const [status, setStatus] = useState<ListingStatus>('pending');
+  const [status, setStatus] = useDraft<ListingStatus>('admin:services:status', 'pending');
   const [busyId, setBusyId] = useState<string | null>(null);
   const services = useLoad(() => api<{ services: AdminListing[] }>(`/admin/services?status=${status}`).then((r) => r.services), [status]);
 

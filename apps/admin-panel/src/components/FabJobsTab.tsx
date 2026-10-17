@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api, downloadFile } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { FAB_STATUS_LABEL, formatDateTime, formatInr, SERVICE_KIND_LABEL } from '@spaceborn/web-core/format';
@@ -20,7 +21,7 @@ const ADMIN_CAN_CANCEL: FabStatus[] = ['submitted', 'quoted', 'pending_payment',
 
 export function FabJobsTab() {
   const { prompt, toast } = useFeedback();
-  const [filter, setFilter] = useState<Filter>('active');
+  const [filter, setFilter] = useDraft<Filter>('admin:fab-jobs:filter', 'active');
   const [busyId, setBusyId] = useState<string | null>(null);
   const jobs = useLoad(() => api<{ jobs: FabJob[] }>(`/admin/fab-jobs?status=${STATUSES[filter]}`).then((r) => r.jobs), [filter]);
 

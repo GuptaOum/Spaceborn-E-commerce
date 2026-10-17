@@ -57,7 +57,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#f8f9fc] py-12">
+      <div className="min-h-screen bg-[#fee9d7] py-12">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <div className="bg-white rounded-2xl border border-slate-200 p-12 shadow-xs space-y-4">
             <div className="w-16 h-16 rounded-full bg-slate-100 mx-auto flex items-center justify-center text-slate-400">
@@ -69,7 +69,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
             </p>
             <button
               onClick={onContinueShopping}
-              className="mt-4 inline-flex items-center px-6 py-3 bg-[#6366f1] text-white text-xs font-bold rounded-xl hover:bg-[#d44000] transition cursor-pointer shadow-sm"
+              className="mt-4 inline-flex items-center px-6 py-3 bg-[#0c831f] text-white text-xs font-bold rounded-xl hover:bg-[#0a6e1a] transition cursor-pointer shadow-sm"
             >
               Browse Products Catalog
             </button>
@@ -244,7 +244,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                     onChange={(e) => onUpdateGstDetails({ ...gstDetails, enabled: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#6366f1]"></div>
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0c831f]"></div>
                 </label>
               </div>
 
@@ -257,7 +257,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                       value={gstDetails.legalName}
                       onChange={(e) => onUpdateGstDetails({ ...gstDetails, legalName: e.target.value })}
                       placeholder="e.g. Apex Robotics Labs LLP"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-semibold text-slate-800 focus:border-[#6366f1]"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-semibold text-slate-800 focus:border-[#0c831f]"
                     />
                   </div>
 
@@ -276,7 +276,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
                       value={gstDetails.gstin}
                       onChange={(e) => handleGstinChange(e.target.value)}
                       placeholder="e.g. 29AABCA9482Q1Z7"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-mono font-bold text-slate-800 uppercase focus:border-[#6366f1]"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg outline-none font-mono font-bold text-slate-800 uppercase focus:border-[#0c831f]"
                     />
                   </div>
 
@@ -345,7 +345,7 @@ export const CartReviewView: React.FC<CartReviewViewProps> = ({
               {/* Checkout CTA */}
               <button
                 onClick={onProceedToCheckout}
-                className="w-full bg-[#6366f1] hover:bg-[#d44000] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-md shadow-orange-500/20 cursor-pointer"
+                className="w-full bg-[#0c831f] hover:bg-[#0a6e1a] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-md cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
                 <span>Proceed to Checkout</span>

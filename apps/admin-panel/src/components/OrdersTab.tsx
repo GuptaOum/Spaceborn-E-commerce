@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
@@ -28,9 +29,9 @@ const TONE: Partial<Record<OrderStatus, string>> = {
 
 export function OrdersTab() {
   const { prompt } = useFeedback();
-  const [filter, setFilter] = useState<Filter>('active');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filter, setFilter] = useDraft<Filter>('admin:orders:filter', 'active');
+  const [searchQuery, setSearchQuery] = useDraft('admin:orders:search', '');
+  const [expandedId, setExpandedId] = useDraft<string | null>('admin:orders:expanded', null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const query = STATUSES[filter] ? `?status=${STATUSES[filter]!.join(',')}` : '';
   const orders = useLoad(() => api<{ orders: Order[] }>(`/admin/orders${query}`).then((r) => r.orders), [query]);

@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import {
   Mail,
   MapPin,
@@ -25,7 +26,7 @@ const TOPICS: Record<string, string> = {
 };
 
 export const ContactView: React.FC<ContactViewProps> = ({ onNavigate }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useDraft('contact:form', {
     name: '',
     topic: 'order',
     orderNumber: '',

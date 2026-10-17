@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { Product } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { CATEGORIES, matchCategory, isCategoryActive } from '../data/products';
@@ -72,14 +73,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const serverRanked = initialSearchQuery.trim().length > 1 && searchResults !== null;
 
   // Filter state
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [selectedVoltages, setSelectedVoltages] = useState<string[]>([]);
-  const [selectedRpms, setSelectedRpms] = useState<string[]>([]);
-  const [selectedShaft, setSelectedShaft] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState(10000);
-  const [sortBy, setSortBy] = useState<'featured' | 'price_asc' | 'price_desc' | 'rating'>('featured');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedSubCategory, setSelectedSubCategory] = useDraft<string>('catalog:subCategory', 'All');
+  const [inStockOnly, setInStockOnly] = useDraft('catalog:inStock', false);
+  const [selectedVoltages, setSelectedVoltages] = useDraft<string[]>('catalog:voltages', []);
+  const [selectedRpms, setSelectedRpms] = useDraft<string[]>('catalog:rpms', []);
+  const [selectedShaft, setSelectedShaft] = useDraft<string[]>('catalog:shaft', []);
+  const [maxPrice, setMaxPrice] = useDraft('catalog:maxPrice', 10000);
+  const [sortBy, setSortBy] = useDraft<'featured' | 'price_asc' | 'price_desc' | 'rating'>('catalog:sort', 'featured');
+  const [viewMode, setViewMode] = useDraft<'grid' | 'list'>('catalog:view', 'grid');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const handleClearSearch = () => {

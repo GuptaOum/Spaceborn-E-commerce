@@ -5,6 +5,7 @@ import { api, fetchAuthedBlob, uploadFile } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
 import type { Category, ProductSubmission, SubmissionStatus } from '@spaceborn/web-core/types';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { useLoad } from '@spaceborn/web-core/use-load';
 
 const STATUS_STYLE: Record<SubmissionStatus, string> = {
@@ -49,9 +50,10 @@ export function ProductsPanel() {
   const { confirm } = useFeedback();
   const submissions = useLoad(() => api<{ submissions: ProductSubmission[] }>('/vendor/product-submissions').then((r) => r.submissions), []);
   const categories = useLoad(() => api<{ categories: Category[] }>('/categories').then((r) => r.categories), []);
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>('all');
-  const [editing, setEditing] = useState<ProductSubmission | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [filter, setFilter] = useDraft<(typeof FILTERS)[number]>('vendor:products:filter', 'all');
+  const [editing, setEditing] = useDraft<ProductSubmission | null>('vendor:products:editing', null);
+  // The photo itself cannot be kept across a refresh; the vendor picks it again before submitting.
+  const [form, setForm] = useDraft('vendor:products:form', EMPTY_FORM);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export function ProductsPanel() {
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
-    onChange: (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value }),
+    onChange: (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value })),
     className: input,
     required: true,
   });

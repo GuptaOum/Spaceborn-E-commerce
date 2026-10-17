@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { useLoad } from '@spaceborn/web-core/use-load';
 import type { Store } from '@spaceborn/web-core/types';
 import { MapPin, Zap, CheckCircle2 } from 'lucide-react';
@@ -33,7 +34,7 @@ const save = (productId: string, body: Record<string, unknown>) =>
 
 function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (saved: Saved) => void; onDeleted?: (id: string) => void }) {
   const [price, setPrice] = useState(String(item.price));
-  const [delta, setDelta] = useState('');
+  const [delta, setDelta] = useDraft(`vendor:inv:${item.productId}:delta`, '');
   useEffect(() => setPrice(String(item.price)), [item.price]);
 
   const [update, busy] = useAction(
@@ -155,11 +156,11 @@ function Row({ item, onSaved, onDeleted }: { item: InventoryItem; onSaved: (save
 }
 
 function AddFromCatalog({ store, owned, onAdded }: { store?: Store; owned: Set<string>; onAdded: (item: InventoryItem) => void }) {
-  const [q, setQ] = useState('');
+  const [q, setQ] = useDraft('vendor:inv:add:q', '');
   const [query, setQuery] = useState('');
-  const [picked, setPicked] = useState<CatalogEntry | null>(null);
-  const [price, setPrice] = useState('');
-  const [stock, setStock] = useState('10');
+  const [picked, setPicked] = useDraft<CatalogEntry | null>('vendor:inv:add:picked', null);
+  const [price, setPrice] = useDraft('vendor:inv:add:price', '');
+  const [stock, setStock] = useDraft('vendor:inv:add:stock', '10');
   const catalog = useLoad(
     () => api<{ products: CatalogEntry[] }>(`/vendor/catalog?limit=20${query ? `&q=${encodeURIComponent(query)}` : ''}`).then((r) => r.products),
     [query],
@@ -200,7 +201,7 @@ function AddFromCatalog({ store, owned, onAdded }: { store?: Store; owned: Set<s
             Add products to your {store?.city ? `${store.city} Hub` : 'Store'} inventory
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Components added here will be immediately available to {store?.city ? <strong>{store.city}</strong> : 'local'} engineers for 10–20 min dispatch.
+            Parts added here show up for customers within your delivery radius{store?.city ? <> in <strong>{store.city}</strong></> : ''}.
           </p>
         </div>
         {store?.city && (
@@ -262,8 +263,8 @@ function AddFromCatalog({ store, owned, onAdded }: { store?: Store; owned: Set<s
 
 export function InventoryPanel({ store, onChange }: { store?: Store; onChange: () => void }) {
   const { toast } = useFeedback();
-  const [view, setView] = useState<View>('all');
-  const [search, setSearch] = useState('');
+  const [view, setView] = useDraft<View>('vendor:inv:view', 'all');
+  const [search, setSearch] = useDraft('vendor:inv:search', '');
   const inventory = useLoad(() => api<{ items: InventoryItem[] }>('/vendor/inventory?limit=100').then((r) => r.items), []);
 
   const apply = (saved: Saved) => {

@@ -37,7 +37,7 @@ const SECTIONS = [
 
 export const WarrantyPolicyView: React.FC<WarrantyPolicyViewProps> = ({ onNavigate }) => {
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-[#fee9d7] py-10 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto space-y-8">
 
         <div className="bg-slate-900 rounded-2xl p-8 md:p-10 text-white border border-slate-800 shadow-xl space-y-3">

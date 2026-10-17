@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api, fetchAuthedBlob } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
@@ -134,7 +135,7 @@ function Review({ submission, onDecided }: { submission: ProductSubmission; onDe
 }
 
 export function ProductSubmissionsTab({ counts, onDecided }: { counts?: Record<string, number>; onDecided: () => void }) {
-  const [status, setStatus] = useState<SubmissionStatus>('pending');
+  const [status, setStatus] = useDraft<SubmissionStatus>('admin:submissions:status', 'pending');
   const [openId, setOpenId] = useState<string | null>(null);
   const submissions = useLoad(() => api<{ submissions: ProductSubmission[] }>(`/admin/product-submissions?status=${status}`).then((r) => r.submissions), [status]);
 

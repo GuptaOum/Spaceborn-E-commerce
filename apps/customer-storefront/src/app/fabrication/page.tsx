@@ -6,6 +6,7 @@ import { api, downloadFile, uploadFile } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
 import { FAB_STATUS_LABEL, formatBytes, formatDateTime, formatInr, SERVICE_KIND_LABEL } from '@spaceborn/web-core/format';
 import type { CheckoutPayment, FabFile, FabJob, FabStatus, ServiceKind, ServiceListing } from '@spaceborn/web-core/types';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { useLoad } from '@spaceborn/web-core/use-load';
 import { useStore } from '../../context/StoreContext';
 import { payWithRazorpay } from '../../lib/razorpay';
@@ -33,12 +34,13 @@ const normalizePhone = (v: string) => v.replace(/\D/g, '').slice(-10);
 function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDone: () => void; onCancel: () => void }) {
   const { location, currentUser } = useStore();
   const spec = FORMAT_SPECS[service.kind];
-  const [files, setFiles] = useState<FabFile[]>([]);
-  const [specifiedFormat, setSpecifiedFormat] = useState(spec.formats[0]);
+  const draftKey = `fab:job:${service.id}`;
+  const [files, setFiles, clearFiles] = useDraft<FabFile[]>(`${draftKey}:files`, []);
+  const [specifiedFormat, setSpecifiedFormat, clearFormat] = useDraft(`${draftKey}:format`, spec.formats[0]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm, clearForm] = useDraft(`${draftKey}:form`, {
     material: service.materials[0] ?? '',
     quantity: '1',
     notes: '',
@@ -48,7 +50,7 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
     city: location.label === 'Current location' ? '' : location.label,
     pincode: location.pincode,
   });
-  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
+  const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((prev) => ({ ...prev, [k]: e.target.value }));
 
   const onFiles = async (list: FileList | null) => {
     if (!list?.length) return;
@@ -100,9 +102,18 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
           },
         },
       });
+      clearFiles();
+      clearFormat();
+      clearForm();
       onDone();
     } catch (err) {
-      setError((err as Error).message);
+      const message = (err as Error).message;
+      if (message.includes('missing or already attached')) {
+        clearFiles();
+        setError('Your uploaded files have expired. Upload them again to send the request.');
+      } else {
+        setError(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -159,7 +170,7 @@ function JobForm({ service, onDone, onCancel }: { service: ServiceListing; onDon
             </span>
             <span className="flex items-center gap-2.5 ml-2">
               <span className="text-[#7a6274]">{formatBytes(f.sizeBytes)}</span>
-              <button type="button" onClick={() => setFiles(files.filter((x) => x.id !== f.id))} className="text-[#e2434b] font-semibold">
+              <button type="button" onClick={() => setFiles((prev) => prev.filter((x) => x.id !== f.id))} className="text-[#e2434b] font-semibold">
                 Remove
               </button>
             </span>
@@ -355,8 +366,8 @@ export default function FabricationPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { location, locateMe } = useStore();
-  const [kind, setKind] = useState<ServiceKind>('3d_printing');
-  const [selected, setSelected] = useState<ServiceListing | null>(null);
+  const [kind, setKind] = useDraft<ServiceKind>('fab:kind', '3d_printing');
+  const [selectedId, setSelectedId] = useDraft<string | null>('fab:selected', null);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState<string | null>(null);
   const jobsRef = useRef<HTMLDivElement>(null);
@@ -372,6 +383,8 @@ export default function FabricationPage() {
   );
   const services = { ...nearby, data: nearby.data?.services ?? null };
   const outOfRange = nearby.data?.outOfRange ?? [];
+  const selected = services.data?.find((s) => s.id === selectedId) ?? null;
+  const setSelected = (service: ServiceListing | null) => setSelectedId(service?.id ?? null);
 
   const useMyLocation = async () => {
     setLocating(true);

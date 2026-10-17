@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
 import { SignInPanel } from '@spaceborn/web-core/sign-in';
@@ -56,7 +57,7 @@ const titleCase = (city: string) => city.replace(/\b\w/g, (c) => c.toUpperCase()
 
 export default function AdminHome() {
   const { user, loading, signOut } = useAuth();
-  const [tab, setTab] = useState<TabId>('stores');
+  const [tab, setTab] = useDraft<TabId>('admin:tab', 'stores');
   // The API decides authoritatively via the admin_members table.
   const looksAdmin = user?.role === 'admin';
   const scope = useLoad<AdminScope | null>(

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime } from '@spaceborn/web-core/format';
@@ -16,12 +17,12 @@ export function TeamTab({ me }: { me: AdminScope }) {
   const regions = useLoad(() => api<{ regions: AdminRegion[] }>('/admin/regions').then((r) => r.regions), []);
   const audit = useLoad(() => api<{ entries: AuditEntry[] }>('/admin/audit?limit=50').then((r) => r.entries), []);
 
-  const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [allRegions, setAllRegions] = useState(false);
-  const [picked, setPicked] = useState<string[]>([]);
-  const [extraCity, setExtraCity] = useState('');
-  const [isOwner, setIsOwner] = useState(false);
+  const [email, setEmail] = useDraft('admin:team:email', '');
+  const [displayName, setDisplayName] = useDraft('admin:team:name', '');
+  const [allRegions, setAllRegions] = useDraft('admin:team:allRegions', false);
+  const [picked, setPicked] = useDraft<string[]>('admin:team:regions', []);
+  const [extraCity, setExtraCity] = useDraft('admin:team:extraCity', '');
+  const [isOwner, setIsOwner] = useDraft('admin:team:isOwner', false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -53,7 +53,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6">
+    <div className="min-h-screen bg-[#fee9d7] py-10 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
@@ -74,7 +74,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
             <select
               value={selectedToAdd}
               onChange={e => setSelectedToAdd(e.target.value)}
-              className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#6366f1] max-w-[220px] truncate cursor-pointer"
+              className="text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white outline-none focus:border-[#0c831f] max-w-[220px] truncate cursor-pointer"
             >
               <option value="">Select component to compare...</option>
               {PRODUCTS.filter(p => !activeProducts.some(ap => ap.id === p.id)).map(p => (
@@ -94,7 +94,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
             <button
               onClick={handleAddProduct}
               disabled={!selectedToAdd}
-              className="bg-[#6366f1] hover:bg-[#d44000] disabled:bg-slate-200 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
+              className="bg-[#0c831f] hover:bg-[#0a6e1a] disabled:bg-slate-200 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add</span>
@@ -137,7 +137,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
                               onSelectProduct(product);
                               onNavigate('product');
                             }}
-                            className="font-bold text-slate-900 hover:text-[#6366f1] cursor-pointer line-clamp-2"
+                            className="font-bold text-slate-900 hover:text-[#0c831f] cursor-pointer line-clamp-2"
                           >
                             {product.name}
                           </h4>
@@ -154,7 +154,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
                       <button
                         onClick={() => onAddToCart(product, 1)}
-                        className="w-full bg-[#6366f1] hover:bg-[#d44000] text-white py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer shadow-xs"
+                        className="w-full bg-[#0c831f] hover:bg-[#0a6e1a] text-white py-1.5 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-1 cursor-pointer shadow-xs"
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
                         <span>Add to Cart</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr } from '@spaceborn/web-core/format';
@@ -38,7 +39,7 @@ const VERB: Record<Decision, string> = { approve: 'approved', reject: 'rejected'
 
 /** Everything one vendor has on the shelf, with the numbers an admin checks first at the top. */
 function StoreInventoryPanel({ storeId }: { storeId: string }) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useDraft('admin:stores:query', '');
   const inv = useLoad(() => api<StoreInventory>(`/admin/stores/${storeId}/inventory`), [storeId]);
   const q = query.trim().toLowerCase();
   const items = (inv.data?.items ?? []).filter(
@@ -130,7 +131,7 @@ function StoreInventoryPanel({ storeId }: { storeId: string }) {
 function StoreThread({ storeId }: { storeId: string }) {
   const [notes, setNotes] = useState<{ id: number; senderRole: string; body: string; createdAt: string }[]>([]);
   const [after, setAfter] = useState(0);
-  const [text, setText] = useState('');
+  const [text, setText] = useDraft(`admin:store-thread:${storeId}:text`, '');
   const [error, setError] = useState<string | null>(null);
   const path = `/admin/stores/${storeId}/messages`;
 
@@ -192,7 +193,7 @@ function StoreThread({ storeId }: { storeId: string }) {
 
 export function StoresTab({ counts, onDecided }: { counts?: Record<string, number>; onDecided: () => void }) {
   const { prompt, confirm } = useFeedback();
-  const [status, setStatus] = useState<StoreStatus>('pending');
+  const [status, setStatus] = useDraft<StoreStatus>('admin:stores:status', 'pending');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [openInventoryId, setOpenInventoryId] = useState<string | null>(null);
   const [openThreadId, setOpenThreadId] = useState<string | null>(null);

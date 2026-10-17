@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { api } from '@spaceborn/web-core/api';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { SERVING_REGIONS, type ServingRegion, type Store } from '@spaceborn/web-core/types';
 import { MapPin, Navigation, CheckCircle2, Building2 } from 'lucide-react';
 
@@ -11,15 +12,17 @@ interface Props {
 }
 
 export function ApplicationForm({ initial, onSubmitted }: Props) {
-  const [selectedRegionId, setSelectedRegionId] = useState<string>(() => {
+  const draftKey = `vendor:application:${initial?.id ?? 'new'}`;
+  const initialRegion = (() => {
     if (initial?.city) {
       const match = SERVING_REGIONS.find((r) => r.city.toLowerCase() === initial.city.toLowerCase());
       return match ? match.id : 'custom';
     }
     return 'kanpur';
-  });
+  })();
+  const [selectedRegionId, setSelectedRegionId, clearRegion] = useDraft<string>(`${draftKey}:region`, initialRegion);
 
-  const [form, setForm] = useState({
+  const [form, setForm, clearForm] = useDraft(`${draftKey}:form`, {
     name: initial?.name ?? '',
     phone: initial?.phone ?? '',
     gstin: initial?.gstin ?? '',
@@ -83,6 +86,8 @@ export function ApplicationForm({ initial, onSubmitted }: Props) {
           deliveryRadiusKm: Number(form.deliveryRadiusKm),
         },
       });
+      clearRegion();
+      clearForm();
       onSubmitted();
     } catch (err) {
       setError((err as Error).message);
@@ -93,7 +98,7 @@ export function ApplicationForm({ initial, onSubmitted }: Props) {
 
   const field = (key: keyof typeof form) => ({
     value: form[key],
-    onChange: (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value }),
+    onChange: (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value })),
     className: 'mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none transition-colors',
   });
 

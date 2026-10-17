@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { type FormEvent } from 'react';
 import { api } from '@spaceborn/web-core/api';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr, SERVICE_KIND_LABEL } from '@spaceborn/web-core/format';
 import type { ServiceKind, ServiceListing, Store } from '@spaceborn/web-core/types';
@@ -22,7 +23,7 @@ const DEFAULTS: Record<ServiceKind, { title: string; materials: string; size: [n
 function ListingForm({ kind, existing, store, onSaved, onCancel }: { kind: ServiceKind; existing?: ServiceListing; store: Store; onSaved: (s: ServiceListing) => void; onCancel: () => void }) {
   const { confirm } = useFeedback();
   const d = DEFAULTS[kind];
-  const [form, setForm] = useState({
+  const [form, setForm, clearForm] = useDraft(`vendor:service:${kind}`, {
     title: existing?.title ?? d.title,
     description: existing?.description ?? '',
     materials: existing?.materials.join(', ') ?? d.materials,
@@ -34,7 +35,7 @@ function ListingForm({ kind, existing, store, onSaved, onCancel }: { kind: Servi
   });
   const field = (k: keyof typeof form, props: Record<string, unknown> = {}) => ({
     value: form[k],
-    onChange: (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value }),
+    onChange: (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value })),
     className: 'mt-1 w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm',
     required: true,
     ...props,
@@ -56,6 +57,7 @@ function ListingForm({ kind, existing, store, onSaved, onCancel }: { kind: Servi
           turnaroundHours: Number(form.turnaroundHours),
         },
       });
+      clearForm();
       onSaved(r.service);
     },
     { success: 'Sent to an admin for approval' },
@@ -132,7 +134,7 @@ function Visibility({ s, store }: { s: ServiceListing; store: Store }) {
 
 export function ServicesPanel({ store }: { store: Store }) {
   const services = useLoad(() => api<{ services: ServiceListing[] }>('/vendor/services').then((r) => r.services), []);
-  const [editing, setEditing] = useState<ServiceKind | null>(null);
+  const [editing, setEditing] = useDraft<ServiceKind | null>('vendor:service:editing', null);
 
   const upsert = (next: ServiceListing) =>
     services.mutate((list) => [next, ...(list ?? []).filter((x) => x.kind !== next.kind)]);

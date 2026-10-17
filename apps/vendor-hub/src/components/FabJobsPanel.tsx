@@ -5,6 +5,7 @@ import { api, downloadFile } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { FAB_STATUS_LABEL, formatBytes, formatDateTime, formatInr, SERVICE_KIND_LABEL } from '@spaceborn/web-core/format';
 import type { FabFileAnalysis, FabJob, FabStatus } from '@spaceborn/web-core/types';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { useLoad } from '@spaceborn/web-core/use-load';
 
 function AnalysisLine({ fileName, analysis }: { fileName: string; analysis: FabFileAnalysis }) {
@@ -50,9 +51,10 @@ const bucketOf = (status: FabStatus): Filter =>
   (Object.keys(FILTERS) as Filter[]).find((f) => FILTERS[f].split(',').includes(status)) ?? 'done';
 
 function QuoteForm({ job, onQuoted }: { job: FabJob; onQuoted: (job: FabJob) => void }) {
-  const [amount, setAmount] = useState(job.quoteAmount ? String(job.quoteAmount) : '');
-  const [hours, setHours] = useState(job.readyInHours ? String(job.readyInHours) : '6');
-  const [note, setNote] = useState(job.quoteNote ?? '');
+  const draftKey = `vendor:fab-quote:${job.id}`;
+  const [amount, setAmount, clearAmount] = useDraft(`${draftKey}:amount`, job.quoteAmount ? String(job.quoteAmount) : '');
+  const [hours, setHours, clearHours] = useDraft(`${draftKey}:hours`, job.readyInHours ? String(job.readyInHours) : '6');
+  const [note, setNote, clearNote] = useDraft(`${draftKey}:note`, job.quoteNote ?? '');
 
   // The CAD worker's estimate across every file, already multiplied by quantity. One tap fills the form;
   // the maker still presses Send, so the number they put their name to is theirs.
@@ -77,6 +79,9 @@ function QuoteForm({ job, onQuoted }: { job: FabJob; onQuoted: (job: FabJob) => 
         method: 'POST',
         body: { amount: Number(amount), readyInHours: Number(hours), note: note.trim() || undefined },
       });
+      clearAmount();
+      clearHours();
+      clearNote();
       onQuoted(r.job);
     },
     { success: job.status === 'quoted' ? 'Quote updated; the customer has been told' : 'Quote sent; the customer can now accept and pay' },
@@ -116,7 +121,7 @@ function QuoteForm({ job, onQuoted }: { job: FabJob; onQuoted: (job: FabJob) => 
 
 export function FabJobsPanel() {
   const { prompt, toast } = useFeedback();
-  const [filter, setFilter] = useState<Filter>('new');
+  const [filter, setFilter] = useDraft<Filter>('vendor:fab-jobs:filter', 'new');
   const [busyId, setBusyId] = useState<string | null>(null);
   const jobs = useLoad(() => api<{ jobs: FabJob[] }>(`/vendor/fab-jobs?status=${FILTERS[filter]}`).then((r) => r.jobs), [filter]);
 

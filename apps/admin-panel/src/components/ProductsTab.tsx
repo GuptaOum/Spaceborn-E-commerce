@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo, type FormEvent } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api } from '@spaceborn/web-core/api';
 import { useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
@@ -82,15 +83,15 @@ function BadgeChips({ value, onToggle, disabled, size = 'sm' }: { value: Product
 
 export function ProductsTab() {
   const { toast } = useFeedback();
-  const [typed, setTyped] = useState('');
-  const [search, setSearch] = useState('');
-  const [segregation, setSegregation] = useState<SegregationTab>('all');
-  const [selectedStoreId, setSelectedStoreId] = useState<string>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [typed, setTyped] = useDraft('admin:products:typed', '');
+  const [search, setSearch] = useDraft('admin:products:search', '');
+  const [segregation, setSegregation] = useDraft<SegregationTab>('admin:products:segregation', 'all');
+  const [selectedStoreId, setSelectedStoreId] = useDraft<string>('admin:products:store', 'all');
+  const [selectedCategory, setSelectedCategory] = useDraft<string>('admin:products:category', 'all');
   const [expandedVendorId, setExpandedVendorId] = useState<string | null>(null);
 
-  const [form, setForm] = useState(emptyForm);
-  const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const [form, setForm] = useDraft('admin:products:form', emptyForm);
+  const [editingProduct, setEditingProduct] = useDraft<AdminProduct | null>('admin:products:editing', null);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);

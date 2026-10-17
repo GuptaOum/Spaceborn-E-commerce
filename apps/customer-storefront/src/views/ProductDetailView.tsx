@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { api } from '@spaceborn/web-core/api';
 import { useAuth } from '@spaceborn/web-core/auth';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { PRODUCT_BADGES, type CatalogOffer, type GeoPoint } from '@spaceborn/web-core/types';
 import { Product, AppView } from '../types';
 import { ProductCard } from '../components/ProductCard';
@@ -77,13 +78,23 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const [hasPurchased, setHasPurchased] = useState(false);
   const [eligibleOrderNumber, setEligibleOrderNumber] = useState<number | null>(null);
   const [existingUserReview, setExistingUserReview] = useState<{ rating: number; title: string | null; content: string } | null>(null);
-  const [showReviewForm, setShowReviewForm] = useState(false);
-  const [newRating, setNewRating] = useState(5);
+  const [reviewDraft, setReviewDraft, clearReviewDraft] = useDraft(`review:${product.id}`, {
+    open: false,
+    rating: 5,
+    title: '',
+    comment: '',
+    name: '',
+    org: '',
+  });
+  const { open: showReviewForm, rating: newRating, title: newTitle, comment: newComment, name: newName, org: newOrg } = reviewDraft;
+  const patchReview = (patch: Partial<typeof reviewDraft>) => setReviewDraft((d) => ({ ...d, ...patch }));
+  const setShowReviewForm = (open: boolean) => patchReview({ open });
+  const setNewRating = (rating: number) => patchReview({ rating });
+  const setNewTitle = (title: string) => patchReview({ title });
+  const setNewComment = (comment: string) => patchReview({ comment });
+  const setNewName = (name: string) => patchReview({ name });
+  const setNewOrg = (org: string) => patchReview({ org });
   const [hoverRating, setHoverRating] = useState(0);
-  const [newTitle, setNewTitle] = useState('');
-  const [newComment, setNewComment] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newOrg, setNewOrg] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   // Hover zoom: where the cursor is over the image, as percentages
@@ -104,7 +115,6 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     setQuantity(1);
     setPinStatus(null);
     setActiveTab('description');
-    setShowReviewForm(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const fetchReviews = async () => {
@@ -132,10 +142,11 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         setHasPurchased(Boolean(res.hasPurchased));
         setEligibleOrderNumber(res.eligibleOrderNumber ?? null);
         if (res.userReview) {
-          setExistingUserReview(res.userReview);
-          setNewRating(res.userReview.rating);
-          setNewTitle(res.userReview.title || '');
-          setNewComment(res.userReview.content);
+          const saved = res.userReview;
+          setExistingUserReview(saved);
+          setReviewDraft((d) =>
+            d.title || d.comment ? d : { ...d, rating: saved.rating, title: saved.title || '', comment: saved.content },
+          );
         } else {
           setExistingUserReview(null);
         }
@@ -251,7 +262,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       
       const newRev: ReviewItem = {
         name: newName.trim() || user?.name || 'Verified Customer',
-        org: newOrg.trim() || 'Robotics & Hardware Lab',
+        org: newOrg.trim(),
         date: 'Just now',
         title: newTitle.trim(),
         comment: newComment.trim(),
@@ -274,7 +285,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     setReviewSubmitted(true);
     setTimeout(() => {
       setReviewSubmitted(false);
-      setShowReviewForm(false);
+      clearReviewDraft();
     }, 2200);
   };
 

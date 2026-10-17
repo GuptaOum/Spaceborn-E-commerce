@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useDraft } from '@spaceborn/web-core/use-draft';
 import { 
   User, 
   Building2, 
@@ -39,22 +40,22 @@ export function AccountProfileView({
   onSignOut,
   onNavigate
 }: AccountProfileViewProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'addresses' | 'gst'>('overview');
+  const [activeTab, setActiveTab] = useDraft<'overview' | 'profile' | 'addresses' | 'gst'>('profile:tab', 'overview');
   
   // Edit profile state
-  const [isEditing, setIsEditing] = useState(false);
-  const [fullName, setFullName] = useState(user.fullName);
-  const [phone, setPhone] = useState(user.phone);
-  const [companyName, setCompanyName] = useState(user.companyName || '');
-  const [designation, setDesignation] = useState(user.designation || '');
+  const [isEditing, setIsEditing] = useDraft('profile:editing', false);
+  const [fullName, setFullName] = useDraft('profile:fullName', user.fullName);
+  const [phone, setPhone] = useDraft('profile:phone', user.phone);
+  const [companyName, setCompanyName] = useDraft('profile:company', user.companyName || '');
+  const [designation, setDesignation] = useDraft('profile:designation', user.designation || '');
 
   // Add address state
-  const [isAddingAddress, setIsAddingAddress] = useState(false);
-  const [newAddrLine1, setNewAddrLine1] = useState('');
-  const [newAddrCity, setNewAddrCity] = useState('');
-  const [newAddrState, setNewAddrState] = useState('Karnataka');
-  const [newAddrPincode, setNewAddrPincode] = useState('');
-  const [newAddrType, setNewAddrType] = useState<'business' | 'residential'>('business');
+  const [isAddingAddress, setIsAddingAddress] = useDraft('profile:addingAddress', false);
+  const [newAddrLine1, setNewAddrLine1] = useDraft('profile:addr:line1', '');
+  const [newAddrCity, setNewAddrCity] = useDraft('profile:addr:city', '');
+  const [newAddrState, setNewAddrState] = useDraft('profile:addr:state', 'Karnataka');
+  const [newAddrPincode, setNewAddrPincode] = useDraft('profile:addr:pincode', '');
+  const [newAddrType, setNewAddrType] = useDraft<'business' | 'residential'>('profile:addr:type', 'business');
 
   const [savedSuccess, setSavedSuccess] = useState<string | null>(null);
 

@@ -10,6 +10,7 @@
     "./format": "./src/format.ts",
     "./sign-in": "./src/SignInPanel.tsx",
     "./use-load": "./src/useLoad.ts",
+    "./use-draft": "./src/useDraft.ts",
     "./feedback": "./src/feedback.tsx",
     "./geo-map": "./src/GeoMap.tsx"
   },
