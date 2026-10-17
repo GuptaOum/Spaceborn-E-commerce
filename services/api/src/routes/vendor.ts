@@ -20,7 +20,7 @@ import { consume } from '../lib/rateLimit.js';
 import { listStoreOrders, requestHandoverOtp, transitionOrder } from '../orders/service.js';
 import { recordRiderPosition } from '../orders/tracking.js';
 import { HOLDS_STOCK, ORDER_STATUSES } from '../orders/status.js';
-import { getJob, getJobFile, listStoreJobs, quoteJob, transitionJob } from '../fabrication/service.js';
+import { getJob, getJobFile, listStoreJobs, quoteJob, requestFabHandoverOtp, transitionJob } from '../fabrication/service.js';
 import { SERVICE_KINDS } from '../fabrication/status.js';
 import { LISTING_COLUMNS, streamFile } from './fabrication.js';
 import { escapeLike, fabStatusList, latitude, longitude, pagination, phone, pincode, reason, statusList, uuid } from './schemas.js';
@@ -427,6 +427,11 @@ vendorRouter.post('/fab-jobs/:id/transition', requireApprovedStore, handoverLimi
     req.body,
   );
   res.json({ job: await transitionJob({ jobId: parse(uuid, req.params.id), actor: vendorActor(req), ...b }) });
+});
+
+// Wrong guesses stay capped by handoverLimiter on the transition route, whatever the number of codes sent.
+vendorRouter.post('/fab-jobs/:id/handover-otp', requireApprovedStore, async (req, res) => {
+  res.json(await requestFabHandoverOtp(parse(uuid, req.params.id), vendorActor(req)));
 });
 
 // The vendor is at the door. Sending is throttled in requestHandoverOtp (45s, same code while

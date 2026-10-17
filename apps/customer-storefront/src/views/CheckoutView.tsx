@@ -51,6 +51,8 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // One key per checkout attempt so a double click or retry never creates two orders.
   const idempotencyKey = useRef(newIdempotencyKey());
+  // Placed but not paid yet: the customer closed Razorpay or the payment failed.
+  const unpaidOrder = useRef<string | null>(null);
 
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
 
@@ -77,6 +79,23 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       .finally(() => setResolving(false));
     return () => controller.abort();
   }, [cartKey, location.latitude, location.longitude, cart.length]);
+
+  // A key stands for one cart and one address. Once either changes the next attempt is a new
+  // checkout, and the unpaid one is cancelled so its stock and reservation are not left hanging.
+  const checkoutBody = `${cartKey}|${JSON.stringify(address)}|${location.latitude},${location.longitude}`;
+  useEffect(() => {
+    idempotencyKey.current = newIdempotencyKey();
+    const stale = unpaidOrder.current;
+    if (!stale) return;
+    unpaidOrder.current = null;
+    void api<{ order: Order }>(`/orders/${stale}`)
+      .then(({ order }) =>
+        order.status === 'pending_payment'
+          ? api(`/orders/${stale}/cancel`, { method: 'POST', body: { reason: 'Changed the cart or address before paying' } })
+          : undefined,
+      )
+      .catch(() => undefined);
+  }, [checkoutBody]);
 
   const unavailable = new Set(resolution?.unavailable ?? []);
   const elsewhere = new Set(resolution?.elsewhere ?? []);
@@ -154,6 +173,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
       });
 
       if (placed.order.status === 'pending_payment') {
+        unpaidOrder.current = placed.order.id;
         if (placed.payment.provider === 'razorpay') {
           await payOrder(placed);
         } else {
@@ -166,6 +186,7 @@ export function CheckoutView({ onNavigate }: CheckoutViewProps) {
         return;
       }
 
+      unpaidOrder.current = null;
       clearCart();
       clearAddress();
       idempotencyKey.current = newIdempotencyKey();

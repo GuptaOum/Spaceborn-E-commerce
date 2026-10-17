@@ -7,6 +7,7 @@ import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatDateTime, formatInr, ORDER_STATUS_LABEL } from '@spaceborn/web-core/format';
 import type { Order, OrderStatus } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
+import { RefundsPanel } from './RefundsPanel';
 import { FilterChips, ListState } from './ui';
 
 const FILTERS = ['active', 'delivered', 'cancelled', 'all'] as const;
@@ -64,6 +65,33 @@ export function OrdersTab() {
     { success: (msg) => msg as string },
   );
 
+  const [deliver] = useAction(
+    async (order: Order) => {
+      const reason = await prompt({
+        title: `Mark order #${order.orderNumber} delivered?`,
+        body: 'Only once you have confirmed with the customer that the parcel reached them. This skips the delivery code and is recorded in the audit log.',
+        label: 'How it was confirmed',
+        minLength: 3,
+        multiline: true,
+        confirmLabel: 'Mark delivered',
+      });
+      if (!reason) return '';
+      setBusyId(order.id);
+      try {
+        const r = await api<{ order: Order }>(`/admin/orders/${order.id}/deliver`, { method: 'POST', body: { reason } });
+        orders.mutate((list) => {
+          if (!list) return list;
+          const keep = filter === 'all' || filter === 'delivered';
+          return keep ? list.map((o) => (o.id === order.id ? { ...o, ...r.order } : o)) : list.filter((o) => o.id !== order.id);
+        });
+        return `Order #${order.orderNumber} marked delivered`;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    { success: (msg) => msg as string },
+  );
+
   const filteredOrders = useMemo(() => {
     const list = orders.data ?? [];
     const q = searchQuery.trim().toLowerCase();
@@ -80,6 +108,7 @@ export function OrdersTab() {
 
   return (
     <div>
+      <RefundsPanel />
       <div className="flex flex-wrap items-center gap-3">
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} />
         <div className="relative min-w-[240px] flex-1 max-w-sm">
@@ -160,6 +189,15 @@ export function OrdersTab() {
                             >
                               {isExpanded ? 'Hide' : `Items (${order.items?.length ?? 0})`}
                             </button>
+                            {order.status === 'out_for_delivery' && (
+                              <button
+                                disabled={busyId === order.id}
+                                onClick={() => void deliver(order)}
+                                className="text-xs font-semibold text-emerald-700 hover:underline disabled:opacity-50"
+                              >
+                                Delivered
+                              </button>
+                            )}
                             {CANCELLABLE.includes(order.status) && (
                               <button
                                 disabled={busyId === order.id}

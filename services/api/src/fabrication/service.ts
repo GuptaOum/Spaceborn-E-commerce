@@ -367,8 +367,8 @@ export interface JobTransitionInput {
 const FAB_OTP_TTL_MINUTES = 10;
 const FAB_OTP_MAX_ATTEMPTS = 5;
 
-export async function transitionJob(input: JobTransitionInput) {
-  const outcome = await withTransaction(async (c) => {
+export async function transitionJob(input: JobTransitionInput, db?: pg.PoolClient) {
+  const run = async (c: pg.PoolClient) => {
     const { rows } = await c.query(
       `select j.id, j.status, j.customer_id, j.store_id, j.handover_otp,
               (j.handover_otp is not null and j.handover_otp_expires_at > now()) as otp_live,
@@ -388,7 +388,7 @@ export async function transitionJob(input: JobTransitionInput) {
     if (!canTransitionJob(from, input.to, actor.role)) throw conflict(`Job cannot move from ${from} to ${input.to}`);
     if (input.to === 'delivered') {
       const code = typeof job.handover_otp === 'string' ? job.handover_otp : '';
-      if (!code || !job.otp_live) throw conflict('The delivery code is not active. It is sent when the rider leaves and lasts 10 minutes.');
+      if (!code || !job.otp_live) throw conflict('The delivery code is not active. Send a new one to the customer from the job card.');
       const otp = input.otp ?? '';
       const matches = otp.length === code.length && crypto.timingSafeEqual(Buffer.from(otp), Buffer.from(code));
       if (!matches) {
@@ -440,9 +440,53 @@ export async function transitionJob(input: JobTransitionInput) {
     }
     await enqueue(c, 'fab_job.status_changed', { jobId: job.id, from, to: input.to });
     return 'ok' as const;
-  });
+  };
+  const outcome = db ? await run(db) : await withTransaction(run);
   if (outcome === 'mismatch') throw forbidden('Handover code does not match');
-  return getJob(pool, input.jobId, input.actor);
+  return getJob(db ?? pool, input.jobId, input.actor);
+}
+
+const FAB_OTP_RESEND_SECONDS = 45;
+
+// The code is first sent when the rider leaves. A ride longer than its life, or five wrong guesses,
+// needs a fresh one at the door. A live code is re-sent as it is; the vendor never sees it.
+export async function requestFabHandoverOtp(jobId: string, actor: ActorContext) {
+  return withTransaction(async (c) => {
+    const { rows } = await c.query<{
+      id: string;
+      status: FabStatus;
+      store_id: string;
+      handover_otp: string | null;
+      otp_live: boolean;
+      resend_in: number | null;
+    }>(
+      `select id, status, store_id, handover_otp,
+              (handover_otp is not null and handover_otp_expires_at > now()) as otp_live,
+              greatest(0, ceil(extract(epoch from (handover_otp_sent_at + make_interval(secs => $2) - now()))))::int as resend_in
+         from fab_jobs where id = $1 for update`,
+      [jobId, FAB_OTP_RESEND_SECONDS],
+    );
+    const job = rows[0];
+    if (!job || actor.role !== 'vendor' || job.store_id !== actor.storeId) throw notFound('Job not found');
+    if (job.status !== 'out_for_delivery') throw conflict('The delivery code can be sent once the job is out for delivery');
+    if (job.resend_in && job.resend_in > 0) {
+      throw conflict(`A code was just sent. Try again in ${job.resend_in}s`, { retryAfterSeconds: job.resend_in });
+    }
+    const reusing = Boolean(job.otp_live && job.handover_otp);
+    const code = reusing && job.handover_otp ? job.handover_otp : crypto.randomInt(1000, 10000).toString();
+    const stamped = await c.query<{ sent_at: Date; expires_at: Date }>(
+      `update fab_jobs
+          set handover_otp = $2,
+              handover_otp_sent_at = now(),
+              handover_otp_expires_at = case when $4 then handover_otp_expires_at else now() + make_interval(mins => $3) end,
+              handover_otp_attempts = case when $4 then handover_otp_attempts else 0 end
+        where id = $1
+        returning handover_otp_sent_at as sent_at, handover_otp_expires_at as expires_at`,
+      [job.id, code, FAB_OTP_TTL_MINUTES, reusing],
+    );
+    const row = stamped.rows[0]!;
+    return { jobId: job.id, sentAt: row.sent_at.toISOString(), expiresAt: row.expires_at.toISOString() };
+  });
 }
 
 export async function expireQuotes(batchSize = 50): Promise<number> {

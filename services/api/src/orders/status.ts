@@ -17,11 +17,11 @@ export type Actor = Role | 'system';
 
 const TRANSITIONS: Record<OrderStatus, Partial<Record<OrderStatus, Actor[]>>> = {
   pending_payment: { placed: ['system'], expired: ['system'], cancelled: ['customer', 'admin', 'system'] },
-  placed: { accepted: ['vendor'], cancelled: ['customer', 'vendor', 'admin'] },
+  placed: { accepted: ['vendor'], cancelled: ['customer', 'vendor', 'admin', 'system'] },
   accepted: { packing: ['vendor'], cancelled: ['vendor', 'admin'] },
   packing: { ready_for_pickup: ['vendor'], cancelled: ['vendor', 'admin'] },
   ready_for_pickup: { out_for_delivery: ['vendor'], cancelled: ['vendor', 'admin'] },
-  out_for_delivery: { delivered: ['vendor'], cancelled: ['vendor', 'admin'] },
+  out_for_delivery: { delivered: ['vendor', 'admin'], cancelled: ['vendor', 'admin'] },
   delivered: {},
   cancelled: {},
   expired: {},

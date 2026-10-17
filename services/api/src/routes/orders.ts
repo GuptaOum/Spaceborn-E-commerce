@@ -5,7 +5,14 @@ import { currentUser, requireAuth } from '../auth.js';
 import { pool } from '../db/pool.js';
 import { badRequest, conflict, parse } from '../errors.js';
 import { MAX_ITEMS_PER_LINE } from '../orders/pricing.js';
-import { checkoutPayload, getOrder, listCustomerOrders, placeOrder, transitionOrder } from '../orders/service.js';
+import {
+  cancelForCustomer,
+  checkoutPayload,
+  checkoutStillPayable,
+  getOrder,
+  listCustomerOrders,
+  placeOrder,
+} from '../orders/service.js';
 import { subscribeTracking, trackingSnapshot } from '../orders/tracking.js';
 import { deliveryAddress, uuid } from './schemas.js';
 
@@ -131,17 +138,15 @@ ordersRouter.post('/:id/pay', async (req, res) => {
     throw conflict('The reservation expired. Place the order again.');
   }
   if (!payload.payment || payload.payment.status === 'captured') throw conflict('Payment is not open for this order');
+  if (!(await checkoutStillPayable(payload.order.id))) {
+    throw conflict('Part of this checkout was cancelled. Place the order again.', { code: 'checkout_broken' });
+  }
   res.json(payload);
 });
 
 ordersRouter.post('/:id/cancel', async (req, res) => {
   const user = currentUser(req);
   const { reason } = parse(z.object({ reason: z.string().trim().max(300).optional() }), req.body ?? {});
-  const order = await transitionOrder({
-    orderId: parse(uuid, req.params.id),
-    to: 'cancelled',
-    actor: { role: 'customer', uid: user.uid },
-    reason: reason || 'Cancelled by customer',
-  });
+  const order = await cancelForCustomer(parse(uuid, req.params.id), user.uid, reason || 'Cancelled by customer');
   res.json({ order });
 });

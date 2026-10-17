@@ -7,7 +7,8 @@ import {
 } from '../auth.js';
 import { addMember, audit, listAudit, listMembers, listRegions, memberEmail, regionList, removeMember, updateMember } from '../admin/team.js';
 import { approveSubmission, findSimilar, getAdminSubmission, listAdminSubmissions, pipeImage, rejectSubmission, submissionImage } from '../catalog/submissions.js';
-import { pool, withTransaction } from '../db/pool.js';
+import { pool, withTransaction, type Db } from '../db/pool.js';
+import { recordRefund, refundOwed, settleRefundStatus, type RefundRequest } from '../payments/refunds.js';
 import { conflict, forbidden, notFound, parse } from '../errors.js';
 import { listAllOrders, orderCity, transitionOrder } from '../orders/service.js';
 import { getJobFile, jobCity, listAllJobs, transitionJob } from '../fabrication/service.js';
@@ -242,7 +243,9 @@ adminRouter.post('/stores/:id/messages', async (req, res) => {
 
 type StoreDecision = 'approved' | 'rejected' | 'suspended';
 
-async function decideStore(storeId: string, decision: StoreDecision, note: string | null, cities: string[] | null) {
+const SUSPEND_REASON = 'This shop can no longer fulfil your order. You are refunded in full.';
+
+async function decideStore(storeId: string, decision: StoreDecision, note: string | null, cities: string[] | null, adminUid: string) {
   const allowedFrom: Record<StoreDecision, string[]> = {
     approved: ['pending', 'suspended'],
     rejected: ['pending'],
@@ -271,7 +274,54 @@ async function decideStore(storeId: string, decision: StoreDecision, note: strin
       await setRoleClaims(store.owner_id, 'customer', null, c);
       await revokeSessions(store.owner_id);
     }
-    return { id: storeId, status: decision, city: store.city as string, name: store.name as string };
+
+    // A suspended owner loses the Seller Hub, so nothing still at the shop would ever move. Those
+    // orders and print jobs are cancelled and refunded now; a parcel already on the road stays open
+    // for support to close from Orders & Delivery.
+    let cancelledOrders = 0;
+    let cancelledJobs = 0;
+    let onTheRoad = 0;
+    if (decision === 'suspended') {
+      const admin = { role: 'admin' as const, uid: adminUid };
+      const open = await c.query<{ id: string; status: string }>(
+        `select id, status from orders
+          where store_id = $1 and status in ('placed', 'accepted', 'packing', 'ready_for_pickup', 'out_for_delivery')
+          order by id`,
+        [storeId],
+      );
+      for (const order of open.rows) {
+        if (order.status === 'out_for_delivery') {
+          onTheRoad += 1;
+          continue;
+        }
+        await transitionOrder({ orderId: order.id, to: 'cancelled', actor: admin, reason: SUSPEND_REASON }, c);
+        cancelledOrders += 1;
+      }
+      const jobs = await c.query<{ id: string }>(
+        `select id from fab_jobs
+          where store_id = $1 and status in ('submitted', 'quoted', 'pending_payment', 'in_production', 'ready')
+          order by id`,
+        [storeId],
+      );
+      for (const job of jobs.rows) {
+        await transitionJob({ jobId: job.id, to: 'cancelled', actor: admin, reason: SUSPEND_REASON }, c);
+        cancelledJobs += 1;
+      }
+      const roadJobs = await c.query<{ n: number }>(
+        `select count(*)::int as n from fab_jobs where store_id = $1 and status = 'out_for_delivery'`,
+        [storeId],
+      );
+      onTheRoad += roadJobs.rows[0]?.n ?? 0;
+    }
+    return {
+      id: storeId,
+      status: decision,
+      city: store.city as string,
+      name: store.name as string,
+      cancelledOrders,
+      cancelledJobs,
+      onTheRoad,
+    };
   });
 }
 
@@ -279,11 +329,22 @@ for (const decision of ['approve', 'reject', 'suspend'] as const) {
   const status: StoreDecision = decision === 'approve' ? 'approved' : decision === 'reject' ? 'rejected' : 'suspended';
   adminRouter.post(`/stores/:id/${decision}`, async (req, res) => {
     const note = decision === 'approve' ? null : parse(z.object({ reason }), req.body).reason;
-    const store = await decideStore(parse(uuid, req.params.id), status, note, scopeCities(adminScope(req)));
+    const store = await decideStore(parse(uuid, req.params.id), status, note, scopeCities(adminScope(req)), currentUser(req).uid);
     // A suspended shop's stock leaves the pooled catalog right away; a reinstated one can come back.
     await bumpCatalog();
-    await audit(req, `store.${decision}`, { type: 'store', id: store.id, city: store.city }, { name: store.name, reason: note });
-    res.json({ store: { id: store.id, status: store.status } });
+    await audit(req, `store.${decision}`, { type: 'store', id: store.id, city: store.city }, {
+      name: store.name,
+      reason: note,
+      ...(decision === 'suspend'
+        ? { cancelledOrders: store.cancelledOrders, cancelledJobs: store.cancelledJobs, onTheRoad: store.onTheRoad }
+        : {}),
+    });
+    res.json({
+      store: { id: store.id, status: store.status },
+      cancelledOrders: store.cancelledOrders,
+      cancelledJobs: store.cancelledJobs,
+      onTheRoad: store.onTheRoad,
+    });
   });
 }
 
@@ -296,7 +357,11 @@ const PRODUCT_COLUMNS = `
   is_active as "isActive", updated_at as "updatedAt"`;
 
 adminRouter.get('/products', requireGlobalAdmin, async (req, res) => {
-  const q = parse(pagination.extend({ q: z.string().trim().max(80).optional() }), req.query);
+  // The master catalog is one admin screen, not a customer page; it loads the whole list at once.
+  const q = parse(
+    pagination.extend({ limit: z.coerce.number().int().min(1).max(500).default(50), q: z.string().trim().max(80).optional() }),
+    req.query,
+  );
   const search = q.q ? `%${escapeLike(q.q)}%` : null;
   const { rows } = await pool.query(
     `select ${PRODUCT_COLUMNS},
@@ -315,7 +380,7 @@ adminRouter.get('/products', requireGlobalAdmin, async (req, res) => {
                  'unitsHeld', (select coalesce(sum(oi.quantity), 0)::int from order_items oi join orders o on o.id = oi.order_id
                                 where oi.product_id = p.id and o.store_id = s.id
                                   and o.status = 'pending_payment')
-               )
+               ))
                  from inventory i join stores s on s.id = i.store_id where i.product_id = p.id and i.is_listed),
               '[]'::json
             ) as "stores",
@@ -405,10 +470,15 @@ adminRouter.put('/products/:id/badges', requireGlobalAdmin, async (req, res) => 
 
 adminRouter.get('/product-submissions', async (req, res) => {
   const q = parse(
-    pagination.extend({ status: z.enum(['pending', 'approved', 'rejected']).optional() }),
+    pagination.extend({
+      status: z.enum(['pending', 'approved', 'rejected']).optional(),
+      category: z.string().trim().min(1).max(60).optional(),
+    }),
     req.query,
   );
-  res.json({ submissions: await listAdminSubmissions(q.status ?? null, q.limit, q.offset, scopeCities(adminScope(req))) });
+  res.json({
+    submissions: await listAdminSubmissions(q.status ?? null, q.limit, q.offset, scopeCities(adminScope(req)), q.category ?? null),
+  });
 });
 
 adminRouter.get('/product-submissions/:id/image', async (req, res) => {
@@ -422,13 +492,21 @@ adminRouter.get('/product-submissions/:id', async (req, res) => {
 });
 
 adminRouter.post('/product-submissions/:id/approve', async (req, res) => {
-  const body = parse(z.object({ mergeIntoProductId: uuid.optional() }), req.body ?? {});
+  const body = parse(
+    z.object({ mergeIntoProductId: uuid.optional(), categoryId: z.string().trim().min(1).max(60).optional() }),
+    req.body ?? {},
+  );
   if (!body.mergeIntoProductId && adminScope(req).regions !== null) {
     throw forbidden('Approving a new catalog product needs an admin with access to all regions. Merge it into an existing product instead.');
   }
-  const submission = await approveSubmission(parse(uuid, req.params.id), body.mergeIntoProductId ?? null, scopeCities(adminScope(req)));
+  const submission = await approveSubmission(
+    parse(uuid, req.params.id),
+    body.mergeIntoProductId ?? null,
+    scopeCities(adminScope(req)),
+    body.categoryId ?? null,
+  );
   await audit(req, 'submission.approve', { type: 'product_submission', id: submission.id, city: submission.city }, {
-    name: submission.name, productId: submission.productId, merged: !!body.mergeIntoProductId,
+    name: submission.name, productId: submission.productId, merged: !!body.mergeIntoProductId, categoryId: submission.categoryId,
   });
   res.json({ submission: { id: submission.id, status: submission.status, productId: submission.productId } });
 });
@@ -463,6 +541,91 @@ adminRouter.post('/orders/:id/cancel', async (req, res) => {
   });
   await audit(req, 'order.cancel', { type: 'order', id: orderId, city }, { reason: body.reason });
   res.json({ order });
+});
+
+// Closes a parcel the shop can no longer close itself, e.g. after a suspension or a broken code flow.
+adminRouter.post('/orders/:id/deliver', async (req, res) => {
+  const body = parse(z.object({ reason }), req.body);
+  const orderId = parse(uuid, req.params.id);
+  const city = await orderCity(orderId);
+  if (!city || !inScope(adminScope(req), city)) throw notFound('Order not found');
+  const order = await transitionOrder({
+    orderId,
+    to: 'delivered',
+    reason: body.reason,
+    actor: { role: 'admin', uid: currentUser(req).uid },
+  });
+  await audit(req, 'order.deliver', { type: 'order', id: orderId, city }, { reason: body.reason });
+  res.json({ order });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Refunds the worker has not finished: still retrying, or given up after its last attempt.
+
+const refundEvent = (db: Db, id: number, cities: string[] | null, lock = false) =>
+  db.query<{ id: number; payload: RefundRequest; city: string | null; processed: boolean }>(
+    `select x.id, x.payload, s.city, (x.processed_at is not null) as processed
+       from outbox x
+       left join orders o on o.id = (x.payload->>'orderId')::uuid
+       left join fab_jobs j on j.id = (x.payload->>'jobId')::uuid
+       left join stores s on s.id = coalesce(o.store_id, j.store_id)
+      where x.id = $1 and x.topic = 'refund.requested' and ${CITY('$2')}
+      ${lock ? 'for update of x' : ''}`,
+    [id, cities],
+  );
+
+adminRouter.get('/refunds', async (req, res) => {
+  const { rows } = await pool.query(
+    `select x.id, x.attempts, x.last_error as "lastError", x.failed_at as "failedAt",
+            x.next_attempt_at as "nextAttemptAt", x.created_at as "createdAt",
+            (x.payload->>'amountPaise')::bigint as "amountPaise",
+            o.order_number as "orderNumber", j.job_number as "jobNumber",
+            coalesce(o.delivery_address, j.delivery_address)->>'fullName' as "customerName",
+            s.name as "storeName", s.city
+       from outbox x
+       left join orders o on o.id = (x.payload->>'orderId')::uuid
+       left join fab_jobs j on j.id = (x.payload->>'jobId')::uuid
+       left join stores s on s.id = coalesce(o.store_id, j.store_id)
+      where x.topic = 'refund.requested' and x.processed_at is null and ${CITY('$1')}
+      order by x.failed_at desc nulls last, x.id
+      limit 100`,
+    [scopeCities(adminScope(req))],
+  );
+  res.json({ refunds: rows.map((row) => ({ ...row, amountPaise: Number(row.amountPaise) })) });
+});
+
+adminRouter.post('/refunds/:id/retry', async (req, res) => {
+  const id = parse(z.coerce.number().int().positive(), req.params.id);
+  const event = (await refundEvent(pool, id, scopeCities(adminScope(req)))).rows[0];
+  if (!event || event.processed) throw notFound('Refund not found');
+  await pool.query(
+    `update outbox set attempts = 0, failed_at = null, last_error = null, next_attempt_at = now()
+      where id = $1 and processed_at is null`,
+    [id],
+  );
+  await audit(req, 'refund.retry', { type: 'refund', id: String(id), city: event.city });
+  res.json({ ok: true });
+});
+
+// Money sent outside Razorpay (bank transfer, or a refund made in the Razorpay dashboard). The
+// ledger records it under the same order or job, so the worker can never pay it out a second time.
+adminRouter.post('/refunds/:id/settle', requireGlobalAdmin, async (req, res) => {
+  const id = parse(z.coerce.number().int().positive(), req.params.id);
+  const body = parse(z.object({ reference: z.string().trim().min(3).max(120) }), req.body);
+  const settled = await withTransaction(async (c) => {
+    const event = (await refundEvent(c, id, null, true)).rows[0];
+    if (!event || event.processed) throw notFound('Refund not found');
+    const { reference, amount } = await refundOwed(c, event.payload);
+    if (amount > 0) await recordRefund(c, event.payload.paymentId, reference, amount, `manual:${body.reference}`);
+    else await settleRefundStatus(c, event.payload.paymentId);
+    await c.query('update outbox set processed_at = now(), failed_at = null where id = $1', [id]);
+    return { city: event.city, amount };
+  });
+  await audit(req, 'refund.settle_manual', { type: 'refund', id: String(id), city: settled.city }, {
+    reference: body.reference,
+    amountPaise: settled.amount,
+  });
+  res.json({ ok: true, amountPaise: settled.amount });
 });
 
 // ---------------------------------------------------------------------------------------------

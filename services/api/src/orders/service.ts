@@ -312,19 +312,53 @@ async function writeSplit(c: Db, slices: StoreSlice[], input: PlaceOrderInput) {
   return { orderId: firstId, grandTotal, checkoutId };
 }
 
+const sameAddress = (a: DeliveryAddress, b: DeliveryAddress) =>
+  a.fullName === b.fullName &&
+  a.phone === b.phone &&
+  a.line1 === b.line1 &&
+  (a.line2 ?? '') === (b.line2 ?? '') &&
+  (a.landmark ?? '') === (b.landmark ?? '') &&
+  a.city === b.city &&
+  a.pincode === b.pincode &&
+  Number(a.latitude) === Number(b.latitude) &&
+  Number(a.longitude) === Number(b.longitude);
+
+// A key stands for one cart sent to one address. Replaying it with a different body would hand back
+// a payment for the old checkout, so the caller is refused and must start again with a new key.
+async function findByKey(input: PlaceOrderInput, quantities: Map<string, number>): Promise<string | null> {
+  const existing = await pool.query<{ id: string; checkout_id: string | null; delivery_address: DeliveryAddress }>(
+    `select o.id, o.checkout_id, o.delivery_address from orders o
+       left join checkouts c on c.id = o.checkout_id
+      where o.customer_id = $1 and (o.idempotency_key = $2 or c.idempotency_key = $2)
+      order by o.created_at, length(o.idempotency_key), o.idempotency_key
+      limit 1`,
+    [input.customerId, input.idempotencyKey],
+  );
+  const first = existing.rows[0];
+  if (!first) return null;
+  const lines = await pool.query<{ product_id: string; quantity: number }>(
+    `select oi.product_id, sum(oi.quantity)::int as quantity
+       from orders o join order_items oi on oi.order_id = o.id
+      where o.id = $1 or (o.checkout_id is not null and o.checkout_id = $2::uuid)
+      group by oi.product_id`,
+    [first.id, first.checkout_id],
+  );
+  const sameCart =
+    lines.rows.length === quantities.size && lines.rows.every((row) => quantities.get(row.product_id) === row.quantity);
+  if (!sameCart || !sameAddress(first.delivery_address, input.address)) {
+    throw conflict('Your cart or address changed after this checkout started. Place the order again.', {
+      code: 'idempotency_mismatch',
+    });
+  }
+  return first.id;
+}
+
 export async function placeOrder(input: PlaceOrderInput) {
   const quantities = mergeLines(input.items);
   const productIds = [...quantities.keys()];
 
-  const existing = await pool.query<{ id: string }>(
-    `select o.id from orders o
-       left join checkouts c on c.id = o.checkout_id
-      where o.customer_id = $1 and (o.idempotency_key = $2 or c.idempotency_key = $2)
-      order by o.created_at
-      limit 1`,
-    [input.customerId, input.idempotencyKey],
-  );
-  if (existing.rows[0]) return checkoutPayload(existing.rows[0].id, input.customerId);
+  const existingId = await findByKey(input, quantities);
+  if (existingId) return checkoutPayload(existingId, input.customerId);
 
   let orderId: string;
   let grandTotal: number;
@@ -380,16 +414,9 @@ export async function placeOrder(input: PlaceOrderInput) {
     }));
   } catch (err) {
     if (err instanceof IdempotentReplay) {
-      const replay = await pool.query<{ id: string }>(
-        `select o.id from orders o
-           left join checkouts c on c.id = o.checkout_id
-          where o.customer_id = $1 and (o.idempotency_key = $2 or c.idempotency_key = $2)
-          order by o.created_at
-          limit 1`,
-        [input.customerId, input.idempotencyKey],
-      );
-      if (!replay.rows[0]) throw conflict('This checkout is already being processed. Please refresh your orders.');
-      return checkoutPayload(replay.rows[0].id, input.customerId);
+      const replayId = await findByKey(input, quantities);
+      if (!replayId) throw conflict('This checkout is already being processed. Please refresh your orders.');
+      return checkoutPayload(replayId, input.customerId);
     }
     throw err;
   }
@@ -541,7 +568,10 @@ export async function transitionOrder(input: TransitionInput, db?: pg.PoolClient
     if (!canTransition(from, input.to, actor.role)) {
       throw conflict(`Order cannot move from ${from} to ${input.to}`);
     }
-    if (input.to === 'delivered') {
+    if (input.to === 'delivered' && actor.role === 'admin') {
+      // Support closes a delivery the shop cannot (suspended, or the code flow failed at the door).
+      if (!input.reason) throw unprocessable('reason_required', 'Say why support is marking this delivered');
+    } else if (input.to === 'delivered') {
       // The code only exists after the vendor asked for it at the door, and it does not live long.
       if (!order.handover_otp) throw conflict('Send the delivery code to the customer first');
       if (!order.otp_live) throw conflict('The delivery code has expired. Send a new one to the customer');
@@ -723,4 +753,74 @@ export async function expireReservations(batchSize = 50): Promise<number> {
   const expired = await expireReservationsInTx(batchSize);
   if (expired) void bumpCatalog();
   return expired;
+}
+
+// An unpaid split checkout is one payment. Cancelling one delivery cancels the others too, otherwise
+// paying for what is left would charge for the cancelled delivery as well.
+export async function cancelForCustomer(orderId: string, customerId: string, reason: string) {
+  const actor: ActorContext = { role: 'customer', uid: customerId };
+  return withTransaction(async (c) => {
+    const { rows } = await c.query<{ status: OrderStatus; checkout_id: string | null }>(
+      'select status, checkout_id from orders where id = $1 and customer_id = $2',
+      [orderId, customerId],
+    );
+    const order = rows[0];
+    if (!order) throw notFound('Order not found');
+    let siblings: string[] = [];
+    if (order.status === 'pending_payment' && order.checkout_id) {
+      // Same lock order as markPaid, so a payment landing now cannot deadlock with this cancel.
+      const mates = await c.query<{ id: string; status: OrderStatus }>(
+        'select id, status from orders where checkout_id = $1 order by id for update',
+        [order.checkout_id],
+      );
+      siblings = mates.rows.filter((row) => row.id !== orderId && row.status === 'pending_payment').map((row) => row.id);
+    }
+    await transitionOrder({ orderId, to: 'cancelled', actor, reason }, c);
+    for (const id of siblings) await transitionOrder({ orderId: id, to: 'cancelled', actor, reason }, c);
+    return getOrder(c, orderId, actor);
+  });
+}
+
+// A paid order the shop has not accepted in time is cancelled and refunded, and the shop is taken
+// offline: nobody is watching its Seller Hub, so the next orders would wait the same way.
+export async function cancelUnaccepted(batchSize = 20): Promise<number> {
+  const { rows } = await pool.query<{ id: string; store_id: string }>(
+    `select id, store_id from orders
+      where status = 'placed' and placed_at < now() - make_interval(mins => $1)
+      order by placed_at
+      limit $2`,
+    [config.ORDER_ACCEPT_MINUTES, batchSize],
+  );
+  let cancelled = 0;
+  for (const row of rows) {
+    try {
+      await transitionOrder({
+        orderId: row.id,
+        to: 'cancelled',
+        actor: { role: 'system', uid: null },
+        reason: `The shop did not confirm your order within ${config.ORDER_ACCEPT_MINUTES} minutes. You are refunded in full.`,
+      });
+    } catch (err) {
+      // The shop accepted it between the scan and the lock.
+      if (err instanceof HttpError && err.status === 409) continue;
+      throw err;
+    }
+    await pool.query('update stores set is_online = false where id = $1 and is_online', [row.store_id]);
+    logger.warn({ orderId: row.id, storeId: row.store_id }, 'order not accepted in time, cancelled and store taken offline');
+    cancelled += 1;
+  }
+  return cancelled;
+}
+
+// Any sibling that is no longer waiting for payment makes the shared payment wrong, so the
+// customer is sent back to place the order again.
+export async function checkoutStillPayable(orderId: string): Promise<boolean> {
+  const { rows } = await pool.query<{ broken: boolean }>(
+    `select exists (
+       select 1 from orders s join orders o on o.checkout_id = s.checkout_id
+        where o.id = $1 and s.status <> 'pending_payment'
+     ) as broken`,
+    [orderId],
+  );
+  return !rows[0]?.broken;
 }

@@ -56,8 +56,15 @@ describe('order status machine', () => {
     expect(canTransition('placed', 'packing', 'vendor')).toBe(false);
     expect(canTransition('ready_for_pickup', 'out_for_delivery', 'vendor')).toBe(true);
     expect(canTransition('out_for_delivery', 'delivered', 'vendor')).toBe(true);
-    expect(canTransition('out_for_delivery', 'delivered', 'admin')).toBe(false);
+    // Support can close a parcel already on the road (the service insists on a reason); nobody can skip ahead to it.
+    expect(canTransition('out_for_delivery', 'delivered', 'admin')).toBe(true);
+    expect(canTransition('packing', 'delivered', 'admin')).toBe(false);
     expect(canTransition('out_for_delivery', 'delivered', 'customer')).toBe(false);
+  });
+
+  it('lets the system cancel a paid order the shop never accepted, and nothing later', () => {
+    expect(canTransition('placed', 'cancelled', 'system')).toBe(true);
+    expect(canTransition('accepted', 'cancelled', 'system')).toBe(false);
   });
 });
 

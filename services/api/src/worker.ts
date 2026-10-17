@@ -8,9 +8,10 @@ import { pool, withTransaction } from './db/pool.js';
 import { logger } from './logger.js';
 import { expireQuotes, removeOrphanFiles } from './fabrication/service.js';
 import { notifyHandoverOtp, notifyJobStatus, notifyJobSubmitted, notifyOrderPlaced, notifyOrderStatus } from './notifications.js';
-import { expireReservations } from './orders/service.js';
+import { cancelUnaccepted, expireReservations } from './orders/service.js';
 import type { OrderStatus } from './orders/status.js';
 import { refundPayment } from './payments/razorpay.js';
+import { recordRefund, refundOwed, settleRefundStatus, type RefundRequest } from './payments/refunds.js';
 
 const POLL_MS = 3_000;
 const MAX_ATTEMPTS = 8;
@@ -23,61 +24,22 @@ interface OutboxRow {
   attempts: number;
 }
 
-// A payment is refunded once the ledger adds up to what was paid. A partly refunded payment goes
-// back to captured so the admin's "refunds pending" count only shows refunds that are still owed.
-async function settleRefundStatus(paymentId: string) {
-  await pool.query(
-    `update payments p set status = case
-         when coalesce((select sum(r.amount_paise) from payment_refunds r where r.payment_id = p.id), 0) >= p.amount_paise then 'refunded'
-         else 'captured' end::payment_status
-      where p.id = $1 and p.status in ('captured', 'refund_pending')`,
-    [paymentId],
-  );
-}
-
 async function handle(row: OutboxRow) {
   switch (row.topic) {
     case 'refund.requested': {
-      const { paymentId, orderId, jobId, providerPaymentId, amountPaise } = row.payload as {
-        paymentId: string;
-        orderId?: string;
-        jobId?: string;
-        providerPaymentId: string | null;
-        amountPaise: number;
-      };
-      const reference = (orderId ?? jobId)!;
-      const current = await pool.query<{ status: string; amount_paise: number; refunded: number; done: boolean }>(
-        `select p.status, p.amount_paise,
-                coalesce((select sum(r.amount_paise) from payment_refunds r where r.payment_id = p.id), 0)::bigint as refunded,
-                exists(select 1 from payment_refunds r where r.payment_id = p.id and r.reference = $2) as done
-           from payments p where p.id = $1`,
-        [paymentId, reference],
-      );
-      const payment = current.rows[0];
-      if (!payment || payment.status === 'created' || payment.status === 'failed') return;
-      if (payment.done) {
-        await settleRefundStatus(paymentId);
-        return;
-      }
-      // Never refund more than what was paid, whatever the request says.
-      const remaining = Number(payment.amount_paise) - Number(payment.refunded);
-      const amount = Math.min(Number(amountPaise), remaining);
+      const request = row.payload as unknown as RefundRequest;
+      const { reference, amount } = await refundOwed(pool, request);
       if (amount <= 0) {
-        await settleRefundStatus(paymentId);
+        await settleRefundStatus(pool, request.paymentId);
         return;
       }
       let providerRefundId: string | null = null;
       if (config.paymentsMode === 'razorpay') {
-        if (!providerPaymentId) throw new Error(`payment ${paymentId} has no provider payment id to refund`);
-        providerRefundId = (await refundPayment(providerPaymentId, amount, reference)).id ?? null;
+        if (!request.providerPaymentId) throw new Error(`payment ${request.paymentId} has no provider payment id to refund`);
+        providerRefundId = (await refundPayment(request.providerPaymentId, amount, reference)).id ?? null;
       }
-      await pool.query(
-        `insert into payment_refunds (payment_id, reference, amount_paise, provider_refund_id)
-         values ($1, $2, $3, $4) on conflict (payment_id, reference) do nothing`,
-        [paymentId, reference, amount, providerRefundId],
-      );
-      await settleRefundStatus(paymentId);
-      logger.info({ orderId, jobId, amountPaise: amount }, 'refund issued');
+      await recordRefund(pool, request.paymentId, reference, amount, providerRefundId);
+      logger.info({ orderId: request.orderId, jobId: request.jobId, amountPaise: amount }, 'refund issued');
       return;
     }
     case 'fab_job.submitted':
@@ -180,6 +142,8 @@ async function loop() {
       if (expired) logger.info({ expired }, 'released stock from unpaid orders');
       const expiredQuotes = await expireQuotes();
       if (expiredQuotes) logger.info({ expiredQuotes }, 'expired unaccepted fabrication quotes');
+      const unaccepted = await cancelUnaccepted();
+      if (unaccepted) logger.info({ unaccepted }, 'cancelled paid orders no shop accepted in time');
       if (Date.now() - lastOrphanSweep > ORPHAN_SWEEP_MS) {
         lastOrphanSweep = Date.now();
         const removed = await removeOrphanFiles();

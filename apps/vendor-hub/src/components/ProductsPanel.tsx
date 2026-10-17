@@ -235,7 +235,7 @@ export function ProductsPanel() {
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLE[s.status]}`}>{s.status}</span>
               </div>
               <p className="text-xs text-slate-500">
-                {s.categoryId} · MRP {formatInr(s.mrp)} · your price {formatInr(s.price)} · stock {s.stock}
+                {s.categoryName ?? s.categoryId} · MRP {formatInr(s.mrp)} · your price {formatInr(s.price)} · stock {s.stock}
               </p>
               <p className="mt-1 line-clamp-2 text-xs text-slate-600">{s.description}</p>
               <p className="mt-1 text-xs text-slate-500">{STATUS_HELP[s.status]}</p>
@@ -325,9 +325,11 @@ export function ProductsPanel() {
           Category
           <select {...field('categoryId')}>
             <option value="">Select…</option>
-            {categories.data?.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
+            {categories.data
+              ?.filter((c) => c.isVisible !== false)
+              .map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
           </select>
         </label>
         <label className="block text-xs font-semibold text-slate-600">Brand<input {...field('brand')} required={false} maxLength={80} /></label>

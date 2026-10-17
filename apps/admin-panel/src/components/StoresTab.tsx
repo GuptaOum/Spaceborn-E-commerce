@@ -212,7 +212,10 @@ export function StoresTab({ counts, onDecided }: { counts?: Record<string, numbe
       } else {
         reason = await prompt({
           title: `${action === 'reject' ? 'Reject' : 'Suspend'} ${store.name}?`,
-          body: 'The vendor sees this reason in their Seller Hub.',
+          body:
+            action === 'suspend'
+              ? 'The vendor sees this reason. Their orders and print jobs that have not left the shop are cancelled and refunded now. Anything already out for delivery stays open for you to close under Orders.'
+              : 'The vendor sees this reason in their Seller Hub.',
           label: 'Reason',
           minLength: 3,
           multiline: true,
@@ -223,10 +226,22 @@ export function StoresTab({ counts, onDecided }: { counts?: Record<string, numbe
       }
       setBusyId(store.id);
       try {
-        await api(`/admin/stores/${store.id}/${action}`, { method: 'POST', body: reason ? { reason } : {} });
+        const r = await api<{ cancelledOrders?: number; cancelledJobs?: number; onTheRoad?: number }>(
+          `/admin/stores/${store.id}/${action}`,
+          { method: 'POST', body: reason ? { reason } : {} },
+        );
         stores.mutate((list) => list?.filter((s) => s.id !== store.id) ?? list); // it now lives under another filter
         onDecided();
-        return `${store.name} ${VERB[action]}`;
+        if (action !== 'suspend') return `${store.name} ${VERB[action]}`;
+        const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+        const closed = (r.cancelledOrders ?? 0) + (r.cancelledJobs ?? 0);
+        return [
+          `${store.name} suspended.`,
+          closed ? `Cancelled ${plural(r.cancelledOrders ?? 0, 'order')} and ${plural(r.cancelledJobs ?? 0, 'print job')}.` : '',
+          r.onTheRoad ? `${r.onTheRoad} still out for delivery: close them under Orders.` : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
       } finally {
         setBusyId(null);
       }

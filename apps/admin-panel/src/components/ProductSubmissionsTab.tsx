@@ -5,7 +5,7 @@ import { useDraft } from '@spaceborn/web-core/use-draft';
 import { api, fetchAuthedBlob } from '@spaceborn/web-core/api';
 import { useAction, useFeedback } from '@spaceborn/web-core/feedback';
 import { formatInr } from '@spaceborn/web-core/format';
-import type { ProductSubmission, SimilarMatch, SubmissionStatus } from '@spaceborn/web-core/types';
+import type { Category, ProductSubmission, SimilarMatch, SubmissionStatus } from '@spaceborn/web-core/types';
 import { useLoad } from '@spaceborn/web-core/use-load';
 import { FilterChips, ListState, StatusBadge } from './ui';
 
@@ -46,10 +46,22 @@ function Photo({ id }: { id: string }) {
   );
 }
 
-function Review({ submission, onDecided }: { submission: ProductSubmission; onDecided: (s: ProductSubmission, verb: string) => void }) {
+function Review({
+  submission,
+  categories,
+  onDecided,
+}: {
+  submission: ProductSubmission;
+  categories: Category[];
+  onDecided: (s: ProductSubmission, verb: string) => void;
+}) {
   const { prompt, confirm } = useFeedback();
   const detail = useLoad(() => api<{ submission: ProductSubmission; similar: SimilarMatch[] }>(`/admin/product-submissions/${submission.id}`), [submission.id]);
   const duplicates = detail.data?.similar.filter((m) => m.likelyDuplicate) ?? [];
+  const [categoryId, setCategoryId] = useState(submission.categoryId);
+  const corrected = categoryId !== submission.categoryId;
+  const chosen = categories.find((c) => c.id === categoryId);
+  const hiddenPick = chosen?.isVisible === false;
 
   const [run, busy] = useAction(
     async (kind: 'new' | 'merge' | 'reject', match?: SimilarMatch) => {
@@ -76,9 +88,13 @@ function Review({ submission, onDecided }: { submission: ProductSubmission; onDe
         });
         if (!ok) return '';
       }
-      await api(`/admin/product-submissions/${submission.id}/approve`, { method: 'POST', body: match ? { mergeIntoProductId: match.id } : {} });
+      await api(`/admin/product-submissions/${submission.id}/approve`, {
+        method: 'POST',
+        body: { ...(match ? { mergeIntoProductId: match.id } : {}), ...(corrected ? { categoryId } : {}) },
+      });
       onDecided(submission, match ? `attached to ${match.name}` : 'approved as a new product');
-      return match ? `${submission.name}: stock attached to ${match.name}` : `${submission.name} is now in the catalog`;
+      const where = corrected && chosen ? ` under ${chosen.name}` : '';
+      return match ? `${submission.name}: stock attached to ${match.name}` : `${submission.name} is now in the catalog${where}`;
     },
     { success: (msg) => msg as string },
   );
@@ -121,8 +137,29 @@ function Review({ submission, onDecided }: { submission: ProductSubmission; onDe
         ))}
       </ul>
       {submission.status === 'pending' && (
+        <label className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+          Category on the website
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-normal text-slate-800"
+          >
+            {categories
+              .filter((c) => c.isVisible !== false || c.id === submission.categoryId)
+              .map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                  {c.isVisible === false ? ' (hidden)' : ''}
+                </option>
+              ))}
+          </select>
+          {corrected && <span className="font-normal text-sky-700">Changed from the vendor’s pick ({submission.categoryName ?? submission.categoryId})</span>}
+          {hiddenPick && <span className="font-normal text-amber-700">Hidden in Storefront Studio: pick a visible category to approve as new.</span>}
+        </label>
+      )}
+      {submission.status === 'pending' && (
         <div className="mt-3 flex gap-2">
-          <button disabled={busy || detail.loading} onClick={() => void run('new')} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
+          <button disabled={busy || detail.loading || hiddenPick} onClick={() => void run('new')} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
             {busy ? 'Working…' : 'Approve as new product'}
           </button>
           <button disabled={busy} onClick={() => void run('reject')} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-semibold text-red-700 disabled:opacity-50">
@@ -136,8 +173,11 @@ function Review({ submission, onDecided }: { submission: ProductSubmission; onDe
 
 export function ProductSubmissionsTab({ counts, onDecided }: { counts?: Record<string, number>; onDecided: () => void }) {
   const [status, setStatus] = useDraft<SubmissionStatus>('admin:submissions:status', 'pending');
+  const [category, setCategory] = useDraft('admin:submissions:category', '');
   const [openId, setOpenId] = useState<string | null>(null);
-  const submissions = useLoad(() => api<{ submissions: ProductSubmission[] }>(`/admin/product-submissions?status=${status}`).then((r) => r.submissions), [status]);
+  const categories = useLoad(() => api<{ categories: Category[] }>('/categories').then((r) => r.categories), []);
+  const query = `status=${status}${category ? `&category=${encodeURIComponent(category)}` : ''}`;
+  const submissions = useLoad(() => api<{ submissions: ProductSubmission[] }>(`/admin/product-submissions?${query}`).then((r) => r.submissions), [query]);
 
   const decided = (s: ProductSubmission) => {
     submissions.mutate((list) => list?.filter((x) => x.id !== s.id) ?? list);
@@ -147,8 +187,28 @@ export function ProductSubmissionsTab({ counts, onDecided }: { counts?: Record<s
 
   return (
     <div>
-      <FilterChips options={FILTERS} value={status} onChange={setStatus} counts={counts} />
-      <ListState loading={submissions.loading} error={submissions.error} empty={submissions.data?.length === 0 ? `No ${status} product submissions.` : null}>
+      <div className="flex flex-wrap items-center gap-3">
+        <FilterChips options={FILTERS} value={status} onChange={setStatus} counts={counts} />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label="Filter by category"
+          className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800"
+        >
+          <option value="">All categories</option>
+          {categories.data?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+              {c.isVisible === false ? ' (hidden)' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+      <ListState
+        loading={submissions.loading}
+        error={submissions.error}
+        empty={submissions.data?.length === 0 ? `No ${status} product submissions${category ? ' in this category' : ''}.` : null}
+      >
         <ul className="mt-4 space-y-3">
           {submissions.data?.map((s) => {
             // Pending items open their review by default, so one click less per decision.
@@ -166,7 +226,7 @@ export function ProductSubmissionsTab({ counts, onDecided }: { counts?: Record<s
                       {s.storeName}, {s.city} · {s.ownerEmail ?? '—'}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      {s.categoryId}
+                      <span className="font-semibold text-slate-700">{s.categoryName ?? s.categoryId}</span>
                       {s.brand && <> · {s.brand}</>} · MRP {formatInr(s.mrp)} · price {formatInr(s.price)} · stock {s.stock}
                     </p>
                     <p className="mt-1 text-xs text-slate-600">{s.description}</p>
@@ -178,7 +238,7 @@ export function ProductSubmissionsTab({ counts, onDecided }: { counts?: Record<s
                     )}
                   </div>
                 </div>
-                {open && s.status === 'pending' && <Review submission={s} onDecided={decided} />}
+                {open && s.status === 'pending' && <Review submission={s} categories={categories.data ?? []} onDecided={decided} />}
               </li>
             );
           })}

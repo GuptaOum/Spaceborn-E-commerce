@@ -323,7 +323,11 @@ function OrderCard({
   };
 
   const cancel = async () => {
-    if (!confirm('Cancel this order? Paid amounts are refunded to your original payment method within 3-5 business days.')) return;
+    const message =
+      order.status === 'pending_payment' && order.checkoutId
+        ? 'Cancel this checkout? Nothing has been charged. If it was split into more than one delivery, they are all cancelled together.'
+        : 'Cancel this order? Paid amounts are refunded to your original payment method within 3-5 business days.';
+    if (!confirm(message)) return;
     setCancelling(true);
     try {
       await api(`/orders/${order.id}/cancel`, { method: 'POST', body: {} });

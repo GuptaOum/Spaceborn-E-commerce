@@ -16,6 +16,8 @@ export type StoreStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 export interface Category {
   id: string;
   name: string;
+  /** False when the admin hid it in Storefront Studio: no new products go in, customers do not see it. */
+  isVisible?: boolean;
 }
 
 /** Service coverage near the customer. Shops are anonymous: distance and speed only. */
@@ -285,6 +287,7 @@ export interface ProductSubmission {
   name: string;
   description: string;
   categoryId: string;
+  categoryName?: string | null;
   brand: string | null;
   mrp: number;
   price: number;

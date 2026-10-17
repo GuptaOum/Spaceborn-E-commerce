@@ -104,7 +104,7 @@ export function ProductsTab() {
 
   const categories = useLoad(() => api<{ categories: Category[] }>('/categories').then((r) => r.categories), []);
   const products = useLoad(
-    () => api<{ products: AdminProduct[] }>(`/admin/products?limit=150${search ? `&q=${encodeURIComponent(search)}` : ''}`).then((r) => r.products),
+    () => api<{ products: AdminProduct[] }>(`/admin/products?limit=500${search ? `&q=${encodeURIComponent(search)}` : ''}`).then((r) => r.products),
     [search],
   );
 

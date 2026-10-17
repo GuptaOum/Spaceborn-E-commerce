@@ -22,7 +22,7 @@ catalogRouter.get('/categories', async (_req, res) => {
     res.json(hit);
     return;
   }
-  const { rows } = await pool.query('select id, name from categories order by sort_order, name');
+  const { rows } = await pool.query('select id, name, is_visible as "isVisible" from categories order by sort_order, name');
   const body = { categories: rows };
   await cacheSet(key, body, 600);
   res.json(body);

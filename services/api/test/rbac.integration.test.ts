@@ -652,6 +652,48 @@ describe('vendor product submissions', () => {
     const stolen = await call(vendorPune(), 'POST', '/v1/vendor/product-submissions', submission(image.body.imageKey, 'Stolen Photo Listing Item'));
     expect(stolen.status).toBe(422);
   });
+
+  it('vendors pick from the admin’s visible categories; the admin sees the queue by category and can correct it', async () => {
+    const other = (await db.pool.query<{ id: string; name: string }>(
+      `select id, name from categories where id <> 'dev-boards' and is_visible order by sort_order limit 1`,
+    )).rows[0]!;
+    await db.pool.query(`update categories set is_visible = false where id = $1`, [other.id]);
+    await (await import('../src/cache.js')).bumpCatalog();
+    try {
+      const listed = await call(vendorBlr(), 'GET', '/v1/categories');
+      expect(listed.body.categories.find((c: { id: string }) => c.id === other.id).isVisible).toBe(false);
+      const image = await uploadImage(vendorBlr());
+      const intoHidden = await call(vendorBlr(), 'POST', '/v1/vendor/product-submissions', {
+        ...submission(image.body.imageKey, 'Hidden Shelf Listing Item'), categoryId: other.id,
+      });
+      expect(intoHidden.status).toBe(422);
+      expect(intoHidden.body.error.code).toBe('category_hidden');
+
+      const created = await call(vendorBlr(), 'POST', '/v1/vendor/product-submissions', submission(image.body.imageKey, 'Misfiled Servo Tester Pro'));
+      expect(created.status).toBe(201);
+      const id = created.body.submission.id;
+
+      const devBoards = await call('root-admin:admin', 'GET', '/v1/admin/product-submissions?status=pending&category=dev-boards');
+      const row = devBoards.body.submissions.find((s: { id: string }) => s.id === id);
+      expect(row.categoryName).toBeTruthy();
+      expect(row.categoryName).not.toBe('dev-boards');
+      const elsewhere = await call('root-admin:admin', 'GET', `/v1/admin/product-submissions?status=pending&category=${other.id}`);
+      expect(elsewhere.body.submissions.some((s: { id: string }) => s.id === id)).toBe(false);
+
+      // A hidden category cannot take it; a visible one can, and the product lands there.
+      const toHidden = await call('root-admin:admin', 'POST', `/v1/admin/product-submissions/${id}/approve`, { categoryId: other.id });
+      expect(toHidden.body.error.code).toBe('category_hidden');
+      await db.pool.query(`update categories set is_visible = true where id = $1`, [other.id]);
+      const approved = await call('root-admin:admin', 'POST', `/v1/admin/product-submissions/${id}/approve`, { categoryId: other.id });
+      expect(approved.status).toBe(200);
+      const product = await db.pool.query('select category_id from products where id = $1', [approved.body.submission.productId]);
+      expect(product.rows[0].category_id).toBe(other.id);
+      const sub = await db.pool.query('select category_id from product_submissions where id = $1', [id]);
+      expect(sub.rows[0].category_id).toBe(other.id);
+    } finally {
+      await db.pool.query(`update categories set is_visible = true where id = $1`, [other.id]);
+    }
+  });
 });
 
 describe('customer search', () => {

@@ -140,7 +140,7 @@ export function FabJobsPanel() {
       if (to === 'delivered') {
         const otp = await prompt({
           title: `Deliver job #${job.jobNumber}`,
-          body: 'Ask the customer for the 4-digit delivery code.',
+          body: 'Ask the customer for the 4-digit delivery code. If it has expired, close this and use Resend code.',
           label: 'Delivery code',
           placeholder: '1234',
           minLength: 4,
@@ -172,6 +172,19 @@ export function FabJobsPanel() {
         const r = await api<{ job: FabJob }>(`/vendor/fab-jobs/${job.id}/transition`, { method: 'POST', body });
         replace(r.job);
         return `#${job.jobNumber} ${FAB_STATUS_LABEL[r.job.status].toLowerCase()}`;
+      } finally {
+        setBusyId(null);
+      }
+    },
+    { success: (msg) => msg as string },
+  );
+
+  const [sendCode] = useAction(
+    async (job: FabJob) => {
+      setBusyId(job.id);
+      try {
+        await api(`/vendor/fab-jobs/${job.id}/handover-otp`, { method: 'POST', body: {} });
+        return `Code sent to ${job.deliveryAddress.fullName || 'the customer'}. Ask them to read it to you.`;
       } finally {
         setBusyId(null);
       }
@@ -286,6 +299,11 @@ export function FabJobsPanel() {
                 {next && (
                   <button disabled={busy} onClick={() => void transition(job, next.to)} className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
                     {busy ? 'Working…' : next.label}
+                  </button>
+                )}
+                {job.status === 'out_for_delivery' && (
+                  <button disabled={busy} onClick={() => void sendCode(job)} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                    Resend code
                   </button>
                 )}
                 {(job.status === 'submitted' || job.status === 'quoted') && (

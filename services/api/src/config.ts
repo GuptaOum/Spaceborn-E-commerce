@@ -75,6 +75,8 @@ const schema = z.object({
   CORS_ORIGIN: z.string().optional().transform(unset),
   // Empty locally and on the Render demo: the API serves the catalog straight from Postgres.
   REDIS_URL: z.string().optional().transform(unset),
+  // A paid order the shop has not accepted after this long is cancelled, refunded, and the shop goes offline.
+  ORDER_ACCEPT_MINUTES: z.coerce.number().int().min(3).max(240).default(15),
   ADMIN_EMAILS: z
     .string()
     .default('')

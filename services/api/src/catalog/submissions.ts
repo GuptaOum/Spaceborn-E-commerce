@@ -86,16 +86,20 @@ export interface SubmissionInput {
 const COLUMNS = `
   s.id, s.store_id as "storeId", s.name, s.description, s.category_id as "categoryId", s.brand,
   s.mrp, s.price, s.stock, s.status, s.review_note as "reviewNote", s.product_id as "productId",
-  s.image_key as "imageKey", s.created_at as "createdAt", s.updated_at as "updatedAt"`;
+  s.image_key as "imageKey", s.created_at as "createdAt", s.updated_at as "updatedAt",
+  (select c.name from categories c where c.id = s.category_id) as "categoryName"`;
 
 function present<T extends { mrp: number; price: number; imageKey?: string | null }>(row: T) {
   const { imageKey, ...rest } = row;
   return { ...rest, mrp: Number(row.mrp), price: Number(row.price), hasImage: Boolean(imageKey) };
 }
 
+// Only categories the admin shows on the website can take new products; a product in a hidden one
+// would be approved and still never appear.
 async function requireCategory(db: Db, categoryId: string) {
-  const { rows } = await db.query('select 1 from categories where id = $1', [categoryId]);
+  const { rows } = await db.query<{ is_visible: boolean }>('select is_visible from categories where id = $1', [categoryId]);
   if (!rows[0]) throw unprocessable('unknown_category', 'Pick a category from the list');
+  if (!rows[0].is_visible) throw unprocessable('category_hidden', 'That category is not on the website right now. Pick another one.');
 }
 
 async function vectorsFor(input: SubmissionInput) {
@@ -406,16 +410,23 @@ export async function getAdminSubmission(id: string, cities: CityScope = null) {
   return { ...present(row), storeName: row.storeName as string, city: row.city as string, ownerEmail: row.ownerEmail as string | null };
 }
 
-export async function listAdminSubmissions(status: string | null, limit: number, offset: number, cities: CityScope = null) {
+export async function listAdminSubmissions(
+  status: string | null,
+  limit: number,
+  offset: number,
+  cities: CityScope = null,
+  categoryId: string | null = null,
+) {
   const { rows } = await pool.query(
     `select ${COLUMNS}, st.name as "storeName", st.city, u.email as "ownerEmail"
        from product_submissions s
        join stores st on st.id = s.store_id
        join users u on u.id = st.owner_id
       where ($1::submission_status is null or s.status = $1) and ${cityFilter(4)}
+        and ($5::text is null or s.category_id = $5)
       order by s.created_at desc
       limit $2 offset $3`,
-    [status, limit, offset, cities],
+    [status, limit, offset, cities, categoryId],
   );
   return rows.map((row) => ({ ...present(row), storeName: row.storeName, city: row.city, ownerEmail: row.ownerEmail }));
 }
@@ -424,7 +435,12 @@ function newSku() {
   return `SB${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 }
 
-export async function approveSubmission(id: string, mergeIntoProductId: string | null, cities: CityScope = null) {
+export async function approveSubmission(
+  id: string,
+  mergeIntoProductId: string | null,
+  cities: CityScope = null,
+  categoryId: string | null = null,
+) {
   const approved = await withTransaction(async (c) => {
     const { rows } = await c.query(
       `select s.id, s.status, s.store_id, s.name, s.description, s.category_id, s.brand, s.mrp, s.price, s.stock,
@@ -438,6 +454,9 @@ export async function approveSubmission(id: string, mergeIntoProductId: string |
     if (!sub) throw notFound('Submission not found');
     if (sub.status !== 'pending') throw conflict(`A ${sub.status} submission cannot be approved`);
     if (sub.store_status !== 'approved') throw conflict('Approve the store before its products');
+    // The admin may correct the vendor's pick instead of bouncing the whole listing back.
+    if (categoryId) sub.category_id = categoryId;
+    if (!mergeIntoProductId) await requireCategory(c, sub.category_id);
 
     let productId = mergeIntoProductId;
     if (productId) {
@@ -489,11 +508,18 @@ export async function approveSubmission(id: string, mergeIntoProductId: string |
       `insert into inventory (store_id, product_id, price, stock, is_listed) values ($1, $2, $3, $4, true)`,
       [sub.store_id, productId, sub.price, sub.stock],
     );
-    await c.query(`update product_submissions set status = 'approved', product_id = $2, review_note = null where id = $1`, [
+    await c.query(
+      `update product_submissions set status = 'approved', product_id = $2, category_id = $3, review_note = null where id = $1`,
+      [id, productId, sub.category_id],
+    );
+    return {
       id,
+      status: 'approved' as const,
       productId,
-    ]);
-    return { id, status: 'approved' as const, productId, city: sub.city as string, name: sub.name as string };
+      categoryId: sub.category_id as string,
+      city: sub.city as string,
+      name: sub.name as string,
+    };
   });
   void bumpCatalog();
   return approved;
